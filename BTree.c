@@ -9,7 +9,6 @@
  *
  */
 #include <stdlib.h>
-#include <iostream>
 
 /* Size of Node. */
 #define NODESIZE 5
