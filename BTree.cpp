@@ -30,15 +30,12 @@ class Node {
         Node** children;
         // Number of entries (Rule in B Trees: d <= size <= 2 * d)
         int size;
+        // indicates if the current node is a leaf node
+        bool leaf;
 
     public:
-        // Node Constructor: initiates a new node 
-        // @return the node pointer
-        Node(){}
-        /*
-         * nodeLookup(int value, int pointer)
-         *    - True if the value was found in the specified node.
-        */
+        // Node Constructor Declaration: initiates a new node, leaf is T if it's a leaf node else F
+        Node(bool leaf);
         // nodeLookup(int value) - True if the value was found in the specified node.
         bool NodeLookup(int value);
         /*
@@ -52,6 +49,8 @@ class Node {
         // void SplitChild(Node* CurrNode);
         // check if the node is a leaf node
         bool IsLeaf(Node* node);
+        // deconstructor
+        ~Node();
 
     // allow access of Node class for BTree
     friend class BTree;
@@ -60,39 +59,38 @@ class Node {
 
 class BTree {
     private:
-        // size of node
-        // static const int NODESIZE = 5;
-        // Node array, initialized with length = 1, i.e. root node
+        // Node array, including the root node
         Node* nodes;  
         //  Number of currently used nodes
         int CntNodes;
-        // pointer to the root node
-        Node* root;
         // number of currently used values
         int CntValues;
 
     public:
-        BTree() {
-            root = NULL;
-        }
+        // constructor for BTree
+        BTree();
         // Lookup(int value)
         // - True if the value was found.
-        bool Lookup(int value);
+        bool Lookup(Node* root, int value);
         // Insert(int value)
         // - If -1 is returned, the value is inserted and increase cntValues.
         // - If -2 is returned, the value already exists.
         void Insert(int value);
         // CntValues()- Returns the number of used values.
         int CntValues();
-        
+        // deconstructor
+        ~BTree();
 };
 
 
 /**
- * @brief Construct a new Node:: Node object
+ * @brief Node definition Construct a new Node:: Node object
+ * @param _leaf True if it's the leaf node else false
  * 
  */
-Node::Node() {
+Node::Node(bool _leaf) {
+    // T if it's leaf else F
+    leaf = _leaf;
     // allocate enough space for a new Node
     values = new int[NODESIZE];
     // initialize new node pointers for the Node's children
@@ -107,7 +105,22 @@ Node::Node() {
  * 
  */
 bool Node::NodeLookup(int value) {
-    // binary search
+    // if node does not exit, you cannot find the existing value
+    if (size <= 0) {
+        return false;
+    } 
+    // if size > 0, perform binary search within a node
+    int low = 0, high = size - 1;
+    while (low <= high) {
+        int mid = low + (high - low) / 2;
+        if (value == values[mid]) {
+            return true;
+        } else if (value < values[mid]) {
+            high = mid - 1;
+        } else {
+            low = mid + 1;
+        }
+    }
     return false;
 }
 
@@ -143,3 +156,54 @@ bool Node::IsLeaf(Node* node) {
     return node->children == NULL;
 }
 
+/**
+ * @brief Destroy the Node:: Node object
+ * 
+ */
+Node::~Node(){
+    delete[] values;
+    delete[] children;
+}
+
+/**
+ * @brief BTree constructor
+ * Construct a new BTree::BTree object
+ * 
+ */
+BTree::BTree() {
+    // root node is initialize to NULL
+    nodes = NULL;
+}
+
+/**
+ * @brief Search the search value 
+ * 
+ * @param root root node of current subtree
+ * @param value search value
+ * @return true if search value found else return false
+ */
+
+bool BTree::Lookup(Node* root, int value) {
+    nodes = root;
+    // if root node is null, then we cannot perform search
+    if (!nodes) {
+        return false;
+    } 
+    // check the current node if the search value exist
+    if (nodes->NodeLookup(value)) {
+        return true;
+    }
+    int i = 0;
+    while (i < CntNodes && value > nodes->children[i]->values[nodes->size - 1]) {
+        i++;
+    }
+    return Lookup(nodes->children[i], value);
+}
+
+/**
+ * @brief Destroy the BTree::BTree object
+ * 
+ */
+BTree::~BTree() {
+    delete nodes;
+}
