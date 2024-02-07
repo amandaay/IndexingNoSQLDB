@@ -49,6 +49,8 @@ class Node {
         // void SplitChild(Node* CurrNode);
         // check if the node is a leaf node
         bool IsLeaf(Node* node);
+        // Display node
+        void Display(int node);
         // deconstructor
         ~Node();
 
