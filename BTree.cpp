@@ -10,7 +10,6 @@
  */
 
 #include <iostream>
-#include <cmath>
 
 using namespace std;
 
@@ -26,7 +25,7 @@ class Node {
     private:
         // Node Values (Leaf Values / Key Values for the children nodes).
         int* values;
-        // Node Array, pointing to the children nodes. This array is not initialized for leaf nodes.
+        // Children ptrs from current node
         Node** children;
         // Number of entries (Rule in B Trees: d <= size <= 2 * d)
         int size;
@@ -93,7 +92,7 @@ Node::Node(){
     // allocate enough space for a new Node
     values = new int[NODESIZE];
     // initialize new node pointers for the Node's children
-    children = new Node*[static_cast<int>(ceil(NODESIZE / 2))];
+    children = new Node*[NODESIZE + 1];
     // initialize number of values = 0
     size = 0;
 }
