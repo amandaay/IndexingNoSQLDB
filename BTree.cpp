@@ -31,11 +31,11 @@ class Node {
         // Number of entries (Rule in B Trees: d <= size <= 2 * d)
         int size;
         // indicates if the current node is a leaf node
-        bool leaf;
+        // bool leaf;
 
     public:
-        // Node Constructor Declaration: initiates a new node, leaf is T if it's a leaf node else F
-        Node(bool leaf);
+        // Node Constructor Declaration: initiates a new node
+        Node();
         // nodeLookup(int value) - search the index of the value in the specific node
         int NodeLookup(int value);
         /*
@@ -87,10 +87,9 @@ class BTree {
 
 /**
  * @brief Node definition Construct a new Node:: Node object
- * @param _leaf True if it's the leaf node else false
  * 
  */
-Node::Node(bool _leaf) : leaf(_leaf) {
+Node::Node(){
     // allocate enough space for a new Node
     values = new int[NODESIZE];
     // initialize new node pointers for the Node's children
@@ -110,7 +109,7 @@ int Node::NodeLookup(int value) {
         return -1;
     } 
     // if size > 0, perform binary search within a node
-    int left = 0, right = size - 1;
+    int left = 0, right = size;
     while (left < right) {
         int mid = left + (right - left) / 2;
         if (values[mid] < value) {
@@ -179,7 +178,7 @@ Node::~Node(){
  * 
  */
 BTree::BTree() {
-    // root node is initialize to NULL
+    // root node is initialize to nullptr
     nodes = nullptr;
 }
 
@@ -199,7 +198,7 @@ bool BTree::Lookup(Node* root, int value) {
     } 
     int i = nodes->NodeLookup(value);
     // check the current node if the search value exist
-    if (nodes->values[i] == value) {
+    if (i != -1 && nodes->values[i] == value) {
         return true;
     }
     // if it reaches leaf node, it indicates there's no such value
