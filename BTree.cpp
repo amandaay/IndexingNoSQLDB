@@ -48,7 +48,7 @@ class Node {
         // split child helper function if current node is full
         // void SplitChild(Node* CurrNode);
         // check if the node is a leaf node
-        bool IsLeaf(Node* node);
+        // bool IsLeaf(Node* node);
         // Display node
         void Display(int node);
         // deconstructor
@@ -90,9 +90,7 @@ class BTree {
  * @param _leaf True if it's the leaf node else false
  * 
  */
-Node::Node(bool _leaf) {
-    // T if it's leaf else F
-    leaf = _leaf;
+Node::Node(bool _leaf) : leaf(_leaf) {
     // allocate enough space for a new Node
     values = new int[NODESIZE];
     // initialize new node pointers for the Node's children
@@ -150,21 +148,23 @@ void Node::NodeInsert(int value) {
 /**
  * @brief check if there's any children,
  * 
- * @param node 
  * @return true if no children
  * @return false there's children
  */
-bool Node::IsLeaf(Node* node) {
-    return node->children == NULL;
-}
+// bool Node::IsLeaf(Node* node) {
+//     return node->children == NULL;
+// }
 
 /**
  * @brief Destroy the Node:: Node object
  * 
  */
 Node::~Node(){
-    delete[] values;
+    for (int i = 0; i < size; i++) {
+        delete children[i];
+    }
     delete[] children;
+    delete[] values;
 }
 
 /**
@@ -174,7 +174,7 @@ Node::~Node(){
  */
 BTree::BTree() {
     // root node is initialize to NULL
-    nodes = NULL;
+    nodes = nullptr;
 }
 
 /**
@@ -196,7 +196,7 @@ bool BTree::Lookup(Node* root, int value) {
         return true;
     }
     int i = 0;
-    while (i < CntNodes && value > nodes->children[i]->values[nodes->size - 1]) {
+    while (i < nodes->size && value > nodes->values[i]) {
         i++;
     }
     return Lookup(nodes->children[i], value);
@@ -207,5 +207,6 @@ bool BTree::Lookup(Node* root, int value) {
  * 
  */
 BTree::~BTree() {
+    // TODO: fix memory deallocation, iterate thru every node and its children
     delete nodes;
 }
