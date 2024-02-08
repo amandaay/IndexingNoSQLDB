@@ -91,7 +91,7 @@ class BTree {
 Node::Node(){
     // allocate enough space for a new Node
     values = new int[NODESIZE];
-    // initialize new node pointers for the Node's children
+    // initialize new node pointers for the Node's children ptr
     children = new Node*[NODESIZE + 1];
     // initialize number of values = 0
     size = 0;
