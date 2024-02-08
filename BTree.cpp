@@ -36,8 +36,8 @@ class Node {
     public:
         // Node Constructor Declaration: initiates a new node, leaf is T if it's a leaf node else F
         Node(bool leaf);
-        // nodeLookup(int value) - True if the value was found in the specified node.
-        bool NodeLookup(int value);
+        // nodeLookup(int value) - search the index of the value in the specific node
+        int NodeLookup(int value);
         /*
         * nodeInsert(int value, int pointer)
         *    - -2 if the value already exists in the specified node
@@ -48,7 +48,7 @@ class Node {
         // split child helper function if current node is full
         // void SplitChild(Node* CurrNode);
         // check if the node is a leaf node
-        // bool IsLeaf(Node* node);
+        bool IsLeaf(Node* node);
         // Display node
         void Display(int node);
         // deconstructor
@@ -79,7 +79,7 @@ class BTree {
         // - If -2 is returned, the value already exists.
         void Insert(int value);
         // CntValues()- Returns the number of used values.
-        int CntValues();
+        // int CntValues();
         // deconstructor
         ~BTree();
 };
@@ -94,34 +94,40 @@ Node::Node(bool _leaf) : leaf(_leaf) {
     // allocate enough space for a new Node
     values = new int[NODESIZE];
     // initialize new node pointers for the Node's children
-    children = new Node*[ceil(NODESIZE / 2)];
+    children = new Node*[static_cast<int>(ceil(NODESIZE / 2))];
     // initialize number of values = 0
     size = 0;
 }
 
 /**
- * @brief search value in the specific node
- * @return T if found else F
+ * @brief search value in the specific node 
+ * @return the search value if exist, otherwise leftmost index
  * 
  */
-bool Node::NodeLookup(int value) {
+int Node::NodeLookup(int value) {
     // if node does not exit, you cannot find the existing value
     if (size <= 0) {
-        return false;
+        return -1;
     } 
     // if size > 0, perform binary search within a node
-    int low = 0, high = size - 1;
-    while (low <= high) {
-        int mid = low + (high - low) / 2;
-        if (value == values[mid]) {
-            return true;
-        } else if (value < values[mid]) {
-            high = mid - 1;
+    int left = 0, right = size - 1;
+    while (left < right) {
+        int mid = left + (right - left) / 2;
+        if (values[mid] < value) {
+            left = mid + 1;
         } else {
-            low = mid + 1;
+            right = mid;
         }
+        // if (value == values[mid]) {
+        //     return true;
+        // } else if (value < values[mid]) {
+        //     right = mid - 1;
+        // } else {
+        //     left = mid + 1;
+        // }
     }
-    return false;
+    // return false;
+    return left;
 }
 
 
@@ -151,9 +157,9 @@ void Node::NodeInsert(int value) {
  * @return true if no children
  * @return false there's children
  */
-// bool Node::IsLeaf(Node* node) {
-//     return node->children == NULL;
-// }
+bool Node::IsLeaf(Node* node) {
+    return node->children == NULL;
+}
 
 /**
  * @brief Destroy the Node:: Node object
@@ -191,14 +197,19 @@ bool BTree::Lookup(Node* root, int value) {
     if (!nodes) {
         return false;
     } 
+    int i = nodes->NodeLookup(value);
     // check the current node if the search value exist
-    if (nodes->NodeLookup(value)) {
+    if (nodes->values[i] == value) {
         return true;
     }
-    int i = 0;
-    while (i < nodes->size && value > nodes->values[i]) {
-        i++;
+    // if it reaches leaf node, it indicates there's no such value
+    if (nodes->IsLeaf(nodes)) {
+        return false;
     }
+    // int i = 0;
+    // while (i < nodes->size && value > nodes->values[i]) {
+    //     i++;
+    // }
     return Lookup(nodes->children[i], value);
 }
 
@@ -209,4 +220,10 @@ bool BTree::Lookup(Node* root, int value) {
 BTree::~BTree() {
     // TODO: fix memory deallocation, iterate thru every node and its children
     delete nodes;
+}
+
+
+int main() {
+    // BTree tree;
+    return 0;
 }
