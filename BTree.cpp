@@ -10,7 +10,6 @@
  */
 
 #include <iostream>
-#include <cmath>
 
 using namespace std;
 
@@ -26,8 +25,10 @@ class Node {
     private:
         // Node Values (Leaf Values / Key Values for the children nodes).
         int* values;
-        // Node Array, pointing to the children nodes. This array is not initialized for leaf nodes.
+        // Children ptrs from current node
         Node** children;
+        // degree of the node, i.e. minimum number of children per node
+        int degree;
         // Number of entries (Rule in B Trees: d <= size <= 2 * d)
         int size;
         // indicates if the current node is a leaf node
@@ -35,7 +36,7 @@ class Node {
 
     public:
         // Node Constructor Declaration: initiates a new node
-        Node();
+        Node(int _degree);
         // nodeLookup(int value) - search the index of the value in the specific node
         int NodeLookup(int value);
         /*
@@ -89,11 +90,11 @@ class BTree {
  * @brief Node definition Construct a new Node:: Node object
  * 
  */
-Node::Node(){
+Node::Node(int _degree): degree(_degree) {
     // allocate enough space for a new Node
-    values = new int[NODESIZE];
-    // initialize new node pointers for the Node's children
-    children = new Node*[static_cast<int>(ceil(NODESIZE / 2))];
+    values = new int[2*degree + 1];
+    // initialize node pointers for the Node's children ptr
+    children = new Node*[2*degree];
     // initialize number of values = 0
     size = 0;
 }
@@ -166,7 +167,9 @@ bool Node::IsLeaf(Node* node) {
  */
 Node::~Node(){
     for (int i = 0; i < size; i++) {
-        delete children[i];
+        if (children[i] != nullptr) {
+            delete children[i];
+        }
     }
     delete[] children;
     delete[] values;
