@@ -168,8 +168,3 @@ BTree::~BTree() {
     delete nodes;
 }
 
-
-int main() {
-    // BTree tree;
-    return 0;
-}
