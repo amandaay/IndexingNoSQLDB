@@ -1,0 +1,86 @@
+/*
+ * CS7280 Special Topics in Database Management
+ * Project 1: B-tree implementation.
+ *
+ * You need to code for the following functions in this program
+ *   1. Lookup(int value) -> nodeLookup(int value, int node)
+ *   2. Insert(int value) -> nodeInsert(int value, int node)
+ *   3. Display(int node)
+ *
+ */
+#ifndef BTREE_H
+#define BTREE_H
+
+/* Size of Node. */
+#define NODESIZE 5
+
+/*
+ * Node data structure.
+ *   - This is the simplest structure for nodes used in B-tree
+ *   - This will be used for both internal and leaf nodes.
+ */
+class Node {
+    private:
+        // Node Values (Leaf Values / Key Values for the children nodes).
+        int* values;
+        // Children ptrs from current node
+        Node** children;
+        // degree of the node, i.e. minimum number of children per node
+        int degree;
+        // Number of entries (Rule in B Trees: d <= size <= 2 * d)
+        int size;
+        // indicates if the current node is a leaf node
+        bool leaf;
+
+    public:
+        // Node Constructor Declaration: initiates a new node
+        Node(int _degree, bool _leaf);
+        // nodeLookup(int value) - search the index of the value in the specific node
+        int NodeLookup(int value);
+        /*
+        * nodeInsert(int value, int pointer)
+        *    - -2 if the value already exists in the specified node
+        *    - -1 if the value is inserted into the node or
+        *            something else if the parent node has to be restructured
+        */
+        void NodeInsert(int value);
+        // split child helper function if current node is full
+        // void SplitChild(int i, Node* CurrNode);
+        // check if the node is a leaf node
+        // bool IsLeaf(Node* node);
+        // Display node
+        void Display(int node);
+        // deconstructor
+        ~Node();
+
+    // allow access of Node class for BTree
+    friend class BTree;
+};
+
+
+class BTree {
+    private:
+        // Node array, including the root node
+        Node* nodes;  
+        //  Number of currently used nodes
+        int CntNodes;
+        // number of currently used values
+        int CntValues;
+
+    public:
+        // constructor for BTree
+        BTree();
+        // Lookup(int value)
+        // - True if the value was found.
+        bool Lookup(Node* root, int value);
+        // Insert(int value)
+        // - If -1 is returned, the value is inserted and increase cntValues.
+        // - If -2 is returned, the value already exists.
+        void Insert(int value);
+        // CntValues()- Returns the number of used values.
+        // int CntValues();
+        // deconstructor
+        ~BTree();
+};
+
+#endif // BTREE_H
