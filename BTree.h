@@ -1,13 +1,14 @@
-/*
- * CS7280 Special Topics in Database Management
- * Project 1: B-tree implementation.
- *
- * You need to code for the following functions in this program
- *   1. Lookup(int value) -> nodeLookup(int value, int node)
- *   2. Insert(int value) -> nodeInsert(int value, int node)
- *   3. Display(int node)
- *
+/**
+ * @file BTree.h
+ * @author So Man Amanda Au-Yeung, Chin Yuen Au (Isaac)
+ * @brief CS7280 Special Topics in Database Management
+ *        Project 1: B-tree implementation.
+ * @date due 2024-02-14
+ * 
+ * @copyright Copyright (c) 2024
+ * 
  */
+
 #ifndef BTREE_H
 #define BTREE_H
 
@@ -60,25 +61,28 @@ class Node {
 
 class BTree {
     private:
-        // Node array, including the root node
+        // Node array, including the root nodes
         Node* nodes;  
         //  Number of currently used nodes
         int CntNodes;
         // number of currently used values
         int CntValues;
+        // degree
+        int degree;
 
     public:
         // constructor for BTree
-        BTree();
+        BTree(int _degree);
         // Lookup(int value)
         // - True if the value was found.
         bool Lookup(Node* root, int value);
+        // Public method to access the root nodes
+        Node* getRootNode();
         // Insert(int value)
-        // - If -1 is returned, the value is inserted and increase cntValues.
-        // - If -2 is returned, the value already exists.
         void Insert(int value);
         // CntValues()- Returns the number of used values.
         // int CntValues();
+        void Display();
         // deconstructor
         ~BTree();
 };
