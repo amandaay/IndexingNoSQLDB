@@ -32,11 +32,11 @@ class Node {
         // Number of entries (Rule in B Trees: d <= size <= 2 * d)
         int size;
         // indicates if the current node is a leaf node
-        // bool leaf;
+        bool leaf;
 
     public:
         // Node Constructor Declaration: initiates a new node
-        Node(int _degree);
+        Node(int _degree, bool _leaf);
         // nodeLookup(int value) - search the index of the value in the specific node
         int NodeLookup(int value);
         /*
@@ -47,9 +47,9 @@ class Node {
         */
         void NodeInsert(int value);
         // split child helper function if current node is full
-        // void SplitChild(Node* CurrNode);
+        // void SplitChild(int i, Node* CurrNode);
         // check if the node is a leaf node
-        bool IsLeaf(Node* node);
+        // bool IsLeaf(Node* node);
         // Display node
         void Display(int node);
         // deconstructor
@@ -90,7 +90,7 @@ class BTree {
  * @brief Node definition Construct a new Node:: Node object
  * 
  */
-Node::Node(int _degree): degree(_degree) {
+Node::Node(int _degree, bool _leaf): degree(_degree), leaf(_leaf) {
     // allocate enough space for a new Node
     values = new int[2*degree + 1];
     // initialize node pointers for the Node's children ptr
@@ -132,12 +132,34 @@ int Node::NodeLookup(int value) {
 
 
 /**
- * @brief insertion of value in the specific node
+ * @brief assuming the leaf node is non full
+ * insertion of the dedicated value will be performed
  * 
  */
 void Node::NodeInsert(int value) {
-    //...
-    size++;
+    // binary search and insert where the element should be at
+    // search the index if exist, otherwise where it should be
+    int i = NodeLookup(value);
+    if (leaf) {
+        // shift all the other values towards the right until it reaches the index to be inserted
+        for (int j = size; j > i; j --) {
+        values[j] = values[j - 1];
+	    }
+        values[i] = value;
+        size++;
+    } else {
+        // non leaf	
+        // see index to be inserted is full or not
+        if (children[i]->size == 2*degree + 1)
+        {
+            // TODO: uncomment after finishing splitchild
+            // SplitChild(i, children[i]);
+            if (values[i] < value) {
+                i++;		
+            }
+            children[i]->NodeInsert(value);
+	    }
+    }
 }
 
 
@@ -146,7 +168,7 @@ void Node::NodeInsert(int value) {
  * 
  * @param CurrNode 
  */
-// void Node::SplitChild(Node* CurrNode) {
+// void Node::SplitChild(int i, Node* CurrNode) {
 //     //
 // }
 
@@ -157,9 +179,9 @@ void Node::NodeInsert(int value) {
  * @return true if no children
  * @return false there's children
  */
-bool Node::IsLeaf(Node* node) {
-    return node->children == NULL;
-}
+// bool Node::IsLeaf(Node* node) {
+//    return node->children == NULL;
+// }
 
 /**
  * @brief Destroy the Node:: Node object
@@ -205,7 +227,7 @@ bool BTree::Lookup(Node* root, int value) {
         return true;
     }
     // if it reaches leaf node, it indicates there's no such value
-    if (nodes->IsLeaf(nodes)) {
+    if (nodes->leaf) {
         return false;
     }
     // int i = 0;
@@ -213,6 +235,14 @@ bool BTree::Lookup(Node* root, int value) {
     //     i++;
     // }
     return Lookup(nodes->children[i], value);
+}
+
+/**
+ * @brief 
+ * 
+ */
+void BTree::Insert(int value) {
+
 }
 
 /**
