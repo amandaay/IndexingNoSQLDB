@@ -4,9 +4,9 @@
  * @brief CS7280 Special Topics in Database Management
  *        Project 1: B-tree Test program.
  * @date due 2024-02-14
- * 
+ *
  * @copyright Copyright (c) 2024
- * 
+ *
  */
 
 #include "BTree.h"
@@ -18,7 +18,7 @@
 
 using namespace std;
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
     // default size
     int Nodesize = 5;
     // check if there's an input file with the same arg length
@@ -48,7 +48,7 @@ int main(int argc, char *argv[]) {
     while (getline(testFile, line)) {
         istringstream iss(line);
         string token;
-        while(getline(iss, token, ',')) {
+        while (getline(iss, token, ',')) {
             int value = stoi(token);
             DemoTree.Insert(value);
             cout << value << endl;
@@ -71,7 +71,8 @@ int main(int argc, char *argv[]) {
         while (cin >> LookUpVal) {
             cout << (DemoTree.Lookup(DemoTree.getRootNode(), LookUpVal) ? "FOUND" : "NOT FOUND") << endl;
         }
-    } else {
+    }
+    else {
         cout << "Exiting the program";
     }
     return 0;

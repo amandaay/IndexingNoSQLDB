@@ -7,6 +7,7 @@
 3. `./BTreeTest <testFile.txt> <NODESIZE></NODESIZE>`, note that `<name-you-want-to-give>` = `BTreeTest` and default NODESIZE=5
 
 ## Instructions
+
 1. In this program, user will have to feed in a textfile similar to `DemoTestFile.t` to implement a BTree. i.e. The textfile must be a set of integers separated by commas.
 2. After building the BTree, the user can input values to be searched.
 
@@ -15,6 +16,7 @@
 ## Limitations
 
 ## Assumptions
+
 1. If user does not provide a nodesize, the default value will be 5. <br/>
 2. Note that Nodesize is equivalent to Knuth order of a B Tree.
 

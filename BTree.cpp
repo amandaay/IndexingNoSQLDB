@@ -10,16 +10,16 @@
  */
 #include "BTree.h"
 
-/**
- * @brief Node definition Construct a new Node:: Node object
- *
- */
+ /**
+  * @brief Node definition Construct a new Node:: Node object
+  *
+  */
 Node::Node(int _degree, bool _leaf) : degree(_degree), leaf(_leaf)
 {
     // allocate enough space for a new Node
     values = new int[2 * degree + 1];
     // initialize node pointers for the Node's children ptr
-    children = new Node *[2 * degree];
+    children = new Node * [2 * degree];
     // initialize number of values = 0
     size = 0;
 }
@@ -99,24 +99,24 @@ void Node::NodeInsert(int value)
  *
  * @param CurrNode
  */
-// void Node::SplitChild(int i, Node* CurrNode) {
-//     //
-// }
+ // void Node::SplitChild(int i, Node* CurrNode) {
+ //     //
+ // }
 
-/**
- * @brief check if there's any children,
- *
- * @return true if no children
- * @return false there's children
- */
-// bool Node::IsLeaf(Node* node) {
-//    return node->children == NULL;
-// }
+ /**
+  * @brief check if there's any children,
+  *
+  * @return true if no children
+  * @return false there's children
+  */
+  // bool Node::IsLeaf(Node* node) {
+  //    return node->children == NULL;
+  // }
 
-/**
- * @brief Destroy the Node:: Node object
- *
- */
+  /**
+   * @brief Destroy the Node:: Node object
+   *
+   */
 Node::~Node()
 {
     for (int i = 0; i < size; i++)
@@ -133,10 +133,10 @@ Node::~Node()
 /**
  * @brief BTree constructor
  * Construct a new BTree::BTree object
- * degree initialize as input 
+ * degree initialize as input
  *
  */
-BTree::BTree(int _degree) : degree(_degree), nodes(nullptr){}
+BTree::BTree(int _degree) : degree(_degree), nodes(nullptr) {}
 
 /**
  * @brief Search the search value
@@ -169,8 +169,8 @@ bool BTree::Lookup(Node* root, int value)
 
 /**
  * @brief get access to nodes
- * 
- * @return Node* 
+ *
+ * @return Node*
  */
 Node* BTree::getRootNode() {
     return nodes;
