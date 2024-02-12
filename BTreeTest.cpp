@@ -57,33 +57,57 @@ int main(int argc, char *argv[])
         {
             int value = stoi(token);
             DemoTree.Insert(value);
-            cout << value << endl;
-            // DemoTree.Display();
+            // TODO: DemoTree.Display();
         }
     }
+
+    bool quit = false;
+    char choice;
+
+    while (!quit)
+    {
+        cout << "(1) Look-up, (2) Insert, or (q) Quit?";
+        cin >> choice;
+        switch (choice)
+        {
+        case '1':
+        {
+            int LookUpVal;
+            cout << "What key are you searching for?";
+            cin >> LookUpVal;
+            if (DemoTree.Lookup(DemoTree.getRootNode(), LookUpVal))
+            {
+                // TODO: Display
+            }
+            else
+            {
+                cout << "No key found" << endl;
+            }
+            break;
+        }
+        case '2':
+        {
+            cout << "What key do you insert?";
+            int InsertVal;
+            cin >> InsertVal;
+            DemoTree.Insert(InsertVal);
+            break;
+        }
+        case 'q':
+        {
+            cout << "Good bye!!";
+            quit = true;
+            break;
+        }
+        default:
+        {
+            cout << "Invalid choice" << endl;
+            break;
+        }
+        }
+    }
+
     // close test file
     testFile.close();
-    // test lookup function
-    char choice;
-    cout << "Would you like to search a value in your BTree? (y/n)";
-    cin >> choice;
-    choice = tolower(choice);
-    if (choice != 'y' && choice != 'n')
-    {
-        cerr << "Invalid Choice";
-    }
-    if (choice == 'y')
-    {
-        int LookUpVal;
-        cout << "Enter the value you want to lookup (ctrl+c to kill the program): ";
-        while (cin >> LookUpVal)
-        {
-            cout << (DemoTree.Lookup(DemoTree.getRootNode(), LookUpVal) ? "FOUND" : "NOT FOUND") << endl;
-        }
-    }
-    else
-    {
-        cout << "Exiting the program";
-    }
     return 0;
 }
