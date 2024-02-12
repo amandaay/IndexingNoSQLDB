@@ -12,9 +12,6 @@
 #ifndef BTREE_H
 #define BTREE_H
 
-/* Size of Node. */
-#define NODESIZE 5
-
 /*
  * Node data structure.
  *   - This is the simplest structure for nodes used in B-tree
