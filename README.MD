@@ -27,7 +27,10 @@ https://www.programiz.com/dsa/b-tree<br/>
 https://stackoverflow.com/questions/28846377/what-is-the-difference-btw-order-and-degree-in-terms-of-tree-data-structure<br/>
 https://stackoverflow.com/questions/50800605/using-binary-search-in-b-tree#:~:text=In%20practice%2C%20a%20linear%20search,followed%20by%20a%20linear%20search.<br/>
 
-## Author
+## Authors
 
 So Man Amanda Au-Yeung, NUID: 001673193<br/>
 Chin Yuen Au (Isaac)
+
+## Demo Details
+Group 1
