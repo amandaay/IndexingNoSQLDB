@@ -18,15 +18,18 @@
 
 using namespace std;
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[])
+{
     // default size
     int Nodesize = 5;
     // check if there's an input file with the same arg length
-    if (argc != 2 && argc != 3) {
+    if (argc != 2 && argc != 3)
+    {
         cerr << "Usage: " << argv[0] << " <test-file> [<Nodesize(default=5)>]" << endl;
         return 1;
     }
-    if (argc == 3) {
+    if (argc == 3)
+    {
         // convert the input string to its nodesize
         istringstream(argv[2]) >> Nodesize;
     }
@@ -34,7 +37,8 @@ int main(int argc, char* argv[]) {
     string filename = argv[1];
     ifstream testFile(filename);
     // check if we are able to open the test file
-    if (!testFile.is_open()) {
+    if (!testFile.is_open())
+    {
         cerr << "Error: Unable to open test file." << endl;
         return 1;
     }
@@ -45,10 +49,12 @@ int main(int argc, char* argv[]) {
     cout << "Creating BTree..." << endl;
     string line;
     int value;
-    while (getline(testFile, line)) {
+    while (getline(testFile, line))
+    {
         istringstream iss(line);
         string token;
-        while (getline(iss, token, ',')) {
+        while (getline(iss, token, ','))
+        {
             int value = stoi(token);
             DemoTree.Insert(value);
             cout << value << endl;
@@ -62,17 +68,21 @@ int main(int argc, char* argv[]) {
     cout << "Would you like to search a value in your BTree? (y/n)";
     cin >> choice;
     choice = tolower(choice);
-    if (choice != 'y' && choice != 'n') {
+    if (choice != 'y' && choice != 'n')
+    {
         cerr << "Invalid Choice";
     }
-    if (choice == 'y') {
+    if (choice == 'y')
+    {
         int LookUpVal;
         cout << "Enter the value you want to lookup (ctrl+c to kill the program): ";
-        while (cin >> LookUpVal) {
+        while (cin >> LookUpVal)
+        {
             cout << (DemoTree.Lookup(DemoTree.getRootNode(), LookUpVal) ? "FOUND" : "NOT FOUND") << endl;
         }
     }
-    else {
+    else
+    {
         cout << "Exiting the program";
     }
     return 0;
