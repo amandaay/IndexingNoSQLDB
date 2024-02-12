@@ -3,7 +3,7 @@
 ## How to run?
 
 1. `git clone https://github.com/amandaay/IndexingNoSQLDB.git`
-2. To compile, `clang++ -std=c++11 BTree.cpp -o <name-you-want-to-give>` or `g++ -std=c++11 BTree.cpp BTreeTest.cpp -o BTreeTest <name-you-want-to-give>`
+2. To compile, `clang++ -std=c++11 BTree.cpp -o <name-you-want-to-give>` or `g++ -std=c++11 BTree.cpp BTreeTest.cpp -o <name-you-want-to-give>`
 3. `./BTreeTest <testFile.txt> <NODESIZE>`, note that `<name-you-want-to-give>` = `BTreeTest`
 
 ## Instructions
