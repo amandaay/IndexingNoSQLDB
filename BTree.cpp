@@ -100,9 +100,47 @@ void Node::NodeInsert(int value)
  *
  * @param CurrNode
  */
-// void Node::SplitChild(int i, Node* CurrNode) {
-//     //
-// }
+void Node::SplitChild(int i, Node *CurrNode)
+{
+    // Create a new node that will be the right sibling of CurrNode
+    Node *newNode = new Node(degree, CurrNode->leaf);
+
+    // Copy the right half of CurrNode's values and children to newNode
+    newNode->size = degree - 1;
+    for (int j = 0; j < degree - 1; j++)
+    {
+        newNode->values[j] = CurrNode->values[j + degree];
+    }
+
+    if (!CurrNode->leaf)
+    {
+        for (int j = 0; j < degree; j++)
+        {
+            newNode->children[j] = CurrNode->children[j + degree];
+        }
+    }
+
+    // Reduce the size of CurrNode
+    CurrNode->size = degree - 1;
+
+    // Insert the middle value of CurrNode into the parent node at index i
+    for (int j = size; j > i; j--)
+    {
+        children[j + 1] = children[j];
+    }
+    children[i + 1] = newNode;
+
+    for (int j = size - 1; j >= i; j--)
+    {
+        values[j + 1] = values[j];
+    }
+    values[i] = CurrNode->values[degree - 1];
+
+    size++;
+}
+
+
+
 
 /**
  * @brief check if there's any children,
@@ -110,9 +148,9 @@ void Node::NodeInsert(int value)
  * @return true if no children
  * @return false there's children
  */
-// bool Node::IsLeaf(Node* node) {
-//    return node->children == NULL;
-// }
+bool Node::IsLeaf(Node* node) {
+   return node->children == NULL;
+}
 
 /**
  * @brief Destroy the Node:: Node object
@@ -183,7 +221,37 @@ Node *BTree::getRootNode()
  *
  */
 void BTree::Insert(int value)
-{
+{ // if root node is null, need to create a new root for the empty tree
+  if (!nodes)
+  {
+    // create a new root with minimum degree and marks it as leaf since it is the only node initially
+    nodes = new Node(degree, true);
+    // insert the value into the root node at index 0
+    nodes->values[0] = value;
+    // update the number of keys in the root node to 1
+    nodes->size = 1;
+  } else 
+  { 
+    // if node is full after insertion, need to split
+    if (nodes->size == 2 * degree - 1) 
+    {
+        // create a new node 'new_root' which will become the new root after splitting the current root
+        Node *new_root = new Node(degree, false);
+        // set the current root to be child of new root 'new_root' 
+        new_root->children[0] = nodes;
+        // split the child node of 'new_root' at index 0, which is the current root node
+        new_root->SplitChild(0, nodes);
+        // inserts the new key 'value' into the appropriate child node of 'new_root'
+        int i = 0;
+        if (new_root->values[0] < value)
+            i++;
+        new_root->children[i]->NodeInsert(value);
+        // update root of the B-tree to be new node 'new_root'
+        nodes = new_root;
+    } else
+        // insert new key 'value' into root node if it is not full
+        nodes->NodeInsert(value);
+  }
 }
 
 /**
