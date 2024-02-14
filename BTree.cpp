@@ -294,6 +294,7 @@ void BTree::Display()
     queue<Node *> q;
     q.push(nodes);
     int level = 0;
+    int index = 0;
     while (!q.empty())
     {
         int NodeCount = q.size();
@@ -304,15 +305,11 @@ void BTree::Display()
             Node *node = q.front();
             q.pop();
             // display the current node
-            int j = 0;
-            for (j = 0; j < (node->values).size(); j++)
-            {
-                cout << "[" << j;
-                node->Display(node->size);
-                cout << "]";
-            }
+            cout << index << "[";
+            node->Display(node->size);
+            cout << "] ";
             // enqueue the children
-            for (int i = 0; i < node->size; i++)
+            for (int i = 0; i < node->size + 1; i++)
             {
                 if (node->children[i])
                 {
@@ -320,6 +317,7 @@ void BTree::Display()
                 }
             }
             NodeCount--;
+            index++;
         }
         level++;
         cout << endl;
