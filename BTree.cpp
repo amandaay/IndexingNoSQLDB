@@ -147,9 +147,9 @@ void Node::SplitChild(int i, Node *CurrNode)
  * @brief displaying every single done with its node index
  *
  * @param _size current size of the nodes
- * @param level current level of the nodes
+ * @param NodeId node ID's index
  */
-void Node::Display(int _size)
+void Node::Display(int _size, int NodeId)
 {
     int i = 0;
     for (i = 0; i < _size; i++)
@@ -294,7 +294,7 @@ void BTree::Display()
     queue<Node *> q;
     q.push(nodes);
     int level = 0;
-    int index = 0;
+    int NodeId = 0;
     while (!q.empty())
     {
         int NodeCount = q.size();
@@ -305,8 +305,8 @@ void BTree::Display()
             Node *node = q.front();
             q.pop();
             // display the current node
-            cout << index << "[";
-            node->Display(node->size);
+            cout << NodeId << "[";
+            node->Display(node->size, NodeId);
             cout << "] ";
             // enqueue the children
             for (int i = 0; i < node->size + 1; i++)
@@ -317,7 +317,7 @@ void BTree::Display()
                 }
             }
             NodeCount--;
-            index++;
+            NodeId++;
         }
         level++;
         cout << endl;

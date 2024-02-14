@@ -46,7 +46,7 @@ public:
     // split child helper function if current node is full
     void SplitChild(int i, Node* CurrNode);
     // Display node
-    void Display(int _size);
+    void Display(int _size, int NodeId);
     // deconstructor
     ~Node();
 
