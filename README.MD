@@ -3,7 +3,7 @@
 ## How to run?
 
 1. `git clone https://github.com/amandaay/IndexingNoSQLDB.git`
-2. To compile, `clang++ -std=c++11 BTree.cpp -o <name-you-want-to-give>` or `g++ -std=c++11 BTree.cpp BTreeTest.cpp -o <name-you-want-to-give>`
+2. To compile, `clang++ -std=c++11 BTree.cpp BTreeTest.cpp -o <name-you-want-to-give>` or `g++ -std=c++11 BTree.cpp BTreeTest.cpp -o <name-you-want-to-give>`
 3. `./<name-you-want-to-give> <testFile.txt> <NODESIZE>`, e.g. `<name-you-want-to-give>` = `BTreeTest`
 
 ## Instructions
@@ -30,7 +30,7 @@ https://stackoverflow.com/questions/50800605/using-binary-search-in-b-tree#:~:te
 ## Authors
 
 So Man Amanda Au-Yeung, NUID: 001673193<br/>
-Chin Yuen Au (Isaac)
+Chin Yuen Au (Isaac), NUID: 002639665<br/>
 
 ## Demo Details
 Group 1
