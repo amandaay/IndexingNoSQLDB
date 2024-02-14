@@ -9,6 +9,10 @@
  *
  */
 #include "BTree.h"
+#include <iostream>
+#include <queue>
+
+using namespace std;
 
 /**
  * @brief Node definition Construct a new Node:: Node object
@@ -139,17 +143,36 @@ void Node::SplitChild(int i, Node *CurrNode)
     size++;
 }
 
-
-
-
 /**
- * @brief check if there's any children,
+ * @brief displaying every single done with its node index
  *
- * @return true if no children
- * @return false there's children
+ * @param _size current size of the nodes
+ * @param NodeId node ID's index
  */
-bool Node::IsLeaf(Node* node) {
-   return node->children == NULL;
+void Node::Display(int _size, int NodeId)
+{
+    int i = 0;
+    for (i = 0; i < _size; i++)
+    {
+        if (i != _size - 1)
+        {
+            cout << values[i] << ",";
+        }
+        else
+        {
+            cout << values[i];
+        }
+    }
+    if (i < 2 * degree + 1)
+    {
+        // format ","s per requirement
+        int CurrSize = i;
+        while (CurrSize < 2 * degree - 1)
+        {
+            cout << ",";
+            CurrSize++;
+        }
+    }
 }
 
 /**
@@ -222,44 +245,84 @@ Node *BTree::getRootNode()
  */
 void BTree::Insert(int value)
 { // if root node is null, need to create a new root for the empty tree
-  if (!nodes)
-  {
-    // create a new root with minimum degree and marks it as leaf since it is the only node initially
-    nodes = new Node(degree, true);
-    // insert the value into the root node at index 0
-    nodes->values[0] = value;
-    // update the number of keys in the root node to 1
-    nodes->size = 1;
-  } else 
-  { 
-    // if node is full after insertion, need to split
-    if (nodes->size == 2 * degree - 1) 
+    if (!nodes)
     {
-        // create a new node 'new_root' which will become the new root after splitting the current root
-        Node *new_root = new Node(degree, false);
-        // set the current root to be child of new root 'new_root' 
-        new_root->children[0] = nodes;
-        // split the child node of 'new_root' at index 0, which is the current root node
-        new_root->SplitChild(0, nodes);
-        // inserts the new key 'value' into the appropriate child node of 'new_root'
-        int i = 0;
-        if (new_root->values[0] < value)
-            i++;
-        new_root->children[i]->NodeInsert(value);
-        // update root of the B-tree to be new node 'new_root'
-        nodes = new_root;
-    } else
-        // insert new key 'value' into root node if it is not full
-        nodes->NodeInsert(value);
-  }
+        // create a new root with minimum degree and marks it as leaf since it is the only node initially
+        nodes = new Node(degree, true);
+        // insert the value into the root node at index 0
+        nodes->values[0] = value;
+        // update the number of keys in the root node to 1
+        nodes->size = 1;
+    }
+    else
+    {
+        // if node is full after insertion, need to split
+        if (nodes->size == 2 * degree - 1)
+        {
+            // create a new node 'new_root' which will become the new root after splitting the current root
+            Node *new_root = new Node(degree, false);
+            // set the current root to be child of new root 'new_root'
+            new_root->children[0] = nodes;
+            // split the child node of 'new_root' at index 0, which is the current root node
+            new_root->SplitChild(0, nodes);
+            // inserts the new key 'value' into the appropriate child node of 'new_root'
+            int i = 0;
+            if (new_root->values[0] < value)
+                i++;
+            new_root->children[i]->NodeInsert(value);
+            // update root of the B-tree to be new node 'new_root'
+            nodes = new_root;
+        }
+        else
+            // insert new key 'value' into root node if it is not full
+            nodes->NodeInsert(value);
+    }
 }
 
 /**
- * @brief
+ * @brief Display of the entire constructed tree using level order traversal
  *
  */
 void BTree::Display()
 {
+    // if root is null, we ignore
+    if (!nodes)
+    {
+        cout << "No tree found" << endl;
+        return;
+    }
+    queue<Node *> q;
+    q.push(nodes);
+    int level = 0;
+    int NodeId = 0;
+    while (!q.empty())
+    {
+        int NodeCount = q.size();
+        cout << "L-" << level << ":";
+        // current level
+        while (NodeCount > 0)
+        {
+            Node *node = q.front();
+            q.pop();
+            // display the current node
+            cout << NodeId << "[";
+            node->Display(node->size, NodeId);
+            cout << "] ";
+            // enqueue the children
+            for (int i = 0; i < node->size + 1; i++)
+            {
+                if (node->children[i])
+                {
+                    q.push(node->children[i]);
+                }
+            }
+            NodeCount--;
+            NodeId++;
+        }
+        level++;
+        cout << endl;
+    }
+    cout << endl;
 }
 
 /**

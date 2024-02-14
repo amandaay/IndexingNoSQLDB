@@ -44,11 +44,9 @@ public:
      */
     void NodeInsert(int value);
     // split child helper function if current node is full
-    // void SplitChild(int i, Node* CurrNode);
-    // check if the node is a leaf node
-    // bool IsLeaf(Node* node);
+    void SplitChild(int i, Node* CurrNode);
     // Display node
-    void Display(int node);
+    void Display(int _size, int NodeId);
     // deconstructor
     ~Node();
 
@@ -61,10 +59,10 @@ class BTree
 private:
     // Node array, including the root nodes
     Node *nodes;
-    //  Number of currently used nodes
-    int CntNodes;
-    // number of currently used values
-    int CntValues;
+    // //  Number of currently used nodes
+    // int CntNodes;
+    // // number of currently used values
+    // int CntValues;
     // degree
     int degree;
 
@@ -78,8 +76,7 @@ public:
     Node *getRootNode();
     // Insert(int value)
     void Insert(int value);
-    // CntValues()- Returns the number of used values.
-    // int CntValues();
+    // Display of the entire tree
     void Display();
     // deconstructor
     ~BTree();
