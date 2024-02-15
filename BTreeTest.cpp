@@ -57,8 +57,8 @@ int main(int argc, char *argv[])
         {
             int value = stoi(token);
             DemoTree.Insert(value);
-            DemoTree.Display();
         }
+        DemoTree.Display();
     }
 
     bool quit = false;
