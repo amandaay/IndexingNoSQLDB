@@ -18,7 +18,7 @@ using namespace std;
  * @brief Node definition Construct a new Node:: Node object
  *
  */
-Node::Node(int _degree, bool _leaf) : degree(_degree), leaf(_leaf)
+Node::Node(int _degree, bool _leaf) : degree(_degree), leaf(_leaf), NodeId(-1)
 {
     // allocate enough space for a new Node
     values = new int[2 * degree - 1];
@@ -58,11 +58,21 @@ int Node::NodeLookup(int value)
 }
 
 /**
+ * @brief return nodeId
+ *
+ * @return int return the NodeId
+ */
+int Node::getNodeId()
+{
+    return NodeId;
+}
+
+/**
  * @brief assuming the leaf node is non full
  * insertion of the dedicated value will be performed
  *
  */
-void Node::NodeInsert(int value)
+void Node::NodeInsert(int value, int &NodeIdCounter)
 {
     // binary search and insert where the element should be at
     // search the index if exist and return null, otherwise where it should be
@@ -88,16 +98,16 @@ void Node::NodeInsert(int value)
         // see index to be inserted is full or not
         if (children[i]->size == 2 * degree - 1)
         {
-            SplitChild(i, children[i]);
+            SplitChild(i, children[i], NodeIdCounter);
             if (values[i] < value)
             {
                 i++;
             }
-            children[i]->NodeInsert(value);
+            children[i]->NodeInsert(value, NodeIdCounter);
         }
         else
         {
-            children[i]->NodeInsert(value);
+            children[i]->NodeInsert(value, NodeIdCounter);
         }
     }
 }
@@ -107,11 +117,11 @@ void Node::NodeInsert(int value)
  *
  * @param CurrNode
  */
-void Node::SplitChild(int i, Node *CurrNode)
+void Node::SplitChild(int i, Node *CurrNode, int &NodeIdCounter)
 {
     // Create a new node that will be the right sibling of CurrNode
     Node *newNode = new Node(degree, CurrNode->leaf);
-
+    newNode->NodeId = NodeIdCounter++;
     // Copy the right half of CurrNode's values and children to newNode
     newNode->size = degree - 1;
     for (int j = 0; j < degree - 1; j++)
@@ -201,7 +211,7 @@ Node::~Node()
  * degree initialize as input
  *
  */
-BTree::BTree(int _degree) : degree(_degree), nodes(nullptr) {}
+BTree::BTree(int _degree) : degree(_degree), nodes(nullptr), NodeIdCounter(0) {}
 
 /**
  * @brief Search the search value
@@ -210,7 +220,7 @@ BTree::BTree(int _degree) : degree(_degree), nodes(nullptr) {}
  * @return true if search value found else return false
  */
 
-bool BTree::Lookup(Node *root, int value)
+bool BTree::Lookup(Node *root, int value, vector<int> &NodeIds)
 {
     nodes = root;
     // if root node is null, then we cannot perform search
@@ -219,6 +229,7 @@ bool BTree::Lookup(Node *root, int value)
         return false;
     }
     int i = nodes->NodeLookup(value);
+    NodeIds.push_back(nodes->getNodeId());
     // check the current node if the search value exist
     if (i != -1 && nodes->values[i] == value)
     {
@@ -229,7 +240,7 @@ bool BTree::Lookup(Node *root, int value)
     {
         return false;
     }
-    return Lookup(nodes->children[i], value);
+    return Lookup(nodes->children[i], value, NodeIds);
 }
 
 /**
@@ -243,7 +254,17 @@ Node *BTree::getRootNode()
 }
 
 /**
- * @brief
+ * @brief reset root nodes to its root
+ *
+ * @param root
+ */
+void BTree::setRootNode(Node *root)
+{
+    nodes = root;
+}
+/**
+ * @brief BTree insertion with a new value
+ * @param value insertion value
  *
  */
 void BTree::Insert(int value)
@@ -256,6 +277,8 @@ void BTree::Insert(int value)
         nodes->values[0] = value;
         // update the number of keys in the root node to 1
         nodes->size = 1;
+        // update nodeId
+        nodes->NodeId = NodeIdCounter++;
     }
     else
     {
@@ -264,21 +287,23 @@ void BTree::Insert(int value)
         {
             // create a new node 'new_root' which will become the new root after splitting the current root
             Node *new_root = new Node(degree, false);
+            // update node Id
+            new_root->NodeId = NodeIdCounter++;
             // set the current root to be child of new root 'new_root'
             new_root->children[0] = nodes;
             // split the child node of 'new_root' at index 0, which is the current root node
-            new_root->SplitChild(0, nodes);
+            new_root->SplitChild(0, nodes, NodeIdCounter);
             // inserts the new key 'value' into the appropriate child node of 'new_root'
             int i = 0;
             if (new_root->values[0] < value)
                 i++;
-            new_root->children[i]->NodeInsert(value);
+            new_root->children[i]->NodeInsert(value, NodeIdCounter);
             // update root of the B-tree to be new node 'new_root'
             nodes = new_root;
         }
         else
             // insert new key 'value' into root node if it is not full
-            nodes->NodeInsert(value);
+            nodes->NodeInsert(value, NodeIdCounter);
     }
 }
 
@@ -286,7 +311,7 @@ void BTree::Insert(int value)
  * @brief Display of the entire constructed tree using level order traversal
  *
  */
-void BTree::Display(bool Lookup)
+void BTree::Display()
 {
     // if root is null, we ignore
     if (!nodes)
@@ -297,31 +322,20 @@ void BTree::Display(bool Lookup)
     queue<Node *> q;
     q.push(nodes);
     int level = 0;
-    int NodeId = 0;
     while (!q.empty())
     {
         int NodeCount = q.size();
-        if (!Lookup)
-        {
-            cout << "L-" << level << ": ";
-        }
-        // current level
+        // display levels
+        cout << "L-" << level << ": ";
         while (NodeCount > 0)
         {
             Node *node = q.front();
             q.pop();
             // display the current node
-            if (!Lookup)
-            {
-                cout << NodeId << "[";
-                node->Display(node->size, NodeId);
-                cout << "] ";
-            }
-            else
-            {
-                cout << NodeId << "->";
-                // node->Display(node->size, NodeId);
-            }
+            cout << node->getNodeId() << "[";
+            node->Display(node->size, node->getNodeId());
+            cout << "] ";
+
             // enqueue the children
             for (int i = 0; i < node->size + 1; i++)
             {
@@ -331,7 +345,6 @@ void BTree::Display(bool Lookup)
                 }
             }
             NodeCount--;
-            NodeId++;
         }
         level++;
         cout << endl;
@@ -345,5 +358,9 @@ void BTree::Display(bool Lookup)
  */
 BTree::~BTree()
 {
-    delete nodes;
+    if (nodes != nullptr)
+    {
+        delete nodes;
+        nodes = nullptr;
+    }
 }
