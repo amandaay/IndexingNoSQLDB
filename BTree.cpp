@@ -344,10 +344,17 @@ void BTree::Display()
             // enqueue the children
             for (int i = 0; i < node->size + 1; i++)
             {
+                // cout << "line 330 ";
                 if (node->children[i])
                 {
+                    // cout << "line 333 ";
                     q.push(node->children[i]);
+                    // cout << "line 335 ";
                 }
+                //  else
+                // {
+                //     cout << "child[" << i << "] is null ";
+                // }
             }
             NodeCount--;
         }
