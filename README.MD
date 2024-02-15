@@ -12,13 +12,16 @@
 2. After building the BTree, the user can input values to be searched.
 
 ## Known bugs
+No known bugs so far
 
 ## Limitations
+1. NodeId cannot be -1 according to our implementation.
 
 ## Assumptions
 
 1. If user does not provide a nodesize, the default value will be 5. <br/>
 2. Note that Nodesize is equivalent to Knuth order of a B Tree.
+3. NodeId cannot be -1.
 
 ## Source
 
