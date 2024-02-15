@@ -15,6 +15,7 @@
 #include <sstream>
 #include <string>
 #include <cmath>
+#include <vector>
 
 using namespace std;
 
@@ -58,6 +59,7 @@ int main(int argc, char *argv[])
             int value = stoi(token);
             DemoTree.Insert(value);
         }
+        // creating a tree
         DemoTree.Display();
     }
 
@@ -66,31 +68,64 @@ int main(int argc, char *argv[])
 
     while (!quit)
     {
-        cout << "(1) Look-up, (2) Insert, or (q) Quit?";
+        cout << "(1) Look-up, (2) Insert, or (q) Quit? ";
         cin >> choice;
+        Node *root = DemoTree.getRootNode();
         switch (choice)
         {
         case '1':
         {
+            string StrLookUpVal;
+            cout << "What key are you searching for? ";
+            cin >> StrLookUpVal;
             int LookUpVal;
-            cout << "What key are you searching for?";
-            cin >> LookUpVal;
-            if (DemoTree.Lookup(DemoTree.getRootNode(), LookUpVal))
+            try
             {
-                // TODO: Display
+                LookUpVal = stoi(StrLookUpVal);
+            }
+            catch (const invalid_argument &e)
+            {
+                cout << "Invalid input. Please enter an integer." << endl;
+                break;
+            }
+            vector<int> NodeIds;
+            if (DemoTree.Lookup(root, LookUpVal, NodeIds))
+            {
+                for (auto j = NodeIds.begin(); j != NodeIds.end(); j++)
+                {
+                    cout << *j;
+                    // Check if j is not pointing to the last element
+                    if (j != NodeIds.end() - 1)
+                    {
+                        cout << " -> ";
+                    }
+                }
+                cout << endl;
             }
             else
             {
-                cout << "No key found" << endl;
+                cout << "No key found." << endl;
             }
+            DemoTree.setRootNode(root);
             break;
         }
         case '2':
         {
-            cout << "What key do you insert?";
+            string StrInsertVal;
+            cout << "What key do you insert? ";
+            cin >> StrInsertVal;
             int InsertVal;
-            cin >> InsertVal;
+            try
+            {
+                InsertVal = stoi(StrInsertVal);
+            }
+            catch (const invalid_argument &e)
+            {
+                cout << "Invalid input. Please enter an integer." << endl;
+                break;
+            }
             DemoTree.Insert(InsertVal);
+            DemoTree.Display();
             break;
         }
         case 'q':
@@ -106,7 +141,6 @@ int main(int argc, char *argv[])
         }
         }
     }
-
     // close test file
     testFile.close();
     return 0;

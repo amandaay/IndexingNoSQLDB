@@ -11,6 +11,8 @@
 
 #ifndef BTREE_H
 #define BTREE_H
+#include <vector>
+using namespace std;
 
 /*
  * Node data structure.
@@ -30,21 +32,20 @@ private:
     int size;
     // indicates if the current node is a leaf node
     bool leaf;
+    // Node Id
+    int NodeId;
 
 public:
     // Node Constructor Declaration: initiates a new node
     Node(int _degree, bool _leaf);
     // nodeLookup(int value) - search the index of the value in the specific node
     int NodeLookup(int value);
-    /*
-     * nodeInsert(int value, int pointer)
-     *    - -2 if the value already exists in the specified node
-     *    - -1 if the value is inserted into the node or
-     *            something else if the parent node has to be restructured
-     */
-    void NodeInsert(int value);
+    // getter for nodeId
+    int getNodeId();
+    //Node insert values to the specific node
+    void NodeInsert(int value, int &NodeIdCounter);
     // split child helper function if current node is full
-    void SplitChild(int i, Node* CurrNode);
+    void SplitChild(int i, Node *CurrNode, int &NodeIdCounter);
     // Display node
     void Display(int _size, int NodeId);
     // deconstructor
@@ -59,21 +60,21 @@ class BTree
 private:
     // Node array, including the root nodes
     Node *nodes;
-    // //  Number of currently used nodes
-    // int CntNodes;
-    // // number of currently used values
-    // int CntValues;
     // degree
     int degree;
+    // NodeIdCounter
+    int NodeIdCounter;
 
 public:
     // constructor for BTree
     BTree(int _degree);
     // Lookup(int value)
     // - True if the value was found.
-    bool Lookup(Node *root, int value);
+    bool Lookup(Node *root, int value, vector<int> &NodeIds);
     // Public method to access the root nodes
     Node *getRootNode();
+    // Setter method for the root node pointer
+    void setRootNode(Node *root);
     // Insert(int value)
     void Insert(int value);
     // Display of the entire tree
