@@ -30,7 +30,7 @@ https://stackoverflow.com/questions/50800605/using-binary-search-in-b-tree#:~:te
 ## Authors
 
 So Man Amanda Au-Yeung, NUID: 001673193<br/>
-Chin Yuen Au (Isaac)
+Chin Yuen Au (Isaac), NUID: 002639665<br/>
 
 ## Demo Details
 Group 1
