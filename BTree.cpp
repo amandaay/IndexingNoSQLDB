@@ -21,7 +21,7 @@ using namespace std;
 Node::Node(int _degree, bool _leaf) : degree(_degree), leaf(_leaf)
 {
     // allocate enough space for a new Node
-    values = new int[2 * degree + 1];
+    values = new int[2 * degree - 1];
     // initialize node pointers for the Node's children ptr
     children = new Node *[2 * degree];
     // initialize number of values = 0
@@ -86,14 +86,17 @@ void Node::NodeInsert(int value)
     {
         // non leaf
         // see index to be inserted is full or not
-        if (children[i]->size == 2 * degree + 1)
+        if (children[i]->size == 2 * degree - 1)
         {
-            // TODO: uncomment after finishing splitchild
-            // SplitChild(i, children[i]);
+            SplitChild(i, children[i]);
             if (values[i] < value)
             {
                 i++;
             }
+            children[i]->NodeInsert(value);
+        }
+        else
+        {
             children[i]->NodeInsert(value);
         }
     }
@@ -283,7 +286,7 @@ void BTree::Insert(int value)
  * @brief Display of the entire constructed tree using level order traversal
  *
  */
-void BTree::Display()
+void BTree::Display(bool Lookup)
 {
     // if root is null, we ignore
     if (!nodes)
@@ -298,16 +301,27 @@ void BTree::Display()
     while (!q.empty())
     {
         int NodeCount = q.size();
-        cout << "L-" << level << ":";
+        if (!Lookup)
+        {
+            cout << "L-" << level << ": ";
+        }
         // current level
         while (NodeCount > 0)
         {
             Node *node = q.front();
             q.pop();
             // display the current node
-            cout << NodeId << "[";
-            node->Display(node->size, NodeId);
-            cout << "] ";
+            if (!Lookup)
+            {
+                cout << NodeId << "[";
+                node->Display(node->size, NodeId);
+                cout << "] ";
+            }
+            else
+            {
+                cout << NodeId << "->";
+                // node->Display(node->size, NodeId);
+            }
             // enqueue the children
             for (int i = 0; i < node->size + 1; i++)
             {
@@ -331,6 +345,5 @@ void BTree::Display()
  */
 BTree::~BTree()
 {
-    // TODO: fix memory deallocation, iterate thru every node and its children
     delete nodes;
 }

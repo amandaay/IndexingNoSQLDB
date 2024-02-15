@@ -77,7 +77,7 @@ public:
     // Insert(int value)
     void Insert(int value);
     // Display of the entire tree
-    void Display();
+    void Display(bool Lookup);
     // deconstructor
     ~BTree();
 };

@@ -57,8 +57,9 @@ int main(int argc, char *argv[])
         {
             int value = stoi(token);
             DemoTree.Insert(value);
-            DemoTree.Display();
         }
+        // creating a tree. Thus, false
+        DemoTree.Display(false);
     }
 
     bool quit = false;
@@ -66,31 +67,33 @@ int main(int argc, char *argv[])
 
     while (!quit)
     {
-        cout << "(1) Look-up, (2) Insert, or (q) Quit?";
+        cout << "(1) Look-up, (2) Insert, or (q) Quit? ";
         cin >> choice;
         switch (choice)
         {
         case '1':
         {
             int LookUpVal;
-            cout << "What key are you searching for?";
+            cout << "What key are you searching for? ";
             cin >> LookUpVal;
             if (DemoTree.Lookup(DemoTree.getRootNode(), LookUpVal))
             {
-                // TODO: Display
+                // lookup = True
+                DemoTree.Display(true);
             }
             else
             {
-                cout << "No key found" << endl;
+                cout << "No key found." << endl;
             }
             break;
         }
         case '2':
         {
-            cout << "What key do you insert?";
+            cout << "What key do you insert? ";
             int InsertVal;
             cin >> InsertVal;
             DemoTree.Insert(InsertVal);
+            DemoTree.Display(false);
             break;
         }
         case 'q':
