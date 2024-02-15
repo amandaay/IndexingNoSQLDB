@@ -16,6 +16,8 @@ using namespace std;
 
 /**
  * @brief Node definition Construct a new Node:: Node object
+ * @param _degree degree of node
+ * @param _leaf if it's leafnode or not
  *
  */
 Node::Node(int _degree, bool _leaf) : degree(_degree), leaf(_leaf), NodeId(-1)
@@ -216,7 +218,10 @@ BTree::BTree(int _degree) : degree(_degree), nodes(nullptr), NodeIdCounter(0) {}
 /**
  * @brief Search the search value
  *
+ * @param root root node of every recursive function of the tree
  * @param value search value
+ * @param NodeIds a list of node ids
+ *
  * @return true if search value found else return false
  */
 
@@ -246,7 +251,7 @@ bool BTree::Lookup(Node *root, int value, vector<int> &NodeIds)
 /**
  * @brief get access to nodes
  *
- * @return Node*
+ * @return Node pointer
  */
 Node *BTree::getRootNode()
 {
@@ -256,7 +261,7 @@ Node *BTree::getRootNode()
 /**
  * @brief reset root nodes to its root
  *
- * @param root
+ * @param root root pointer
  */
 void BTree::setRootNode(Node *root)
 {

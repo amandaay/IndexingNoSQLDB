@@ -42,7 +42,7 @@ public:
     int NodeLookup(int value);
     // getter for nodeId
     int getNodeId();
-    //Node insert values to the specific node
+    // Node insert values to the specific node
     void NodeInsert(int value, int &NodeIdCounter);
     // split child helper function if current node is full
     void SplitChild(int i, Node *CurrNode, int &NodeIdCounter);
@@ -68,14 +68,13 @@ private:
 public:
     // constructor for BTree
     BTree(int _degree);
-    // Lookup(int value)
-    // - True if the value was found.
+    // Lookup - True if the value was found.
     bool Lookup(Node *root, int value, vector<int> &NodeIds);
     // Public method to access the root nodes
     Node *getRootNode();
     // Setter method for the root node pointer
     void setRootNode(Node *root);
-    // Insert(int value)
+    // Insert specific value to the tree
     void Insert(int value);
     // Display of the entire tree
     void Display();
