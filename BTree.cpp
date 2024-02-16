@@ -117,7 +117,8 @@ void Node::NodeInsert(int value, int &NodeIdCounter)
 /**
  * @brief splitting child when current node is full
  *
- * @param CurrNode
+ * @param CurrNode node ptr to current node
+ * 
  */
 void Node::SplitChild(int i, Node *CurrNode, int &NodeIdCounter)
 {
