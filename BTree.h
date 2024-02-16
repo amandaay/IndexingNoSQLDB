@@ -71,7 +71,7 @@ private:
 
 public:
     // constructor for BTree
-    BTree(int _degree);
+    BTree(int nodesize);
     // Lookup - True if the value was found.
     bool Lookup(Node *root, int value, vector<int> &NodeIds);
     // Public method to access the root nodes

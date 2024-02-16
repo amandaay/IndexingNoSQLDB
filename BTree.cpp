@@ -22,7 +22,6 @@ using namespace std;
  */
 Node::Node(int _degree, bool _leaf) : degree(_degree), leaf(_leaf), NodeId(-1)
 {
-    // allocate enough space for a new Node
     values = new int[2 * degree - 1];
     // initialize node pointers for the Node's children ptr
     children = new Node *[2 * degree];
@@ -214,7 +213,13 @@ Node::~Node()
  * degree initialize as input
  *
  */
-BTree::BTree(int _degree) : degree(_degree), nodes(nullptr), NodeIdCounter(0) {}
+BTree::BTree(int nodesize) : nodes(nullptr), NodeIdCounter(0) {
+    if (nodesize % 2) {
+        degree = nodesize / 2 + 1;
+    } else {
+        degree = nodesize / 2;
+    }
+}
 
 /**
  * @brief Search the search value
