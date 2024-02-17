@@ -28,7 +28,7 @@ private:
     Node **children;
     // CLRS degree of the node, i.e. minimum number of children per node
     int degree;
-    // Number of entries (Rule in B Trees: d <= size <= 2 * d)
+    // Number of value
     int size;
     // indicates if the current node is a leaf node
     bool leaf;
@@ -47,7 +47,7 @@ public:
     // split child helper function if current node is full
     void SplitChild(int i, Node *CurrNode, int &NodeIdCounter);
     // Display node
-    void Display(int _size, int NodeId);
+    void Display(int _size, int NodeId, int Nodesize);
     // deconstructor
     ~Node();
 
@@ -71,7 +71,7 @@ private:
 
 public:
     // constructor for BTree
-    BTree(int nodesize);
+    BTree(int _degree);
     // Lookup - True if the value was found.
     bool Lookup(Node *root, int value, vector<int> &NodeIds);
     // Public method to access the root nodes
@@ -81,7 +81,7 @@ public:
     // Insert specific value to the tree
     void Insert(int value);
     // Display of the entire tree
-    void Display();
+    void Display(int Nodesize);
     // deconstructor
     ~BTree();
 };

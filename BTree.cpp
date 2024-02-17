@@ -11,6 +11,7 @@
 #include "BTree.h"
 #include <iostream>
 #include <queue>
+#include <cmath>
 
 using namespace std;
 
@@ -117,7 +118,7 @@ void Node::NodeInsert(int value, int &NodeIdCounter)
  * @brief splitting child when current node is full
  *
  * @param CurrNode node ptr to current node
- * 
+ *
  */
 void Node::SplitChild(int i, Node *CurrNode, int &NodeIdCounter)
 {
@@ -126,16 +127,26 @@ void Node::SplitChild(int i, Node *CurrNode, int &NodeIdCounter)
     newNode->NodeId = NodeIdCounter++;
     // Copy the right half of CurrNode's values and children to newNode
     newNode->size = degree - 1;
+    int nodesize = 2 * degree - 1;
+    int index;
+    if (nodesize % 2)
+    {
+        index = degree;
+    }
+    else
+    {
+        index = degree - 1;
+    }
     for (int j = 0; j < degree - 1; j++)
     {
-        newNode->values[j] = CurrNode->values[j + degree];
+        newNode->values[j] = CurrNode->values[j + index];
     }
 
     if (!CurrNode->leaf)
     {
         for (int j = 0; j < degree; j++)
         {
-            newNode->children[j] = CurrNode->children[j + degree];
+            newNode->children[j] = CurrNode->children[j + index];
         }
     }
 
@@ -164,7 +175,7 @@ void Node::SplitChild(int i, Node *CurrNode, int &NodeIdCounter)
  * @param _size current size of the nodes
  * @param NodeId node ID's index
  */
-void Node::Display(int _size, int NodeId)
+void Node::Display(int _size, int NodeId, int Nodesize)
 {
     int i = 0;
     for (i = 0; i < _size; i++)
@@ -178,15 +189,12 @@ void Node::Display(int _size, int NodeId)
             cout << values[i];
         }
     }
-    if (i < 2 * degree + 1)
+    // format ","s per requirement
+    int CurrSize = i;
+    while (CurrSize < Nodesize)
     {
-        // format ","s per requirement
-        int CurrSize = i;
-        while (CurrSize < 2 * degree - 1)
-        {
-            cout << ",";
-            CurrSize++;
-        }
+        cout << ",";
+        CurrSize++;
     }
 }
 
@@ -213,13 +221,7 @@ Node::~Node()
  * degree initialize as input
  *
  */
-BTree::BTree(int nodesize) : nodes(nullptr), NodeIdCounter(0) {
-    if (nodesize % 2) {
-        degree = nodesize / 2 + 1;
-    } else {
-        degree = nodesize / 2;
-    }
-}
+BTree::BTree(int _degree) : degree(_degree), nodes(nullptr), NodeIdCounter(0) {}
 
 /**
  * @brief Search the search value
@@ -322,7 +324,7 @@ void BTree::Insert(int value)
  * @brief Display of the entire constructed tree using level order traversal
  *
  */
-void BTree::Display()
+void BTree::Display(int Nodesize)
 {
     // if root is null, we ignore
     if (!nodes)
@@ -344,7 +346,7 @@ void BTree::Display()
             q.pop();
             // display the current node
             cout << node->getNodeId() << "[";
-            node->Display(node->size, node->getNodeId());
+            node->Display(node->size, node->getNodeId(), Nodesize);
             cout << "] ";
 
             // enqueue the children

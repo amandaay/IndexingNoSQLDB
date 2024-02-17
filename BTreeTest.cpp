@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
     // parsing file one tree per line
     // from Knuth Order to CLRS degree
     // ref: https://stackoverflow.com/questions/28846377/what-is-the-difference-btw-order-and-degree-in-terms-of-tree-data-structure
-    BTree DemoTree(Nodesize);
+    BTree DemoTree(static_cast<int>(ceil((Nodesize + 1) / 2)));
     cout << "Creating BTree..." << endl;
     string line;
     int value;
@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
             DemoTree.Insert(value);
         }
         // creating a tree
-        DemoTree.Display();
+        DemoTree.Display(Nodesize);
     }
 
     bool quit = false;
@@ -125,7 +125,7 @@ int main(int argc, char *argv[])
                 break;
             }
             DemoTree.Insert(InsertVal);
-            DemoTree.Display();
+            DemoTree.Display(Nodesize);
             break;
         }
         case 'q':
