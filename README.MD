@@ -13,11 +13,9 @@
 
 ## Known bugs
 No known bugs so far.
-Only Odd number nodesize is available.
 
 ## Limitations
 1. NodeId cannot be -1 according to our implementation.
-2. Only odd number nodesize works.
 
 ## Assumptions
 
