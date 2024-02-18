@@ -26,18 +26,18 @@ private:
     int *values;
     // Children ptrs from current node
     Node **children;
-    // CLRS degree of the node, i.e. minimum number of children per node
-    int degree;
     // Number of value
     int size;
     // indicates if the current node is a leaf node
     bool leaf;
     // Node Id
     int NodeId;
+    // nodesize
+    int nodesize;
 
 public:
     // Node Constructor Declaration: initiates a new node
-    Node(int _degree, bool _leaf);
+    Node(int nodesize, bool _leaf);
     // nodeLookup(int value) - search the index of the value in the specific node
     int NodeLookup(int value);
     // getter for nodeId
@@ -47,7 +47,7 @@ public:
     // split child helper function if current node is full
     void SplitChild(int i, Node *CurrNode, int &NodeIdCounter);
     // Display node
-    void Display(int _size, int NodeId, int Nodesize);
+    void Display(int _size, int NodeId);
     // deconstructor
     ~Node();
 
@@ -64,14 +64,14 @@ class BTree
 private:
     // Node array, including the root nodes
     Node *nodes;
-    // degree
-    int degree;
     // NodeIdCounter
     int NodeIdCounter;
+    // nodesize
+    int nodesize;
 
 public:
     // constructor for BTree
-    BTree(int _degree);
+    BTree(int nodesize);
     // Lookup - True if the value was found.
     bool Lookup(Node *root, int value, vector<int> &NodeIds);
     // Public method to access the root nodes
@@ -81,7 +81,7 @@ public:
     // Insert specific value to the tree
     void Insert(int value);
     // Display of the entire tree
-    void Display(int Nodesize);
+    void Display();
     // deconstructor
     ~BTree();
 };
