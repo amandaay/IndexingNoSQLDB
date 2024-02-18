@@ -63,6 +63,7 @@ int main(int argc, char *argv[])
 
     bool quit = false;
     char choice;
+    vector<int> NodeIds;
 
     while (!quit)
     {
@@ -86,7 +87,6 @@ int main(int argc, char *argv[])
                 cout << "Invalid input. Please enter an integer." << endl;
                 break;
             }
-            vector<int> NodeIds;
             if (DemoTree.Lookup(root, LookUpVal, NodeIds))
             {
                 for (auto j = NodeIds.begin(); j != NodeIds.end(); j++)
