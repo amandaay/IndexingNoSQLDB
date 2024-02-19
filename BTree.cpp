@@ -206,7 +206,7 @@ Node::~Node()
 /**
  * @brief BTree constructor
  * Construct a new BTree::BTree object
- * nodesize
+ * @param _nodesize user input nodesize
  *
  */
 BTree::BTree(int _nodesize) : nodesize(_nodesize), nodes(nullptr), NodeIdCounter(0) {}
