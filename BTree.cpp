@@ -211,19 +211,6 @@ Node::~Node()
  */
 BTree::BTree(int _nodesize) : nodesize(_nodesize), nodes(nullptr), NodeIdCounter(0) {}
 
-// /**
-//  * @brief overload Look up function without vector as parameter
-//  *
-//  * @param root root node of BTree
-//  * @param value value to be searched
-//  * @return true if found
-//  * @return false not found
-//  */
-// bool BTree::Lookup(Node *root, int value) {
-//     vector<int> NodeIds;
-//     return Lookup(root, value, NodeIds);
-// }
-
 /**
  * @brief Search the search value
  *
