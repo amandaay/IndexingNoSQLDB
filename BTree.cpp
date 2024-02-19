@@ -79,13 +79,13 @@ void Node::NodeInsert(int value, int &NodeIdCounter)
     // binary search and insert where the element should be at
     // search the index if exist and return null, otherwise where it should be
     int i = NodeLookup(value);
+    if (values[i] == value)
+    {
+        // value already exist, nothing is inserted
+        return;
+    }
     if (leaf)
     {
-        if (values[i] == value)
-        {
-            // value already exist, nothing is inserted
-            return;
-        }
         // shift all the other values towards the right until it reaches the index to be inserted
         for (int j = size; j > i; j--)
         {
@@ -123,14 +123,7 @@ void Node::SplitChild(int i, Node *CurrNode, int &NodeIdCounter)
     Node *newNode = new Node(nodesize, CurrNode->leaf);
     newNode->NodeId = NodeIdCounter++;
     // Calculate the index to split at
-    int splitIndex;
-    if (nodesize % 2) {
-        // For odd nodesize, splitIndex should be the midpoint
-        splitIndex = nodesize / 2;
-    } else {
-        // For even nodesize, splitIndex should be the midpoint minus one
-        splitIndex = nodesize / 2 - 1;
-    }
+    int splitIndex = (nodesize % 2) ? nodesize / 2 : nodesize / 2 - 1;
     // Copy the right half of CurrNode's values and children to newNode
     newNode->size = nodesize - splitIndex - 1; // Subtract 1 for the middle value
     for (int j = 0; j < newNode->size; j++)
@@ -148,13 +141,12 @@ void Node::SplitChild(int i, Node *CurrNode, int &NodeIdCounter)
 
     // Reduce the size of CurrNode
     CurrNode->size = splitIndex;
-
     // Insert the middle value of CurrNode into the parent node at index i
     for (int j = size; j > i; j--)
     {
         children[j + 1] = children[j];
     }
-    children[i + 1] = newNode;
+    children[i + 1] = newNode; 
 
     // Move the middle value of CurrNode to the parent node
     for (int j = size - 1; j >= i; j--)
@@ -162,7 +154,6 @@ void Node::SplitChild(int i, Node *CurrNode, int &NodeIdCounter)
         values[j + 1] = values[j];
     }
     values[i] = CurrNode->values[splitIndex];
-
     size++;
 }
 
@@ -220,6 +211,20 @@ Node::~Node()
  */
 BTree::BTree(int _nodesize) : nodesize(_nodesize), nodes(nullptr), NodeIdCounter(0) {}
 
+
+// /**
+//  * @brief overload Look up function without vector as parameter
+//  * 
+//  * @param root root node of BTree
+//  * @param value value to be searched
+//  * @return true if found
+//  * @return false not found
+//  */
+// bool BTree::Lookup(Node *root, int value) {
+//     vector<int> NodeIds;
+//     return Lookup(root, value, NodeIds);
+// }
+
 /**
  * @brief Search the search value
  *
@@ -272,6 +277,7 @@ void BTree::setRootNode(Node *root)
 {
     nodes = root;
 }
+
 /**
  * @brief BTree insertion with a new value
  * @param value insertion value
@@ -293,7 +299,7 @@ void BTree::Insert(int value)
     else
     {
         // if node is full after insertion, need to split
-        if (nodes->size == nodesize)
+if ((nodes->children[0] && nodes->children[0]->size == nodesize && nodes->size == nodesize) || (nodes->leaf && nodes->size == nodesize))
         {
             // create a new node 'new_root' which will become the new root after splitting the current root
             Node *new_root = new Node(nodesize, false);
@@ -310,10 +316,12 @@ void BTree::Insert(int value)
             new_root->children[i]->NodeInsert(value, NodeIdCounter);
             // update root of the B-tree to be new node 'new_root'
             nodes = new_root;
-        }
-        else
+        } 
+        
+        else {
             // insert new key 'value' into root node if it is not full
             nodes->NodeInsert(value, NodeIdCounter);
+        }
     }
 }
 
