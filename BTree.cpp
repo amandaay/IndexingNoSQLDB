@@ -146,7 +146,7 @@ void Node::SplitChild(int i, Node *CurrNode, int &NodeIdCounter)
     {
         children[j + 1] = children[j];
     }
-    children[i + 1] = newNode; 
+    children[i + 1] = newNode;
 
     // Move the middle value of CurrNode to the parent node
     for (int j = size - 1; j >= i; j--)
@@ -211,10 +211,9 @@ Node::~Node()
  */
 BTree::BTree(int _nodesize) : nodesize(_nodesize), nodes(nullptr), NodeIdCounter(0) {}
 
-
 // /**
 //  * @brief overload Look up function without vector as parameter
-//  * 
+//  *
 //  * @param root root node of BTree
 //  * @param value value to be searched
 //  * @return true if found
@@ -299,7 +298,7 @@ void BTree::Insert(int value)
     else
     {
         // if node is full after insertion, need to split
-if ((nodes->children[0] && nodes->children[0]->size == nodesize && nodes->size == nodesize) || (nodes->leaf && nodes->size == nodesize))
+        if ((nodes->children[0] && nodes->children[0]->size == nodesize && nodes->size == nodesize) || (nodes->leaf && nodes->size == nodesize))
         {
             // create a new node 'new_root' which will become the new root after splitting the current root
             Node *new_root = new Node(nodesize, false);
@@ -316,9 +315,10 @@ if ((nodes->children[0] && nodes->children[0]->size == nodesize && nodes->size =
             new_root->children[i]->NodeInsert(value, NodeIdCounter);
             // update root of the B-tree to be new node 'new_root'
             nodes = new_root;
-        } 
-        
-        else {
+        }
+
+        else
+        {
             // insert new key 'value' into root node if it is not full
             nodes->NodeInsert(value, NodeIdCounter);
         }
