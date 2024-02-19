@@ -57,7 +57,7 @@ public:
 
 /**
  * @brief BTree class for building the BTree
- * 
+ *
  */
 class BTree
 {
