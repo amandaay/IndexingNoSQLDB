@@ -284,8 +284,9 @@ void BTree::Insert(int value)
     }
     else
     {
+        int i = nodes->NodeLookup(value);
         // if node is full after insertion, need to split
-        if ((nodes->children[0] && nodes->children[0]->size == nodesize && nodes->size == nodesize) || (nodes->leaf && nodes->size == nodesize))
+        if ((nodes->children[i] && nodes->children[i]->size == nodesize && nodes->size == nodesize) || (nodes->leaf && nodes->size == nodesize))
         {
             // create a new node 'new_root' which will become the new root after splitting the current root
             Node *new_root = new Node(nodesize, false);
