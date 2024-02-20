@@ -68,12 +68,16 @@ private:
     int NodeIdCounter;
     // nodesize
     int nodesize;
+    // true if there's more than 2 layers meaning internal nodes exist
+    bool InternalNodes;
 
 public:
     // constructor for BTree
     BTree(int nodesize);
     // Lookup - True if the value was found.
     bool Lookup(Node *root, int value, vector<int> &NodeIds);
+    // Search for the full ndoes
+    void Lookup(Node *root, int value, vector<Node* > FullNodes);
     // Public method to access the root nodes
     Node *getRootNode();
     // Setter method for the root node pointer
