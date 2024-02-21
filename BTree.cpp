@@ -423,10 +423,6 @@ void BTree::Display()
         // display levels
         cout << "L-" << level << ": ";
         layers = level + 1;
-        // if (level >= 2)
-        // {
-        // InternalNodes = true;
-        // }
         while (NodeCount > 0)
         {
             Node *node = q.front();
