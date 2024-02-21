@@ -96,6 +96,10 @@ void Node::NodeInsert(int value, int &NodeIdCounter)
     }
     else
     {
+        if (children[i]->values[i] == value)
+        {
+            return;
+        }
         // non leaf
         // see index to be inserted is full or not
         if (children[i]->size == nodesize)
@@ -209,10 +213,10 @@ Node::~Node()
  * @param _nodesize user input nodesize
  *
  */
-BTree::BTree(int _nodesize) : nodesize(_nodesize), nodes(nullptr), NodeIdCounter(0), InternalNodes(false) {}
+BTree::BTree(int _nodesize) : nodesize(_nodesize), nodes(nullptr), NodeIdCounter(0), layers(-1) {}
 
 /**
- * @brief Search the search value
+ * @brief Search the lookup value
  *
  * @param root root node of every recursive function of the tree
  * @param value search value
@@ -220,7 +224,6 @@ BTree::BTree(int _nodesize) : nodesize(_nodesize), nodes(nullptr), NodeIdCounter
  *
  * @return true if search value found else return false
  */
-
 bool BTree::Lookup(Node *root, int value, vector<int> &NodeIds)
 {
     nodes = root;
@@ -245,37 +248,39 @@ bool BTree::Lookup(Node *root, int value, vector<int> &NodeIds)
 }
 
 /**
- * @brief Search the search value
+ * @brief Search the lookup value to reach the closest node
+ *        and append the nodes that are full to the FullNodes vector
  *
  * @param root root node of every recursive function of the tree
  * @param value search value
  * @param FullNodes a list of node ids
  *
- * @return true if search value found else return false
+ * @return true if reaches leaf node else value exist
  */
-
-void BTree::Lookup(Node *root, int value, vector<Node *> FullNodes)
+bool BTree::Lookup(Node *root, int value, vector<Node *> &FullNodes)
 {
     nodes = root;
     // if root node is null, then we cannot perform search
     if (!nodes)
     {
-        return;
+        return false;
     }
     int i = nodes->NodeLookup(value);
+    if (nodes->values[i] == value)
+    {
+        // value already exist, nothing is inserted
+        cout << "Value already exist, nothing to be inserted. Please choose another value." << endl;
+        return false;
+    }
     // check the current node if the search value exist
     if (nodes->size == nodesize)
     {
         FullNodes.push_back(nodes);
     }
-    else
-    {
-        vector<Node *> FullNodes = {};
-    }
     // if it reaches leaf node, it indicates there's no such value
     if (nodes->leaf)
     {
-        return;
+        return true;
     }
     return Lookup(nodes->children[i], value, FullNodes);
 }
@@ -301,6 +306,30 @@ void BTree::setRootNode(Node *root)
 }
 
 /**
+ * @brief Helper function for inserting a new value
+ *
+ * @param node root node that needs to be split
+ * @param value value to be inserted
+ * @return newRoot updated root node
+ */
+Node *BTree::SplitRoot(Node *node, int value)
+{
+    // create a new node 'new_root' which will become the new root after splitting the current root
+    Node *newRoot = new Node(nodesize, false);
+    // update node Id
+    newRoot->NodeId = NodeIdCounter++;
+    // set the current root to be child of new root 'new_root'
+    newRoot->children[0] = node;
+    // split the child node of 'new_root' at index 0, which is the current root node
+    newRoot->SplitChild(0, node, NodeIdCounter);
+    // inserts the new key 'value' into the appropriate child node of 'new_root'
+    int i = (newRoot->values[0] < value) ? 1 : 0;
+    newRoot->children[i]->NodeInsert(value, NodeIdCounter);
+    // update root of the B-tree to be new node 'new_root'
+    return newRoot;
+}
+
+/**
  * @brief BTree insertion with a new value
  * @param value insertion value
  *
@@ -322,66 +351,51 @@ void BTree::Insert(int value)
     {
         Node *root = nodes;
         // if there's more than 2 layers we have to traverse each level to see if the nodes are full
-        if (InternalNodes)
+        if (layers > 2)
         {
             vector<Node *> FullNodes;
             // this is a recursive overload look up function to store all the nodes that are full to a vector
             // if we reach a level where nodes are not full, we reset to an empty vector list
-            Lookup(nodes, value, FullNodes);
+            if (!Lookup(nodes, value, FullNodes))
+            {
+                setRootNode(root);
+                return;
+            }
             // if it's leaf node and it's not full, we just insert
-            if (nodes->leaf && nodes->size < nodesize) {
+            if (nodes->leaf && nodes->size < nodesize)
+            {
                 nodes->NodeInsert(value, NodeIdCounter);
                 // resets the node
                 setRootNode(root);
                 return;
             }
+            // reset root node due to recursion happening in lookup overload, where root node was updated
+            setRootNode(root);
             // if the full node is not empty, meaning we have to traverse thru layers that require a split
-            if (!FullNodes.empty() && nodes->leaf && nodes->size == nodesize)
+            if (FullNodes.size() == layers && root->size == nodesize)
             {
                 for (auto node : FullNodes)
                 {
-                    // create a new node 'new_root' which will become the new root after splitting the current root
-                    Node *new_root = new Node(nodesize, false);
-                    // update node Id
-                    new_root->NodeId = NodeIdCounter++;
-                    // set the current root to be child of new root 'new_root'
-                    new_root->children[0] = node;
-                    // split the child node of 'new_root' at index 0, which is the current root node
-                    new_root->SplitChild(0, node, NodeIdCounter);
-                    // inserts the new key 'value' into the appropriate child node of 'new_root'
-                    int i = 0;
-                    if (new_root->values[0] < value)
-                        i++;
-                    new_root->children[i]->NodeInsert(value, NodeIdCounter);
-                    // update root of the B-tree to be new node 'new_root'
-                    nodes = new_root;
+                    Node *newRoot = SplitRoot(node, value);
+                    if (node == root) {
+                        nodes = newRoot; // Update the tree's root
+                    }
                 }
             }
-            // reset root node due to recursion happening in lookup overload, where root node was updated
-            setRootNode(root);
         }
         else
         {
             // if node is full after insertion, need to split
             int i = nodes->NodeLookup(value);
+            if (nodes->values[i] == value)
+            {
+                // value already exist, nothing is inserted
+                return;
+            }
             if ((nodes->children[i] && nodes->children[i]->size == nodesize && nodes->size == nodesize) || (nodes->leaf && nodes->size == nodesize))
             {
-
-                // create a new node 'new_root' which will become the new root after splitting the current root
-                Node *new_root = new Node(nodesize, false);
-                // update node Id
-                new_root->NodeId = NodeIdCounter++;
-                // set the current root to be child of new root 'new_root'
-                new_root->children[0] = nodes;
-                // split the child node of 'new_root' at index 0, which is the current root node
-                new_root->SplitChild(0, nodes, NodeIdCounter);
-                // inserts the new key 'value' into the appropriate child node of 'new_root'
-                int i = 0;
-                if (new_root->values[0] < value)
-                    i++;
-                new_root->children[i]->NodeInsert(value, NodeIdCounter);
-                // update root of the B-tree to be new node 'new_root'
-                nodes = new_root;
+                Node *newRoot = SplitRoot(nodes, value);
+                nodes = newRoot;
             }
         }
         nodes->NodeInsert(value, NodeIdCounter);
@@ -408,11 +422,11 @@ void BTree::Display()
         int NodeCount = q.size();
         // display levels
         cout << "L-" << level << ": ";
-        // layers = level;
-        if (level >= 2)
-        {
-            InternalNodes = true;
-        }
+        layers = level + 1;
+        // if (level >= 2)
+        // {
+        // InternalNodes = true;
+        // }
         while (NodeCount > 0)
         {
             Node *node = q.front();
