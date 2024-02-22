@@ -256,6 +256,7 @@ bool BTree::Lookup(Node *root, int value, vector<int> &NodeIds)
  * @param FullNodes a list of node ids
  *
  * @return true if reaches leaf node else value exist
+ *         false if value does not exist
  */
 bool BTree::Lookup(Node *root, int value, vector<Node *> &FullNodes)
 {
@@ -277,9 +278,16 @@ bool BTree::Lookup(Node *root, int value, vector<Node *> &FullNodes)
     {
         FullNodes.push_back(nodes);
     }
-    // if it reaches leaf node, it indicates there's no such value
+    else
+    {
+        // if the node is not full, we clear the FullNodes vector
+        FullNodes.clear();
+        // we make sure we add back the current node
+        FullNodes.push_back(nodes);
+    }
     if (nodes->leaf)
     {
+        // it reaches the end of the tree to find where the value should be inserted
         return true;
     }
     return Lookup(nodes->children[i], value, FullNodes);
@@ -349,15 +357,18 @@ void BTree::Insert(int value)
     }
     else
     {
+        // assign root
         Node *root = nodes;
         // if there's more than 2 layers we have to traverse each level to see if the nodes are full
         if (layers > 2)
         {
             vector<Node *> FullNodes;
             // this is a recursive overload look up function to store all the nodes that are full to a vector
-            // if we reach a level where nodes are not full, we reset to an empty vector list
+            // this traverses all the way to leaf node to find the closest node to insert
             if (!Lookup(nodes, value, FullNodes))
             {
+                // if the value already exist, we do not insert
+                // we reset the root back to the original root
                 setRootNode(root);
                 return;
             }
@@ -369,18 +380,22 @@ void BTree::Insert(int value)
                 setRootNode(root);
                 return;
             }
-            // reset root node due to recursion happening in lookup overload, where root node was updated
-            setRootNode(root);
             // if the full node is not empty, meaning we have to traverse thru layers that require a split
             if (FullNodes.size() == layers && root->size == nodesize)
             {
-                for (auto node : FullNodes)
-                {
-                    Node *newRoot = SplitRoot(node, value);
-                    if (node == root) {
-                        nodes = newRoot; // Update the tree's root
-                    }
-                }
+                Node *newRoot = SplitRoot(root, value);
+                root = newRoot;
+                setRootNode(root);
+            }
+            else if (FullNodes.size() > 1)
+            {
+                FullNodes.front()->NodeInsert(value, NodeIdCounter);
+                setRootNode(root);
+            }
+            else
+            {
+                setRootNode(root);
+                nodes->NodeInsert(value, NodeIdCounter);
             }
         }
         else
@@ -397,8 +412,8 @@ void BTree::Insert(int value)
                 Node *newRoot = SplitRoot(nodes, value);
                 nodes = newRoot;
             }
+            nodes->NodeInsert(value, NodeIdCounter);
         }
-        nodes->NodeInsert(value, NodeIdCounter);
     }
 }
 
