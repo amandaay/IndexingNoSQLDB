@@ -400,13 +400,14 @@ void BTree::Insert(int value)
         }
         else
         {
-            // if node is full after insertion, need to split
+            // only 2 layers, we can insert directly
             int i = nodes->NodeLookup(value);
             if (nodes->values[i] == value)
             {
                 // value already exist, nothing is inserted
                 return;
             }
+            // if the root is full, we split the root
             if ((nodes->children[i] && nodes->children[i]->size == nodesize && nodes->size == nodesize) || (nodes->leaf && nodes->size == nodesize))
             {
                 Node *newRoot = SplitRoot(nodes, value);
@@ -460,7 +461,6 @@ void BTree::Display()
         level++;
         cout << endl;
     }
-
     cout << endl;
 }
 

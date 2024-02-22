@@ -8,7 +8,7 @@
 
 ## Instructions
 
-1. In this program, user will have to feed in a textfile similar to `DemoTestFile.t` to implement a BTree. i.e. The textfile must be a set of integers separated by commas.
+1. In this program, user will have to feed in a textfile similar to `DemoTestFile.txt` to implement a BTree. i.e. The textfile must be a set of integers separated by commas.
 2. After building the BTree, the user can input values to be searched.
 
 ## Known bugs
