@@ -1,4 +1,4 @@
-# B Tree Implementation
+# Project 1: B Tree Implementation
 
 ## How to run?
 
@@ -29,6 +29,10 @@ https://www.baeldung.com/cs/b-trees-vs-btrees <br/>
 https://www.programiz.com/dsa/b-tree<br/>
 https://stackoverflow.com/questions/28846377/what-is-the-difference-btw-order-and-degree-in-terms-of-tree-data-structure<br/>
 https://stackoverflow.com/questions/50800605/using-binary-search-in-b-tree#:~:text=In%20practice%2C%20a%20linear%20search,followed%20by%20a%20linear%20search.<br/>
+
+# Project 2: Developing Key-Value NoSQL database with Indexing
+### A continuation of project1
+
 
 ## Authors
 
