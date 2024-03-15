@@ -22,7 +22,7 @@ using namespace std;
 int main(int argc, char *argv[])
 {
     // default size
-    int Nodesize = 5;
+    int nodesize = 5;
     // check if there's an input file with the same arg length
     if (argc != 2 && argc != 3)
     {
@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
     if (argc == 3)
     {
         // convert the input string to its nodesize
-        istringstream(argv[2]) >> Nodesize;
+        istringstream(argv[2]) >> nodesize;
     }
     // parse the filename
     string filename = argv[1];
@@ -44,9 +44,7 @@ int main(int argc, char *argv[])
         return 1;
     }
     // parsing file one tree per line
-    // from Knuth Order to CLRS degree
-    // ref: https://stackoverflow.com/questions/28846377/what-is-the-difference-btw-order-and-degree-in-terms-of-tree-data-structure
-    BTree DemoTree(static_cast<int>(ceil(Nodesize / 2.0)));
+    BTree DemoTree(nodesize);
     cout << "Creating BTree..." << endl;
     string line;
     int value;
