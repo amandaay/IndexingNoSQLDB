@@ -16,9 +16,9 @@ constexpr int INITIAL_SIZE = 1024 * 1024;  // Initial size of database file in b
 struct FCB {
     std::string filename;
     std::string filetype; // Data file or index file
-    int start_block;
-    int end_block;
-    int file_size;  // Number of blocks used
+    int startBlock;
+    int endBlock;
+    int fileSize;  // Number of blocks used
     // Add other necessary fields such as create time, create date, etc.
 };
 
