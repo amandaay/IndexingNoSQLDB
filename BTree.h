@@ -92,4 +92,52 @@ public:
     ~BTree();
 };
 
+
+
+/**
+ * @brief 
+ * 
+ * 
+// Modify the Node structure to store block-based index entries
+class Node
+{
+private:
+    vector<pair<int, int>> indexEntries; // Key and block number
+    bool leaf;
+    int nodeId;
+    int nodesize; // Blocking factor
+
+public:
+    Node(int nodesize, bool _leaf);
+    int NodeLookup(int value);
+    void NodeInsert(int key, int blockNumber, int &nodeIdCounter);
+    void SplitChild(int i, Node *currNode, int &nodeIdCounter);
+    void Display(int _size, int nodeId);
+    ~Node();
+
+    friend class BTree;
+};
+
+// Modify the BTree class to work with the new Node structure
+class BTree
+{
+private:
+    Node *root;
+    int nodeIdCounter;
+    int nodesize;
+
+public:
+    BTree(int nodesize);
+    bool Lookup(Node *root, int value, vector<int> &nodeIds);
+    bool Lookup(Node *root, int value, vector<Node*> &fullNodes);
+    Node *getRootNode();
+    void setRootNode(Node *root);
+    Node *SplitRoot(Node *node, int value);
+    void Insert(int key, int blockNumber);
+    void Display();
+    ~BTree();
+};
+
+ * 
+ */
 #endif // BTREE_H
