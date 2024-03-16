@@ -8,12 +8,13 @@
 #include <vector>
 #include <string>
 #include <ctime>
+#include <unordered_map>
 
 using namespace std;
 
 // Define constants for file system parameters
 constexpr int BLOCK_SIZE = 256;           // Block size in bytes
-constexpr int INITIAL_SIZE = 1024 * 1024; // Initial size of database file in bytes
+constexpr int INITIAL_SIZE = 1024 * 1024; // Initial size of database file in bytes (1024 Mbytes)
 
 // Define structures for File Control Block (FCB) and directory entry
 struct FCB
@@ -39,6 +40,7 @@ private:
     string databaseName;
     fstream databaseFile;
     vector<DirectoryEntry> directory;
+    unordered_map<int, int> index; // Index structure (block index to block number)
 
     // Other private members for block management, file operations, etc.
 
@@ -55,17 +57,19 @@ private:
         INVALID
     };
 
-    Command getCommandType(const std::string &command);
+    Command getCommandType(const string &command);
 
 public:
-    NoSQLDatabase(const std::string &dbName);
+    // constructor of NoSQLDatabase
+    // open PFSfile: Allocate a new 1 MByte "PFS" file if it does not already exist. If it does exist, begin using it for further commands.
+    NoSQLDatabase();
     ~NoSQLDatabase();
 
     // File system operations
     // command: operations to perform.
 
     // open PFSfile: Allocate a new 1 MByte "PFS" file if it does not already exist. If it does exist, begin using it for further commands.
-    void openOrCreateDatabase();
+    void openOrCreateDatabase(string &PFSFile);
     // put myFile: Insert data from your OS file, i.e., "myfile" into your NoSQL database, i.e., PFS file.
     void putDataIntoDatabase();
     // get myFile: Download data file "myfile" from your NoSQL database, i.e., PFS file, and save it to the current OS directory.
