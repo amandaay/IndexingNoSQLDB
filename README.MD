@@ -41,7 +41,7 @@ https://stackoverflow.com/questions/50800605/using-binary-search-in-b-tree#:~:te
 1. To compile, `g++ -std=c++11 -c NoSQLDatabase.cpp main.cpp`
 2. To link object files, `g++ -std=c++17 NoSQLDatabase.o main.o -o NoSQLDb` or `clang++ -std=c++17 NoSQLDatabase.cpp main.cpp -o NoSQLDb`
 3. To run the program, `./NoSQLDb`.
-
+4. Prompt `NoSQL > ` will be shown to enter desired commands.
 
 ## Authors
 
