@@ -12,9 +12,11 @@
 2. After building the BTree, the user can input values to be searched.
 
 ## Known bugs
+
 No known bugs so far.
 
 ## Limitations
+
 1. NodeId cannot be -1 according to our implementation.
 
 ## Assumptions
@@ -31,7 +33,14 @@ https://stackoverflow.com/questions/28846377/what-is-the-difference-btw-order-an
 https://stackoverflow.com/questions/50800605/using-binary-search-in-b-tree#:~:text=In%20practice%2C%20a%20linear%20search,followed%20by%20a%20linear%20search.<br/>
 
 # Project 2: Developing Key-Value NoSQL database with Indexing
+
 ### A continuation of project1
+
+## How to run??
+
+1. To compile, `g++ -std=c++11 -c NoSQLDatabase.cpp main.cpp`
+2. To link object files, `g++ -std=c++17 NoSQLDatabase.o main.o -o NoSQLDb` or `clang++ -std=c++17 NoSQLDatabase.cpp main.cpp -o NoSQLDb`
+3. To run the program, `./NoSQLDb`.
 
 
 ## Authors
@@ -40,7 +49,9 @@ So Man Amanda Au-Yeung, NUID: 001673193<br/>
 Chin Yuen Au (Isaac), NUID: 002639665<br/>
 
 ### Grading TA
+
 Moreno Gong (Gongtianchou)
 
 ## Demo Details
+
 Group 1
