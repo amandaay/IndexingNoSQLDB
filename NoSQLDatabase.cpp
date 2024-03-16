@@ -6,7 +6,7 @@
 
 using namespace std;
 
-NoSQLDatabase::NoSQLDatabase(const std::string& dbName) : databaseName(dbName) {
+NoSQLDatabase::NoSQLDatabase(const string& dbName) : databaseName(dbName) {
     // Initialize other members
 }
 
@@ -51,5 +51,58 @@ void NoSQLDatabase::killDatabase() {
 
 void NoSQLDatabase::runCLI() {
     // Implement the command-line interface
+    string command;
+
+    do {
+        // prompt user input
+        cout << "NoSQL > ";
+
+        // get user input
+        getline(cin, command);
+
+        // process the command
+        if (command.empty()){
+            cout << "Invalid command" << endl;
+            continue;
+        }
+
+        // extract the command keyword
+        string keyword = command.substr(0, command.find(" "));
+
+        // Convert the command keyword to lowercase for case-insensitive matching
+        transform(keyword.begin(), keyword.end(), keyword.begin(), ::tolower);
+
+        // Execute actions based on the command keyword
+        switch (getCommandType(keyword)) {
+            case OPEN:
+                openOrCreateDatabase();
+                break;
+            case PUT:
+                putDataIntoDatabase();
+                break;
+            case GET:
+                getDataFromDatabase();
+                break;
+            case RM:
+                delFileFromDatabase();
+                break;
+            case DIR:
+                listAllDataFromDatabase();
+                break;
+            case FIND:
+                findValueFromDatabase();
+                break;
+            case KILL:
+                killDatabase();
+                break;
+            case QUIT:
+                quitDatabase();
+                break;
+            case INVALID:
+                cout << "Invalid command" << endl;
+                break;
+        }
+
+    } while (true);
 
 }

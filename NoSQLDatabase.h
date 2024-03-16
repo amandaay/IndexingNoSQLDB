@@ -42,6 +42,21 @@ private:
 
     // Other private members for block management, file operations, etc.
 
+    enum Command
+    {
+        OPEN,
+        PUT,
+        GET,
+        RM,
+        DIR,
+        FIND,
+        KILL,
+        QUIT,
+        INVALID
+    };
+
+    Command getCommandType(const std::string &command);
+
 public:
     NoSQLDatabase(const std::string &dbName);
     ~NoSQLDatabase();
