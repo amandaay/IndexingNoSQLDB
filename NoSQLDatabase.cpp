@@ -8,13 +8,27 @@
 using namespace std;
 using namespace std::filesystem;
 
-NoSQLDatabase::NoSQLDatabase()
+NoSQLDatabase::NoSQLDatabase(): bTree(INITIAL_SIZE / BLOCK_SIZE)
 {
+
 }
 
 NoSQLDatabase::~NoSQLDatabase()
 {
     // Cleanup resources
+}
+
+// Implement B-tree insertion method
+void NoSQLDatabase::insertIntoBTree(int key)
+{
+    bTree.Insert(key);
+}
+
+// Implement B-tree search method
+bool NoSQLDatabase::searchInBTree(int key)
+{
+    vector<int> NodeIds;
+    return bTree.Lookup(bTree.getRootNode(), key, NodeIds);
 }
 
 void NoSQLDatabase::openOrCreateDatabase(string &PFSFile)
@@ -38,6 +52,7 @@ void NoSQLDatabase::openOrCreateDatabase(string &PFSFile)
     else
     {
         cout << "Creating database " << databaseName << endl;
+        // Open the database file for appending in binary mode
         databaseFile.open(filePath, ios::out | ios::binary);
         if (!databaseFile.is_open())
         {
@@ -45,12 +60,10 @@ void NoSQLDatabase::openOrCreateDatabase(string &PFSFile)
             return;
         }
 
-        int numIndexBlocks = INITIAL_SIZE / BLOCK_SIZE;
-        for (int i = 0; i < numIndexBlocks; ++i)
-        {
-            // Initialize index entries to -1 (indicating free block)
-            index[i] = -1;
-        }
+        int blockingFactor = INITIAL_SIZE / BLOCK_SIZE;
+        // Initialize B-tree index
+        BTree btree(blockingFactor);
+
         databaseFile.close();
     }
 }
@@ -86,6 +99,11 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
 
         // Write data into the NoSQL database file
         database.write(buffer, bytesRead);
+
+        // Index the key using B-tree
+        // Assuming key is an integer extracted from the data
+        int key; // Extract key from data
+        insertIntoBTree(key);
     }
 
     // Close the files

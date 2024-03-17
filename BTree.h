@@ -66,7 +66,7 @@ private:
     Node *nodes;
     // NodeIdCounter
     int NodeIdCounter;
-    // nodesize
+    // nodesize --> blocking factor (bfr)
     int nodesize;
     // count layers if there's more than 2 layers meaning internal nodes exist
     int layers;

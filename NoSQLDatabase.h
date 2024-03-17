@@ -9,6 +9,7 @@
 #include <string>
 #include <ctime>
 #include <unordered_map>
+#include "BTree.h"
 
 using namespace std;
 
@@ -40,7 +41,7 @@ private:
     string databaseName;
     fstream databaseFile;
     vector<DirectoryEntry> directory;
-    unordered_map<int, int> index; // Index structure (block index to block number)
+    BTree bTree; // include BTree for indexing
 
     // Other private members for block management, file operations, etc.
 
@@ -85,7 +86,10 @@ public:
     void quitDatabase();
 
     // Index operations
-    // Add functions for block-based indexing
+
+    // Index operations using B-tree
+    void insertIntoBTree(int key);
+    bool searchInBTree(int key);
 
     // Free block management
     // Add functions for bit map vector approach
