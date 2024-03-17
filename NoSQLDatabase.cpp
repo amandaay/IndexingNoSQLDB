@@ -55,9 +55,44 @@ void NoSQLDatabase::openOrCreateDatabase(string &PFSFile)
     }
 }
 
-void NoSQLDatabase::putDataIntoDatabase()
+void NoSQLDatabase::putDataIntoDatabase(string &myFile)
 {
     // Insert data from OS file into NoSQL database
+    // Accessing the databaseName member variable
+    cout << "Putting data into database " << databaseName << " from file " << myFile << endl;
+    ifstream fileToRead(myFile, ios::in | ios::binary);
+    if (!fileToRead.is_open())
+    {
+        cout << "Error: Unable to open file " << myFile << endl;
+        return;
+    }
+
+    // Open the database file for writing in binary mode
+    path databaseFilePath = databaseName + ".db0";
+    fstream database(databaseFilePath, ios::out | ios::app | ios::binary);
+    if (!database.is_open())
+    {
+        cout << "Error: Unable to open database file " << databaseFilePath << endl;
+        return;
+    }
+
+    // Read data from the OS file and write it into the NoSQL database file
+    char buffer[BLOCK_SIZE];
+    while (!fileToRead.eof())
+    {
+        // Read data from the OS file
+        fileToRead.read(buffer, BLOCK_SIZE);
+        streamsize bytesRead = fileToRead.gcount(); // Number of bytes read
+
+        // Write data into the NoSQL database file
+        database.write(buffer, bytesRead);
+    }
+
+    // Close the files
+    fileToRead.close();
+    database.close();
+
+    cout << "Data from file " << myFile << " inserted into database " << databaseFilePath << " successfully." << endl;
 }
 
 void NoSQLDatabase::getDataFromDatabase()
@@ -158,7 +193,8 @@ void NoSQLDatabase::runCLI()
         // Convert the command keyword to lowercase for case-insensitive matching
         transform(keyword.begin(), keyword.end(), keyword.begin(), ::tolower);
 
-        if (command.length() > command.find(" ")) {
+        if (command.length() > command.find(" "))
+        {
             file = command.substr(command.find(" ") + 1, command.length());
         }
 
@@ -166,10 +202,12 @@ void NoSQLDatabase::runCLI()
         switch (getCommandType(keyword))
         {
         case OPEN:
+            // file here is the database
             openOrCreateDatabase(file);
             break;
         case PUT:
-            putDataIntoDatabase();
+            // file here is the file to be put into the database
+            putDataIntoDatabase(file);
             break;
         case GET:
             getDataFromDatabase();

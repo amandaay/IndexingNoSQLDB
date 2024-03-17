@@ -71,7 +71,7 @@ public:
     // open PFSfile: Allocate a new 1 MByte "PFS" file if it does not already exist. If it does exist, begin using it for further commands.
     void openOrCreateDatabase(string &PFSFile);
     // put myFile: Insert data from your OS file, i.e., "myfile" into your NoSQL database, i.e., PFS file.
-    void putDataIntoDatabase();
+    void putDataIntoDatabase(string &myFile);
     // get myFile: Download data file "myfile" from your NoSQL database, i.e., PFS file, and save it to the current OS directory.
     void getDataFromDatabase();
     // rm myFile: Delete "myfile" from your NoSQL database, i.e. PFS file.
