@@ -61,7 +61,6 @@ private:
 
 public:
     // constructor of NoSQLDatabase
-    // open PFSfile: Allocate a new 1 MByte "PFS" file if it does not already exist. If it does exist, begin using it for further commands.
     NoSQLDatabase();
     ~NoSQLDatabase();
 
