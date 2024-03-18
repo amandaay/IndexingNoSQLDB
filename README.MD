@@ -24,6 +24,7 @@ No known bugs so far.
 1. If user does not provide a nodesize, the default value will be 5. <br/>
 2. NodeId cannot be -1. <br/>
 3. Assume keys are unique without duplicates.
+4. Assume nodesize is greater than 2.
 
 ## Source
 

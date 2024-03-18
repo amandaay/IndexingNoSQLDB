@@ -4,18 +4,23 @@
 #include <iostream>
 #include <fstream>
 #include <filesystem>
+#include <sstream>
+#include <string>
 
 using namespace std;
 using namespace std::filesystem;
 
-NoSQLDatabase::NoSQLDatabase(): bTree(INITIAL_SIZE / BLOCK_SIZE)
+NoSQLDatabase::NoSQLDatabase() : bTree(0)
 {
-
 }
 
 NoSQLDatabase::~NoSQLDatabase()
 {
-    // Cleanup resources
+    // Close the database file
+    if (databaseFile.is_open())
+    {
+        databaseFile.close();
+    }
 }
 
 // Implement B-tree insertion method
@@ -62,7 +67,7 @@ void NoSQLDatabase::openOrCreateDatabase(string &PFSFile)
 
         int blockingFactor = INITIAL_SIZE / BLOCK_SIZE;
         // Initialize B-tree index
-        BTree btree(blockingFactor);
+        bTree = BTree(blockingFactor);
 
         databaseFile.close();
     }
@@ -73,7 +78,7 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
     // Insert data from OS file into NoSQL database
     // Accessing the databaseName member variable
     cout << "Putting data into database " << databaseName << " from file " << myFile << endl;
-    ifstream fileToRead(myFile, ios::in | ios::binary);
+    ifstream fileToRead(myFile);
     if (!fileToRead.is_open())
     {
         cout << "Error: Unable to open file " << myFile << endl;
@@ -89,21 +94,29 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
         return;
     }
 
-    // Read data from the OS file and write it into the NoSQL database file
-    char buffer[BLOCK_SIZE];
-    while (!fileToRead.eof())
+    // Skip the first row (header)
+    string header;
+    getline(fileToRead, header);
+
+    // Read and parse the remaining lines of the CSV file
+    string line;
+    while (getline(fileToRead, line))
     {
-        // Read data from the OS file
-        fileToRead.read(buffer, BLOCK_SIZE);
-        streamsize bytesRead = fileToRead.gcount(); // Number of bytes read
+        stringstream ss(line);
+        string keyString;
 
-        // Write data into the NoSQL database file
-        database.write(buffer, bytesRead);
+        // Assuming the key is located in the first field of each line
+        if (getline(ss, keyString, ','))
+        {
+            // Convert the key to the appropriate data type (e.g., integer)
+            int key = stoi(keyString);
 
-        // Index the key using B-tree
-        // Assuming key is an integer extracted from the data
-        int key; // Extract key from data
-        insertIntoBTree(key);
+            // Write data into the NoSQL database file
+            database.write(reinterpret_cast<char*>(&key), sizeof(int)); // Assuming key is an integer
+
+            // Index the key using B-tree
+            insertIntoBTree(key);
+        }
     }
 
     // Close the files
