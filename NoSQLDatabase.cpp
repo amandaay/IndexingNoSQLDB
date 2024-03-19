@@ -3,7 +3,6 @@
 #include "NoSQLDatabase.h"
 #include <iostream>
 #include <fstream>
-#include <filesystem>
 #include <sstream>
 #include <string>
 
@@ -40,13 +39,13 @@ void NoSQLDatabase::openOrCreateDatabase(string &PFSFile)
 {
     databaseName = PFSFile;
     // Open the database file or Create if db not exist
-    path filePath = databaseName + ".db0";
+    string filePath = databaseName + ".db0";
     if (exists(filePath))
     {
         // check file path
         cout << "filePath: " << filePath << endl;
         // open file
-        databaseFile.open(filePath, ios::in | ios::out | ios::binary);
+        databaseFile.open(filePath);
         if (!databaseFile.is_open())
         {
             cout << "Error: Unable to open database file." << endl;
@@ -57,8 +56,8 @@ void NoSQLDatabase::openOrCreateDatabase(string &PFSFile)
     else
     {
         cout << "Creating database " << databaseName << endl;
-        // Open the database file for appending in binary mode
-        databaseFile.open(filePath, ios::out | ios::binary);
+        // Open the database file
+        databaseFile.open(filePath, ios::out | ios::app | ios::in);
         if (!databaseFile.is_open())
         {
             cout << "Error: Unable to create database file." << endl;
@@ -119,7 +118,7 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
 
             // Assuming the rest of the line constitutes the value
             // Cuts of at MAX_DATA_RECORD_SIZE (40 bytes)
-            string value = line.substr(keyString.length() + 1, MAX_DATA_RECORD_SIZE);
+            string data = line.substr(0, MAX_DATA_RECORD_SIZE);
 
             // Check if adding the record would exceed the block size
             if (currentPos + MAX_DATA_RECORD_SIZE > BLOCK_SIZE)
@@ -134,7 +133,7 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
             {
                 cout << "Writing to data block " << currentBlock << endl;
             }
-            databaseFile << key << " " << value << "\n";
+            databaseFile << data;
 
             // Index the key using B-tree
             insertIntoBTree(key);
