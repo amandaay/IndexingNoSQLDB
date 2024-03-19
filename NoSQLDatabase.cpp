@@ -65,14 +65,11 @@ void NoSQLDatabase::openOrCreateDatabase(string &PFSFile)
         }
 
         // Allocate a new 1 MByte "PFS" file if it does not already exist.
-        // -1 byte is used to position the put pointer at the byte at the end of the file
-        databaseFile.seekp(INITIAL_SIZE - 1);
-        // Write a single byte at the end of the file
-        databaseFile.write("", 1);
+        databaseFile.seekp(INITIAL_SIZE);
 
-        int indexBlockingFactor = BLOCK_SIZE / MAX_INDEX_RECORD_SIZE;
+        int indexBfr = (BLOCK_SIZE - CHILD_BLOCK_SIZE) / (INDEX_BLOCK_SIZE + CHILD_BLOCK_SIZE);
         // Initialize B-tree index
-        bTree = BTree(indexBlockingFactor);
+        bTree = BTree(indexBfr);
     }
 }
 
@@ -99,7 +96,6 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
     getline(fileToRead, header);
 
     // Calculate the number of records that can fit in a block
-    int dataBfr = BLOCK_SIZE / MAX_DATA_RECORD_SIZE; // 256 / 40 = 6
     int currentPos = 0;
     int currentBlock = 0;
 
@@ -116,12 +112,21 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
             // Convert the key to the appropriate data type (e.g., integer)
             int key = stoi(keyString);
 
-            // Assuming the rest of the line constitutes the value
             // Cuts of at MAX_DATA_RECORD_SIZE (40 bytes)
-            string data = line.substr(0, MAX_DATA_RECORD_SIZE);
+            // Truncate the data to fit within MAX_DATA_RECORD_SIZE bytes
+            if (line.size() > DATA_RECORD_SIZE)
+            {
+                line.resize(DATA_RECORD_SIZE - 1);
+                // Check if the last character is not a newline
+                if (line.back() != '\n')
+                {
+                    // If not, add the newline character
+                    line.push_back('\n');
+                }
+            }
 
             // Check if adding the record would exceed the block size
-            if (currentPos + MAX_DATA_RECORD_SIZE > BLOCK_SIZE)
+            if (currentPos + DATA_RECORD_SIZE > BLOCK_SIZE)
             {
                 // Move to the next block
                 databaseFile.seekp((currentBlock + 1) * BLOCK_SIZE);
@@ -133,12 +138,12 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
             {
                 cout << "Writing to data block " << currentBlock << endl;
             }
-            databaseFile << data;
+            databaseFile << line;
 
             // Index the key using B-tree
             insertIntoBTree(key);
-            currentPos += MAX_DATA_RECORD_SIZE;
         }
+        currentPos += DATA_RECORD_SIZE;
     }
 
     // Close the file to read
