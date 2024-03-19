@@ -43,6 +43,13 @@ https://stackoverflow.com/questions/50800605/using-binary-search-in-b-tree#:~:te
 2. To run the program, `./NoSQLDb`.
 3. Prompt `NoSQL > ` will be shown to enter desired commands.
 
+## Assumptions
+1. Test file should always have:
+- Header
+- Endline ("\n") at the end of each line or record
+- First character or integer before the first comma (",") is our key
+2. Each data record has a maximum of 40 bytes including the endline ("\n")
+
 ## Authors
 
 So Man Amanda Au-Yeung, NUID: 001673193<br/>
