@@ -112,7 +112,7 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
             // Convert the key to the appropriate data type (e.g., integer)
             int key = stoi(keyString);
 
-            // Cuts of at MAX_DATA_RECORD_SIZE (40 bytes)
+            // Cuts of at DATA_RECORD_SIZE (40 bytes)
             // Truncate the data to fit within MAX_DATA_RECORD_SIZE bytes
             if (line.size() > DATA_RECORD_SIZE)
             {
@@ -138,6 +138,7 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
             {
                 cout << "Writing to data block " << currentBlock << endl;
             }
+            cout << "Writing at position in the dataFile" << databaseFile.tellp() << endl;
             databaseFile << line;
 
             // Index the key using B-tree

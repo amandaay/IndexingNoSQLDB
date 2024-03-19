@@ -44,11 +44,22 @@ https://stackoverflow.com/questions/50800605/using-binary-search-in-b-tree#:~:te
 3. Prompt `NoSQL > ` will be shown to enter desired commands.
 
 ## Assumptions
+
 1. Test file should always have:
+
 - Header
 - Endline ("\n") at the end of each line or record
 - First character or integer before the first comma (",") is our key
+
 2. Each data record has a maximum of 40 bytes including the endline ("\n")
+
+3. Each block has a maximum of 256 bytes
+
+4. Index block allocation assumption:
+- child block # (integer) 4 bytes
+- key, block # (integer, integer) (4 bytes, 4 bytes)
+- blocking factor for index block: (256 - 4) / (4 * 3) = 21 bytes
+
 
 ## Authors
 
