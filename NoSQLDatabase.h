@@ -19,6 +19,7 @@ constexpr int INITIAL_SIZE = 1024 * 1024; // Initial size of database file in by
 constexpr int DATA_RECORD_SIZE = 40;      // Size of each record in bytes (key + value)
 constexpr int CHILD_BLOCK_SIZE = 4;       // Size Child block
 constexpr int INDEX_BLOCK_SIZE = 4 + 4;   // Size Index block (key, block #)
+constexpr int DIRECTORY_SIZE = 40 + 44 + 16;   // Size of metadata, 3 FCBS, bit map
 
 // Define structures for File Control Block (FCB) and directory entry
 struct FCB

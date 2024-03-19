@@ -131,9 +131,9 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
                 }
             }
 
-            cout << "Writing at position in the dataFile " << databaseFile.tellg() << endl;
+            cout << "Writing at position in the dataFile " << databaseFile.tellp() << endl;
 
-            if (static_cast<std::streamoff>(databaseFile.tellg()) + DATA_RECORD_SIZE > INITIAL_SIZE)
+            if (static_cast<std::streamoff>(databaseFile.tellp()) + DATA_RECORD_SIZE > INITIAL_SIZE)
             {
                 cout << "Database file is full." << endl;
                 dbNumber++;
