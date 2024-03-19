@@ -16,6 +16,8 @@ using namespace std;
 // Define constants for file system parameters
 constexpr int BLOCK_SIZE = 256;           // Block size in bytes
 constexpr int INITIAL_SIZE = 1024 * 1024; // Initial size of database file in bytes (1024 Mbytes)
+constexpr int MAX_DATA_RECORD_SIZE = 40;           // Size of each record in bytes (key + value)
+constexpr int MAX_INDEX_RECORD_SIZE = 8;           // Size of each index record in bytes (key, block number)
 
 // Define structures for File Control Block (FCB) and directory entry
 struct FCB
@@ -25,7 +27,6 @@ struct FCB
     time_t timestamp; // Last modified time
     string filetype;  // Data file or index file
     int startBlock;
-    int endBlock;
     // Add other necessary fields such as create time, create date, etc.
 };
 

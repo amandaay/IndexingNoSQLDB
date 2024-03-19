@@ -65,11 +65,15 @@ void NoSQLDatabase::openOrCreateDatabase(string &PFSFile)
             return;
         }
 
-        int blockingFactor = INITIAL_SIZE / BLOCK_SIZE;
-        // Initialize B-tree index
-        bTree = BTree(blockingFactor);
+        // Allocate a new 1 MByte "PFS" file if it does not already exist.
+        // -1 byte is used to position the put pointer at the byte at the end of the file
+        databaseFile.seekp(INITIAL_SIZE - 1);
+        // Write a single byte at the end of the file
+        databaseFile.write("", 1);
 
-        databaseFile.close();
+        int indexBlockingFactor = BLOCK_SIZE / MAX_INDEX_RECORD_SIZE;
+        // Initialize B-tree index
+        bTree = BTree(indexBlockingFactor);
     }
 }
 
@@ -85,18 +89,20 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
         return;
     }
 
-    // Open the database file for writing in binary mode
-    path databaseFilePath = databaseName + ".db0";
-    fstream database(databaseFilePath, ios::out | ios::app | ios::binary);
-    if (!database.is_open())
+    if (!databaseFile.is_open())
     {
-        cout << "Error: Unable to open database file " << databaseFilePath << endl;
+        cout << "Error: Unable to open database file " << databaseName << endl;
         return;
     }
 
     // Skip the first row (header)
     string header;
     getline(fileToRead, header);
+
+    // Calculate the number of records that can fit in a block
+    int dataBfr = BLOCK_SIZE / MAX_DATA_RECORD_SIZE; // 256 / 40 = 6
+    int currentPos = 0;
+    int currentBlock = 0;
 
     // Read and parse the remaining lines of the CSV file
     string line;
@@ -111,19 +117,35 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
             // Convert the key to the appropriate data type (e.g., integer)
             int key = stoi(keyString);
 
-            // Write data into the NoSQL database file
-            database.write(reinterpret_cast<char*>(&key), sizeof(int)); // Assuming key is an integer
+            // Assuming the rest of the line constitutes the value
+            // Cuts of at MAX_DATA_RECORD_SIZE (40 bytes)
+            string value = line.substr(keyString.length() + 1, MAX_DATA_RECORD_SIZE);
+
+            // Check if adding the record would exceed the block size
+            if (currentPos + MAX_DATA_RECORD_SIZE > BLOCK_SIZE)
+            {
+                // Move to the next block
+                databaseFile.seekp(BLOCK_SIZE, ios::cur);
+                currentBlock++;
+                cout << "Writing to data block " << currentBlock << endl;
+                currentPos = 0;
+            }
+            if (currentBlock == 0)
+            {
+                cout << "Writing to data block " << currentBlock << endl;
+            }
+            databaseFile << key << " " << value << "\n";
 
             // Index the key using B-tree
             insertIntoBTree(key);
+            currentPos += MAX_DATA_RECORD_SIZE;
         }
     }
 
-    // Close the files
+    // Close the file to read
     fileToRead.close();
-    database.close();
 
-    cout << "Data from file " << myFile << " inserted into database " << databaseFilePath << " successfully." << endl;
+    cout << "Data from file " << myFile << " inserted into database " << databaseName << " successfully." << endl;
 }
 
 void NoSQLDatabase::getDataFromDatabase()
