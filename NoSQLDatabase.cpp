@@ -35,11 +35,11 @@ bool NoSQLDatabase::searchInBTree(int key)
     return bTree.Lookup(bTree.getRootNode(), key, NodeIds);
 }
 
-void NoSQLDatabase::openOrCreateDatabase(string &PFSFile)
+void NoSQLDatabase::openOrCreateDatabase(string &PFSFile, int dbNumber)
 {
     databaseName = PFSFile;
     // Open the database file or Create if db not exist
-    string filePath = databaseName + ".db0";
+    string filePath = databaseName + ".db" + to_string(dbNumber);
     if (exists(filePath))
     {
         // check file path
@@ -91,6 +91,11 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
         return;
     }
 
+    // Explicitly set the get pointer's position to the beginning of the file
+    databaseFile.seekg(0, ios::beg);
+
+    cout << "Initial position of the get pointer: " << databaseFile.tellg() << endl;
+
     // Skip the first row (header)
     string header;
     getline(fileToRead, header);
@@ -98,6 +103,7 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
     // Calculate the number of records that can fit in a block
     int currentPos = 0;
     int currentBlock = 0;
+    int dbNumber = 0;
 
     // Read and parse the remaining lines of the CSV file
     string line;
@@ -125,6 +131,16 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
                 }
             }
 
+            cout << "Writing at position in the dataFile " << databaseFile.tellg() << endl;
+
+            if (static_cast<std::streamoff>(databaseFile.tellg()) + DATA_RECORD_SIZE > INITIAL_SIZE)
+            {
+                cout << "Database file is full." << endl;
+                dbNumber++;
+                openOrCreateDatabase(databaseName, dbNumber);
+                currentPos = 0;
+            }
+
             // Check if adding the record would exceed the block size
             if (currentPos + DATA_RECORD_SIZE > BLOCK_SIZE)
             {
@@ -134,12 +150,17 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
                 cout << "Writing to data block " << currentBlock << endl;
                 currentPos = 0;
             }
+            else
+            {
+                databaseFile.seekp(currentPos);
+            }
             if (currentBlock == 0)
             {
                 cout << "Writing to data block " << currentBlock << endl;
             }
-            cout << "Writing at position in the dataFile" << databaseFile.tellp() << endl;
+
             databaseFile << line;
+            cout << "Wrote at position in the dataFile " << databaseFile.tellp() << endl;
 
             // Index the key using B-tree
             insertIntoBTree(key);
@@ -261,7 +282,7 @@ void NoSQLDatabase::runCLI()
         {
         case OPEN:
             // file here is the database
-            openOrCreateDatabase(file);
+            openOrCreateDatabase(file, 0);
             break;
         case PUT:
             // file here is the file to be put into the database

@@ -16,9 +16,9 @@ using namespace std;
 // Define constants for file system parameters
 constexpr int BLOCK_SIZE = 256;           // Block size in bytes
 constexpr int INITIAL_SIZE = 1024 * 1024; // Initial size of database file in bytes (1024 Mbytes)
-constexpr int DATA_RECORD_SIZE = 40;           // Size of each record in bytes (key + value)
-constexpr int CHILD_BLOCK_SIZE = 4;              // Size Child block
-constexpr int INDEX_BLOCK_SIZE = 4 + 4;         // Size Index block (key, block #)
+constexpr int DATA_RECORD_SIZE = 40;      // Size of each record in bytes (key + value)
+constexpr int CHILD_BLOCK_SIZE = 4;       // Size Child block
+constexpr int INDEX_BLOCK_SIZE = 4 + 4;   // Size Index block (key, block #)
 
 // Define structures for File Control Block (FCB) and directory entry
 struct FCB
@@ -71,7 +71,7 @@ public:
     // command: operations to perform.
 
     // open PFSfile: Allocate a new 1 MByte "PFS" file if it does not already exist. If it does exist, begin using it for further commands.
-    void openOrCreateDatabase(string &PFSFile);
+    void openOrCreateDatabase(string &PFSFile, int dbNumber);
     // put myFile: Insert data from your OS file, i.e., "myfile" into your NoSQL database, i.e., PFS file.
     void putDataIntoDatabase(string &myFile);
     // get myFile: Download data file "myfile" from your NoSQL database, i.e., PFS file, and save it to the current OS directory.
