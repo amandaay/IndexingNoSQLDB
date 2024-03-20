@@ -15,7 +15,6 @@ NoSQLDatabase::NoSQLDatabase() : bTree(0)
     currentPosInBlock = 0;
     currentBlock = 0;
     dbNumber = 0;
-
 }
 
 NoSQLDatabase::~NoSQLDatabase()
