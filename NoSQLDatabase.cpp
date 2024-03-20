@@ -68,7 +68,7 @@ void NoSQLDatabase::openOrCreateDatabase(string &PFSFile, int dbNumber)
         // Allocate a new 1 MByte "PFS" file if it does not already exist.
         databaseFile.seekp(INITIAL_SIZE);
         // Explicitly set the get pointer's position to the beginning of the file
-        databaseFile.seekp(0, ios::beg);
+        databaseFile.seekp(DIRECTORY_SIZE, ios::beg);
 
         int indexBfr = (BLOCK_SIZE - CHILD_BLOCK_SIZE) / (INDEX_BLOCK_SIZE + CHILD_BLOCK_SIZE);
         // Initialize B-tree index
@@ -99,7 +99,7 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
     getline(fileToRead, header);
 
     // Calculate the number of records that can fit in a block
-    int currentPosInDb = 0;
+    int currentPosInDb = DIRECTORY_SIZE; // position starts after the directory structure starting 0 in the beginning
     int currentPosInBlock = 0;
     int currentBlock = 0;
     int dbNumber = 0;
@@ -130,37 +130,47 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
                 }
             }
 
+            cout << "Writing to block: " << currentBlock << endl;
+            cout << "Writing at position in the dataFile " << currentPosInDb << endl;
+            cout << "Writing at position in the block " << currentPosInBlock << endl;
+
             // check if the current data file is full
-            if (currentPosInDb + DATA_RECORD_SIZE >= (INITIAL_SIZE - DIRECTORY_SIZE))
+            if (currentPosInDb + DATA_RECORD_SIZE >= (INITIAL_SIZE * (dbNumber + 1)))
             {
                 cout << "Database file is full." << endl;
+                databaseFile.close();
                 dbNumber++;
                 openOrCreateDatabase(databaseName, dbNumber);
                 // Explicitly set the get pointer's position to the beginning of the file
                 // update position in database and each block
-                currentPosInDb = 0;
-                databaseFile.seekp(currentPosInDb, ios::beg);
+                currentPosInDb = DIRECTORY_SIZE;
+                cout << "Updated position in DB " << currentPosInDb << endl;
                 currentPosInBlock = 0;
+                cout << "Updated position in the block " << currentPosInBlock << endl;
+                currentBlock++;
+                cout << "Updated block " << currentBlock << endl;
             }
 
             // Check if adding the record would exceed the block size
-            if (currentPosInBlock + DATA_RECORD_SIZE >=  BLOCK_SIZE)
+            if (currentPosInBlock + DATA_RECORD_SIZE >= BLOCK_SIZE)
             {
                 // Move to the next block
+                cout << "Block is full." << endl;
                 currentBlock++;
-                databaseFile.seekp(currentBlock * BLOCK_SIZE);
-                currentPosInBlock = 0;
+                cout << "Writing to updated block " << currentBlock << endl;
                 currentPosInDb = currentBlock * BLOCK_SIZE;
+                cout << "Writing to updated position in the dataFile " << currentPosInDb << endl;
+                currentPosInBlock = 0;
+                cout << "Writing at position in the block " << currentPosInBlock << endl;
+                databaseFile.seekp(currentPosInDb);
             }
             else
             {
+                cout << "Writing to current data block " << currentBlock << endl;
                 databaseFile.seekp(currentPosInDb);
             }
 
-            cout << "Writing to data block " << currentBlock << endl;
-            cout << "Writing at position in the dataFile " << currentPosInDb << endl;
             databaseFile << line;
-            cout << "Wrote at position in the dataFile " << currentPosInDb << endl;
 
             // Index the key using B-tree
             insertIntoBTree(key);
