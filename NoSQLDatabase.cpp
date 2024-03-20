@@ -11,6 +11,11 @@ using namespace std::filesystem;
 
 NoSQLDatabase::NoSQLDatabase() : bTree(0)
 {
+    currentPosInDb = DIRECTORY_SIZE; // position starts after the directory structure starting 0 in the beginning
+    currentPosInBlock = 0;
+    currentBlock = 0;
+    dbNumber = 0;
+
 }
 
 NoSQLDatabase::~NoSQLDatabase()
@@ -98,11 +103,11 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
     string header;
     getline(fileToRead, header);
 
-    // Calculate the number of records that can fit in a block
-    int currentPosInDb = DIRECTORY_SIZE; // position starts after the directory structure starting 0 in the beginning
-    int currentPosInBlock = 0;
-    int currentBlock = 0;
-    int dbNumber = 0;
+    // Initialize FCB information
+    fcb.filename = myFile;
+    fcb.fileSize = 0;              // Initialize to 0
+    fcb.timestamp = time(nullptr); // Set the timestamp to current time
+    fcb.startBlock = currentBlock; // Assuming currentBlock keeps track of the starting block
 
     // Read and parse the remaining lines of the CSV file
     string line;
@@ -174,9 +179,13 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
 
             // Index the key using B-tree
             insertIntoBTree(key);
+
+            // Update FCB information
         }
-        currentPosInDb += DATA_RECORD_SIZE;
-        currentPosInBlock += DATA_RECORD_SIZE;
+        currentPosInDb += DATA_RECORD_SIZE;    // include directory structure
+        currentPosInBlock += DATA_RECORD_SIZE; // each individual block
+        fcb.fileSize += DATA_RECORD_SIZE;      //  only the data size
+        fcb.timestamp = time(nullptr);         // update the timestamp
     }
 
     // Close the file to read

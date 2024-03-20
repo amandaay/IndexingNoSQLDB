@@ -21,30 +21,34 @@ constexpr int CHILD_BLOCK_SIZE = 4;       // Size Child block
 constexpr int INDEX_BLOCK_SIZE = 4 + 4;   // Size Index block (key, block #)
 constexpr int DIRECTORY_SIZE = 256 * 3;   // Size of metadata, 3 FCBS, bit map
 
-// Define structures for File Control Block (FCB) and directory entry
-struct FCB
-{
-    string filename;
-    int fileSize;     // Number of blocks used
-    time_t timestamp; // Last modified time
-    string filetype;  // Data file or index file
-    int startBlock;
-    // Add other necessary fields such as create time, create date, etc.
-};
-
-struct DirectoryEntry
-{
-    FCB fcb;
-    // Add other necessary fields
-};
+// struct DirectoryEntry
+// {
+//     FCB fcb;
+//     // Add other necessary fields
+// };
 
 class NoSQLDatabase
 {
 private:
     string databaseName;
     fstream databaseFile;
-    vector<DirectoryEntry> directory;
+    int currentPosInDb;    // position starts after the directory structure in each PFS file (e.g. .db0, .db1, .db2,...)
+    int currentPosInBlock; // position starts from 0 to 255 in each block
+    int currentBlock;      // block number starts from 0
+    int dbNumber;          // database number starts from 0
+    // vector<DirectoryEntry> directory;
     BTree bTree; // include BTree for indexing
+
+    // Define structures for File Control Block (FCB) and directory entry
+    struct FCB
+    {
+        string filename;
+        int fileSize;     // Number of blocks used
+        time_t timestamp; // Last modified time
+        int startBlock;
+        // TODO: index info
+        // Add other necessary fields such as create time, create date, etc.
+    };
 
     // Other private members for block management, file operations, etc.
 
@@ -62,6 +66,7 @@ private:
     };
 
     Command getCommandType(const string &command);
+    FCB fcb;
 
 public:
     // constructor of NoSQLDatabase
