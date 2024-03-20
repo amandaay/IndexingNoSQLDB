@@ -62,33 +62,30 @@ https://stackoverflow.com/questions/50800605/using-binary-search-in-b-tree#:~:te
 
 5. Directory Structure Assumptions:
 
-Blocksize: 4 bytes
-Database name: 24 bytes
-Total size: 4 bytes
-Number of total files (PFS): 4 bytes
-Number of records of data file: 4 bytes
------------------------------------------
-Total metadata size = 40 bytes
+- Blocksize: 4 bytes
+- Database name: 24 bytes
+- Total size: 4 bytes
+- Number of total files (PFS): 4 bytes
+- Number of records of data file: 4 bytes
+- Total metadata size = 40 bytes
 
 Assume that there are 4 FCBs:
-filename: 24 bytes
-filesize: 4 bytes
-time: 8 bytes
-start block: 4 bytes
-Index file info: 4 bytes (Root pointer of BTree)
-------------------------------------------------
-Total (4 FCBs) = 44 * 4 = 176 bytes
+- filename: 24 bytes
+- filesize: 4 bytes
+- time: 8 bytes
+- start block: 4 bytes
+- Index file info: 4 bytes (Root pointer of BTree)
+- Total (4 FCBs) = 44 * 4 = 176 bytes
 
-Bit Map: 16 bytes
-Number of blocks = 1 Mbytes / block = 1024 * 1024 / 256 = 4096 blocks
-Each block has 1 or 0. (bit)
-1 indicates free block, 0 indicates that the block is allocated.
-Thus, we have a total of 4096 bit.
-----------------------------------------------------------------------
-To convert to bytes = 4096 / 8 = 512 bytes.
-(Equivalent to around 2 blocks.)
+- Bit Map: 16 bytes
+- Number of blocks = 1 Mbytes / block = 1024 * 1024 / 256 = 4096 blocks
+- Each block has 1 or 0. (bit)
+- 1 indicates free block, 0 indicates that the block is allocated.
+- Thus, we have a total of 4096 bit.
+- To convert to bytes = 4096 / 8 = 512 bytes.
+- (Equivalent to around 2 blocks.)
 
-Directory uses up around 728 bytes (~ 3 block sizes), so we will reserve 3 * 256 = 768 bytes for the directory structure. 
+- Directory uses up around 728 bytes (~ 3 block sizes), so we will reserve 3 * 256 = 768 bytes for the directory structure. 
 
 ## Authors
 
