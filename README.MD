@@ -77,13 +77,12 @@ Assume that there are 4 FCBs:
 - Index file info: 4 bytes (Root pointer of BTree)
 - Total (4 FCBs) = 44 * 4 = 176 bytes
 
-- Bit Map: 16 bytes
+Bit Map: 16 bytes
 - Number of blocks = 1 Mbytes / block = 1024 * 1024 / 256 = 4096 blocks
 - Each block has 1 or 0. (bit)
 - 1 indicates free block, 0 indicates that the block is allocated.
 - Thus, we have a total of 4096 bit.
-- To convert to bytes = 4096 / 8 = 512 bytes.
-- (Equivalent to around 2 blocks.)
+- To convert to bytes = 4096 / 8 = 512 bytes. (Equivalent to around 2 blocks.)
 
 - Directory uses up around 728 bytes (~ 3 block sizes), so we will reserve 3 * 256 = 768 bytes for the directory structure. 
 

@@ -130,37 +130,35 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
                 }
             }
 
-            cout << "Writing at position in the dataFile " << currentPosInDb << endl;
-
             // check if the current data file is full
-            if (currentPosInDb + DATA_RECORD_SIZE > (INITIAL_SIZE - DIRECTORY_SIZE))
+            if (currentPosInDb + DATA_RECORD_SIZE >= (INITIAL_SIZE - DIRECTORY_SIZE))
             {
                 cout << "Database file is full." << endl;
                 dbNumber++;
                 openOrCreateDatabase(databaseName, dbNumber);
                 // Explicitly set the get pointer's position to the beginning of the file
+                // update position in database and each block
                 currentPosInDb = 0;
                 databaseFile.seekp(currentPosInDb, ios::beg);
+                currentPosInBlock = 0;
             }
 
             // Check if adding the record would exceed the block size
-            if (currentPosInBlock + DATA_RECORD_SIZE > ((currentBlock + 1) * BLOCK_SIZE))
+            if (currentPosInBlock + DATA_RECORD_SIZE >=  BLOCK_SIZE)
             {
                 // Move to the next block
-                databaseFile.seekp((currentBlock + 1) * BLOCK_SIZE);
                 currentBlock++;
-                cout << "Writing to data block " << currentBlock << endl;
+                databaseFile.seekp(currentBlock * BLOCK_SIZE);
                 currentPosInBlock = 0;
+                currentPosInDb = currentBlock * BLOCK_SIZE;
             }
             else
             {
                 databaseFile.seekp(currentPosInDb);
             }
-            if (currentBlock == 0)
-            {
-                cout << "Writing to data block " << currentBlock << endl;
-            }
 
+            cout << "Writing to data block " << currentBlock << endl;
+            cout << "Writing at position in the dataFile " << currentPosInDb << endl;
             databaseFile << line;
             cout << "Wrote at position in the dataFile " << currentPosInDb << endl;
 
