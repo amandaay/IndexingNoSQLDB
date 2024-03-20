@@ -88,7 +88,7 @@ Thus, we have a total of 4096 bit.
 To convert to bytes = 4096 / 8 = 512 bytes.
 (Equivalent to around 2 blocks.)
 
-Directory uses up around 728 bytes (~ 3 block sizes), so we will reserve 3* 256 = 768 bytes for the directory structure. 
+Directory uses up around 728 bytes (~ 3 block sizes), so we will reserve 3 * 256 = 768 bytes for the directory structure. 
 
 ## Authors
 

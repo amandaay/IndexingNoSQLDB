@@ -92,9 +92,9 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
     }
 
     // Explicitly set the get pointer's position to the beginning of the file
-    databaseFile.seekg(0, ios::beg);
+    databaseFile.seekp(0, ios::beg);
 
-    cout << "Initial position of the get pointer: " << databaseFile.tellg() << endl;
+    cout << "Initial position of the get pointer: " << databaseFile.tellp() << endl;
 
     // Skip the first row (header)
     string header;
@@ -131,13 +131,16 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
                 }
             }
 
-            cout << "Writing at position in the dataFile " << databaseFile.tellp() << endl;
+            cout << "Writing at position in the dataFile " << currentPos << endl;
 
-            if (static_cast<std::streamoff>(databaseFile.tellp()) + DATA_RECORD_SIZE > INITIAL_SIZE)
+            // check if the current data file is full
+            if (currentPos + DATA_RECORD_SIZE > INITIAL_SIZE)
             {
                 cout << "Database file is full." << endl;
                 dbNumber++;
                 openOrCreateDatabase(databaseName, dbNumber);
+                // Explicitly set the get pointer's position to the beginning of the file
+                databaseFile.seekp(0, ios::beg);
                 currentPos = 0;
             }
 
