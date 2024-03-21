@@ -187,6 +187,12 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
             fcb.timestamp = time(nullptr);         // update the timestamp
         }
     }
+
+    if(!line.empty()){
+        cout << "line not empty." << endl;
+        cout << "line prints: " << line << endl;
+    }  
+    // Add the FCB to the directory
     directory.push_back(fcb);
 
     // Close the file to read
