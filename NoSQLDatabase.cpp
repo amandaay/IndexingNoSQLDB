@@ -123,18 +123,15 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
             int key = stoi(keyString);
 
             // Cuts of at DATA_RECORD_SIZE (40 bytes)
-            // Truncate the data to fit within MAX_DATA_RECORD_SIZE bytes
-
+            // Truncate the data to fit within DATA_RECORD_SIZE bytes
             if (line.size() > DATA_RECORD_SIZE)
             {
-                // cout << "Before line resized THE SIZE: " << line.size() << endl;
-                // cout << "Before line resized: " << line << endl;
                 // leaves 1 byte to account for nextline character
                 line.resize(DATA_RECORD_SIZE);
-                // cout << "After line resized THE SIZE: " << line.size() << endl;
             }
             else if (line.size() < DATA_RECORD_SIZE)
             {
+                // Remove the newline character
                 line.resize(line.size() - 1);
                 // Pad the line with spaces to reach 40 bytes
                 line.resize(DATA_RECORD_SIZE, ' ');
@@ -174,7 +171,6 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
 
             cout << "Writing current line database file: " << line << endl;
             // Write the data to the database file
-
             databaseFile << line;
 
             // Index the key using B-tree
