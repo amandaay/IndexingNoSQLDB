@@ -21,12 +21,6 @@ constexpr int CHILD_BLOCK_SIZE = 4;       // Size Child block
 constexpr int INDEX_BLOCK_SIZE = 4 + 4;   // Size Index block (key, block #)
 constexpr int DIRECTORY_SIZE = 256 * 3;   // Size of metadata, 3 FCBS, bit map
 
-// struct DirectoryEntry
-// {
-//     FCB fcb;
-//     // Add other necessary fields
-// };
-
 class NoSQLDatabase
 {
 private:
@@ -36,7 +30,7 @@ private:
     int currentPosInBlock; // position starts from 0 to 255 in each block
     int currentBlock;      // block number starts from 0
     int dbNumber;          // database number starts from 0
-    // vector<DirectoryEntry> directory;
+    
     BTree bTree; // include BTree for indexing
 
     // Define structures for File Control Block (FCB) and directory entry
@@ -67,6 +61,7 @@ private:
 
     Command getCommandType(const string &command);
     FCB fcb;
+    vector<FCB> directory;
 
 public:
     // constructor of NoSQLDatabase
