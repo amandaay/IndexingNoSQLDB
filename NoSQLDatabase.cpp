@@ -98,15 +98,15 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
         return;
     }
 
-    // Skip the first row (header)
-    string header;
-    getline(fileToRead, header);
-
     // Initialize FCB information
     fcb.filename = myFile;
     fcb.fileSize = 0;              // Initialize to 0
     fcb.timestamp = time(nullptr); // Set the timestamp to current time
     fcb.startBlock = currentBlock; // Assuming currentBlock keeps track of the starting block
+
+    // Skip the first row (header)
+    string header;
+    getline(fileToRead, header);
 
     // Read and parse the remaining lines of the CSV file
     string line;
@@ -178,15 +178,12 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
 
             // Index the key using B-tree
             insertIntoBTree(key);
-
-            // Update FCB information
         }
         currentPosInDb += DATA_RECORD_SIZE;    // include directory structure
         currentPosInBlock += DATA_RECORD_SIZE; // each individual block
         fcb.fileSize += DATA_RECORD_SIZE;      //  only the data size
         fcb.timestamp = time(nullptr);         // update the timestamp
     }
-    directory.push_back(fcb);
     directory.push_back(fcb);
 
     // Close the file to read
