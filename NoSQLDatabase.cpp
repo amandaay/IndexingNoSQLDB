@@ -172,16 +172,20 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
                 databaseFile.seekp(currentPosInDb);
             }
 
+            cout << "Writing current line database file: " << line << endl;
             // Write the data to the database file
             databaseFile << line;
 
             // Index the key using B-tree
             insertIntoBTree(key);
+
+            cout << "KEY inserting into BTree: " << key << endl;
+
+            currentPosInDb += DATA_RECORD_SIZE;    // include directory structure
+            currentPosInBlock += DATA_RECORD_SIZE; // each individual block
+            fcb.fileSize += DATA_RECORD_SIZE;      //  only the data size
+            fcb.timestamp = time(nullptr);         // update the timestamp
         }
-        currentPosInDb += DATA_RECORD_SIZE;    // include directory structure
-        currentPosInBlock += DATA_RECORD_SIZE; // each individual block
-        fcb.fileSize += DATA_RECORD_SIZE;      //  only the data size
-        fcb.timestamp = time(nullptr);         // update the timestamp
     }
     directory.push_back(fcb);
 
