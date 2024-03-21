@@ -125,12 +125,17 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
             // Truncate the data to fit within MAX_DATA_RECORD_SIZE bytes
             if (line.size() > DATA_RECORD_SIZE)
             {
+                cout << "Before line resized THE SIZE: " << line.size() << endl;
+                cout << "Before line resized: " << line << endl;
                 line.resize(DATA_RECORD_SIZE - 1);
+                cout << "After line resized THE SIZE: " << line.size() << endl;
                 // Check if the last character is not a newline
                 if (line.back() != '\n')
                 {
                     // If not, add the newline character
                     line.push_back('\n');
+                    cout << "After line resized with newline THE SIZE: " << line.size() << endl;
+                    cout << "After line resized with newline: " << line << endl;
                 }
             }
 
