@@ -186,6 +186,7 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
         fcb.fileSize += DATA_RECORD_SIZE;      //  only the data size
         fcb.timestamp = time(nullptr);         // update the timestamp
     }
+    directory.push_back(fcb);
 
     // Close the file to read
     fileToRead.close();
@@ -206,6 +207,17 @@ void NoSQLDatabase::delFileFromDatabase()
 void NoSQLDatabase::listAllDataFromDatabase()
 {
     // List all data files in NoSQL database
+    // e.g. movie 128 bytes 12:30 PM September 2
+    //      myFiles filesize timestamp 
+    tm *localTime;
+    char time[50];
+
+    for (int i = 0; i < directory.size(); i++)
+    {
+        localTime = localtime(&directory[i].timestamp);
+        strftime(time, 50, "%I:%M %p %B %d", localTime);
+        cout << directory[i].filename << "\t" << directory[i].fileSize << " bytes\t" << time << endl;
+    }
 }
 
 void NoSQLDatabase::findValueFromDatabase()
