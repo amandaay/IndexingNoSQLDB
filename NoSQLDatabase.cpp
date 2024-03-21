@@ -5,6 +5,7 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <iomanip>
 
 using namespace std;
 using namespace std::filesystem;
@@ -15,6 +16,7 @@ NoSQLDatabase::NoSQLDatabase() : bTree(0)
     currentPosInBlock = 0;
     currentBlock = 0;
     dbNumber = 0;
+    indexBfr = (BLOCK_SIZE - CHILD_BLOCK_SIZE) / (INDEX_BLOCK_SIZE + CHILD_BLOCK_SIZE);
 }
 
 NoSQLDatabase::~NoSQLDatabase()
@@ -74,7 +76,6 @@ void NoSQLDatabase::openOrCreateDatabase(string &PFSFile, int dbNumber)
         // Explicitly set the get pointer's position to the beginning of the file
         databaseFile.seekp(DIRECTORY_SIZE, ios::beg);
 
-        int indexBfr = (BLOCK_SIZE - CHILD_BLOCK_SIZE) / (INDEX_BLOCK_SIZE + CHILD_BLOCK_SIZE);
         // Initialize B-tree index
         bTree = BTree(indexBfr);
     }
@@ -123,20 +124,20 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
 
             // Cuts of at DATA_RECORD_SIZE (40 bytes)
             // Truncate the data to fit within MAX_DATA_RECORD_SIZE bytes
+
             if (line.size() > DATA_RECORD_SIZE)
             {
-                cout << "Before line resized THE SIZE: " << line.size() << endl;
-                cout << "Before line resized: " << line << endl;
-                line.resize(DATA_RECORD_SIZE - 1);
-                cout << "After line resized THE SIZE: " << line.size() << endl;
-                // Check if the last character is not a newline
-                if (line.back() != '\n')
-                {
-                    // If not, add the newline character
-                    line.push_back('\n');
-                    cout << "After line resized with newline THE SIZE: " << line.size() << endl;
-                    cout << "After line resized with newline: " << line << endl;
-                }
+                // cout << "Before line resized THE SIZE: " << line.size() << endl;
+                // cout << "Before line resized: " << line << endl;
+                // leaves 1 byte to account for nextline character
+                line.resize(DATA_RECORD_SIZE);
+                // cout << "After line resized THE SIZE: " << line.size() << endl;
+            }
+            else if (line.size() < DATA_RECORD_SIZE)
+            {
+                line.resize(line.size() - 1);
+                // Pad the line with spaces to reach 40 bytes
+                line.resize(DATA_RECORD_SIZE, ' ');
             }
 
             // check if the current data file is full
@@ -146,14 +147,10 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
                 databaseFile.close();
                 dbNumber++;
                 openOrCreateDatabase(databaseName, dbNumber);
-                // Explicitly set the get pointer's position to the beginning of the file
-                // update position in database and each block
-                currentPosInDb = DIRECTORY_SIZE;
                 cout << "Updated position in DB " << currentPosInDb << endl;
                 currentPosInBlock = 0;
                 cout << "Updated position in the block " << currentPosInBlock << endl;
                 currentBlock++;
-                cout << "Updated block " << currentBlock << endl;
             }
 
             // Check if adding the record would exceed the block size
@@ -161,24 +158,23 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
             {
                 // Move to the next block
                 cout << "Block is full." << endl;
+                // Add next line for representation, BLOCK PER LINE
+                databaseFile << endl;
                 currentBlock++;
-                cout << "Writing to updated block " << currentBlock << endl;
+                // cout << "Writing to updated block " << currentBlock << endl;
                 currentPosInDb = DIRECTORY_SIZE + currentBlock * BLOCK_SIZE;
                 cout << "Writing to updated position in the dataFile " << currentPosInDb << endl;
                 currentPosInBlock = 0;
                 cout << "Writing at position in the block " << currentPosInBlock << endl;
-                databaseFile.seekp(currentPosInDb);
             }
-            else
-            {
-                cout << "Writing to block: " << currentBlock << endl;
-                cout << "Writing at position in the dataFile " << currentPosInDb << endl;
-                cout << "Writing at position in the block " << currentPosInBlock << endl;
-                databaseFile.seekp(currentPosInDb);
-            }
+            // cout << "Writing to block: " << currentBlock << endl;
+            cout << "Writing at position in the dataFile " << currentPosInDb << endl;
+            cout << "Writing at position in the block " << currentPosInBlock << endl;
+            databaseFile.seekp(currentPosInDb);
 
             cout << "Writing current line database file: " << line << endl;
             // Write the data to the database file
+
             databaseFile << line;
 
             // Index the key using B-tree
@@ -190,13 +186,12 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
             currentPosInBlock += DATA_RECORD_SIZE; // each individual block
             fcb.fileSize += DATA_RECORD_SIZE;      //  only the data size
             fcb.timestamp = time(nullptr);         // update the timestamp
+
+            cout << "Entered new record." << endl;
+            cout << endl;
         }
     }
 
-    if(!line.empty()){
-        cout << "line not empty." << endl;
-        cout << "line prints: " << line << endl;
-    }  
     // Add the FCB to the directory
     directory.push_back(fcb);
 

@@ -30,8 +30,9 @@ private:
     int currentPosInBlock; // position starts from 0 to 255 in each block
     int currentBlock;      // block number starts from 0
     int dbNumber;          // database number starts from 0
-    
-    BTree bTree; // include BTree for indexing
+
+    BTree bTree;  // include BTree for indexing
+    int indexBfr; // index blocking factor
 
     // Define structures for File Control Block (FCB) and directory entry
     struct FCB
