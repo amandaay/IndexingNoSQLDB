@@ -134,10 +134,6 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
                 }
             }
 
-            cout << "Writing to block: " << currentBlock << endl;
-            cout << "Writing at position in the dataFile " << currentPosInDb << endl;
-            cout << "Writing at position in the block " << currentPosInBlock << endl;
-
             // check if the current data file is full
             if (currentPosInDb + DATA_RECORD_SIZE >= (INITIAL_SIZE * (dbNumber + 1)))
             {
@@ -162,7 +158,7 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
                 cout << "Block is full." << endl;
                 currentBlock++;
                 cout << "Writing to updated block " << currentBlock << endl;
-                currentPosInDb = currentBlock * BLOCK_SIZE;
+                currentPosInDb = DIRECTORY_SIZE + currentBlock * BLOCK_SIZE;
                 cout << "Writing to updated position in the dataFile " << currentPosInDb << endl;
                 currentPosInBlock = 0;
                 cout << "Writing at position in the block " << currentPosInBlock << endl;
@@ -170,10 +166,13 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
             }
             else
             {
-                cout << "Writing to current data block " << currentBlock << endl;
+                cout << "Writing to block: " << currentBlock << endl;
+                cout << "Writing at position in the dataFile " << currentPosInDb << endl;
+                cout << "Writing at position in the block " << currentPosInBlock << endl;
                 databaseFile.seekp(currentPosInDb);
             }
 
+            // Write the data to the database file
             databaseFile << line;
 
             // Index the key using B-tree
