@@ -187,6 +187,7 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
         fcb.timestamp = time(nullptr);         // update the timestamp
     }
     directory.push_back(fcb);
+    directory.push_back(fcb);
 
     // Close the file to read
     fileToRead.close();
