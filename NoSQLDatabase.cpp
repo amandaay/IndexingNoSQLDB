@@ -13,7 +13,7 @@ using namespace std::filesystem;
 NoSQLDatabase::NoSQLDatabase() : bTree(0)
 {
     currentPosInDb = DIRECTORY_SIZE; // position starts after the directory structure starting 0 in the beginning
-    currentPosInBlock = 0;
+    currentPosInBlock = CHILD_BLOCK_SIZE; // position starts from 4 to 255 in each block
     currentBlock = 0;
     dbNumber = 0;
     indexBfr = (BLOCK_SIZE - CHILD_BLOCK_SIZE) / (INDEX_BLOCK_SIZE + CHILD_BLOCK_SIZE);
@@ -145,12 +145,13 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
                 dbNumber++;
                 openOrCreateDatabase(databaseName, dbNumber);
                 cout << "Updated position in DB " << currentPosInDb << endl;
-                currentPosInBlock = 0;
+                currentPosInBlock = CHILD_BLOCK_SIZE;
                 cout << "Updated position in the block " << currentPosInBlock << endl;
                 currentBlock++;
             }
 
             // Check if adding the record would exceed the block size
+            // Each block is 256 bytes that includes a child block size of 4 bytes
             if (currentPosInBlock + DATA_RECORD_SIZE >= BLOCK_SIZE)
             {
                 // Move to the next block
@@ -161,7 +162,7 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
                 // cout << "Writing to updated block " << currentBlock << endl;
                 currentPosInDb = DIRECTORY_SIZE + currentBlock * BLOCK_SIZE;
                 cout << "Writing to updated position in the dataFile " << currentPosInDb << endl;
-                currentPosInBlock = 0;
+                currentPosInBlock = CHILD_BLOCK_SIZE;
                 cout << "Writing at position in the block " << currentPosInBlock << endl;
             }
             // cout << "Writing to block: " << currentBlock << endl;
