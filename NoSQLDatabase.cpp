@@ -173,6 +173,7 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
             cout << "Writing current line database file: " << line << endl;
             // Write the data to the database file
             databaseFile << line;
+            databaseFile.flush(); // Flush the buffer to write the data to the file
 
             // Index the key using B-tree
             insertIntoBTree(key);
