@@ -13,10 +13,10 @@ using namespace std::filesystem;
 NoSQLDatabase::NoSQLDatabase() : bTree(0)
 {
     currentPosInDb = 0;      // position starts after the directory structure starting 0 in the beginning
-    currentPosInBlock = 0; // position starts from 4 to 255 in each block
-    currentBlock = 0;
-    dbNumber = 0;
-    indexBfr = (BLOCK_SIZE - CHILD_BLOCK_SIZE) / (INDEX_BLOCK_SIZE + CHILD_BLOCK_SIZE);
+    currentPosInBlock = 0; // position starts from 0 to 255 in each block
+    currentBlock = 0;   // which block
+    dbNumber = 0;   // defines database number (e.g. test.db0, test.db1, ...)
+    indexBfr = (BLOCK_SIZE - BLOCK_NUMBER_SIZE) / (KEY_NUMBER_SIZE + (BLOCK_NUMBER_SIZE * 2));
 }
 
 NoSQLDatabase::~NoSQLDatabase()
@@ -82,9 +82,9 @@ void NoSQLDatabase::openOrCreateDatabase(string &PFSFile, int dbNumber)
             databaseFile << i << endl;
         }
         // Explicitly set the get pointer's position to the beginning of the file
-        databaseFile.seekp(0, io::beg);
+        databaseFile.seekp(0, ios::beg);
         // replace "-" with metadata
-        
+        databaseFile.put('*');
 
         // Initialize B-tree index
         bTree = BTree(indexBfr);
