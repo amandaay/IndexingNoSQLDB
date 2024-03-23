@@ -65,6 +65,7 @@ private:
     Command getCommandType(const string &command);
     FCB fcb;
     vector<FCB> directory;
+    void writeDataBoundaries(string &data);
 
 public:
     // constructor of NoSQLDatabase

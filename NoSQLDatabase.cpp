@@ -28,6 +28,14 @@ NoSQLDatabase::~NoSQLDatabase()
     }
 }
 
+void NoSQLDatabase::writeDataBoundaries(string &data) {
+    for (int row =0; row < (INITIAL_SIZE / BLOCK_SIZE); row++) {    
+        if (data.size() < BLOCK_SIZE) {
+            databaseFile << data << setw(BLOCK_SIZE - data.size()) << endl;
+        }
+    }
+}
+
 // Implement B-tree insertion method
 void NoSQLDatabase::insertIntoBTree(int key)
 {
@@ -90,10 +98,19 @@ void NoSQLDatabase::openOrCreateDatabase(string &PFSFile, int dbNumber)
         databaseFile << databaseName;   // takes up 0-49th byte
         databaseFile.flush();
 
+        // initial file size
+        databaseFile.seekp(50);
+        databaseFile << to_string(dbNumber + 1);
+        databaseFile.flush();
+
         // blocksize
         databaseFile.seekp(70);
         databaseFile << to_string(BLOCK_SIZE);
         databaseFile.flush();
+
+        // number of uploaded files e.g. movies-small.csv
+        databaseFile.seekp(80);
+        databaseFile << to_string(fcb.fileSize);
 
         // Initialize B-tree index
         bTree = BTree(indexBfr);
