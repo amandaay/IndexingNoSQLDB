@@ -12,8 +12,8 @@ using namespace std::filesystem;
 
 NoSQLDatabase::NoSQLDatabase() : bTree(0)
 {
-    currentPosInDb = DIRECTORY_SIZE; // position starts after the directory structure starting 0 in the beginning
-    currentPosInBlock = CHILD_BLOCK_SIZE; // position starts from 4 to 255 in each block
+    currentPosInDb = 0;      // position starts after the directory structure starting 0 in the beginning
+    currentPosInBlock = 0; // position starts from 4 to 255 in each block
     currentBlock = 0;
     dbNumber = 0;
     indexBfr = (BLOCK_SIZE - CHILD_BLOCK_SIZE) / (INDEX_BLOCK_SIZE + CHILD_BLOCK_SIZE);
@@ -72,9 +72,19 @@ void NoSQLDatabase::openOrCreateDatabase(string &PFSFile, int dbNumber)
         }
 
         // Allocate a new 1 MByte "PFS" file if it does not already exist.
-        databaseFile.seekp(INITIAL_SIZE);
+        // databaseFile.seekp(INITIAL_SIZE);
+        for (int i = 0; i < (INITIAL_SIZE / BLOCK_SIZE); i++)
+        {
+            databaseFile << i;
+            for (int j = 0; j < BLOCK_SIZE; j ++) {
+                databaseFile << "-";
+            }
+            databaseFile << i << endl;
+        }
         // Explicitly set the get pointer's position to the beginning of the file
-        databaseFile.seekp(DIRECTORY_SIZE, ios::beg);
+        databaseFile.seekp(0, io::beg);
+        // replace "-" with metadata
+        
 
         // Initialize B-tree index
         bTree = BTree(indexBfr);
@@ -145,7 +155,7 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
                 dbNumber++;
                 openOrCreateDatabase(databaseName, dbNumber);
                 cout << "Updated position in DB " << currentPosInDb << endl;
-                currentPosInBlock = CHILD_BLOCK_SIZE;
+                currentPosInBlock = 0;
                 cout << "Updated position in the block " << currentPosInBlock << endl;
                 currentBlock++;
             }
@@ -156,13 +166,17 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
             {
                 // Move to the next block
                 cout << "Block is full." << endl;
-                // Add next line for representation, BLOCK PER LINE
-                databaseFile << endl;
                 currentBlock++;
+                // Add the next block number and next line for representation, BLOCK PER LINE
+                databaseFile.seekp(currentBlock * BLOCK_SIZE);
+                // databaseFile.seekp(DIRECTORY_SIZE + currentBlock * BLOCK_SIZE - CHILD_BLOCK_SIZE);
+                // databaseFile << currentBlock << endl;
+                databaseFile << endl;
+                databaseFile.flush(); // Flush the buffer to write the data to the file
                 // cout << "Writing to updated block " << currentBlock << endl;
                 currentPosInDb = DIRECTORY_SIZE + currentBlock * BLOCK_SIZE;
                 cout << "Writing to updated position in the dataFile " << currentPosInDb << endl;
-                currentPosInBlock = CHILD_BLOCK_SIZE;
+                currentPosInBlock = 0;
                 cout << "Writing at position in the block " << currentPosInBlock << endl;
             }
             // cout << "Writing to block: " << currentBlock << endl;

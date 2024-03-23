@@ -17,9 +17,9 @@ using namespace std;
 constexpr int BLOCK_SIZE = 256;           // Block size in bytes
 constexpr int INITIAL_SIZE = 1024 * 1024; // Initial size of database file in bytes (1024 Mbytes)
 constexpr int DATA_RECORD_SIZE = 40;      // Size of each record in bytes (key + value)
-constexpr int CHILD_BLOCK_SIZE = 4;       // Size Child block
-constexpr int INDEX_BLOCK_SIZE = 4 + 4;   // Size Index block (key, block #)
-constexpr int DIRECTORY_SIZE = 256 * 3;   // Size of metadata, 3 FCBS, bit map
+constexpr int BLOCK_NUMBER_SIZE = 5;       // Size of Block # or Child block # (5 digit block #)
+constexpr int KEY_NUMBER_SIZE = 8;          // Size of Key # in Index Block
+constexpr int DIRECTORY_SIZE = 256 * 20;   // Size of metadata, 3 FCBS, bit map
 
 class NoSQLDatabase
 {

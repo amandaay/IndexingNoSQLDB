@@ -51,40 +51,40 @@ https://stackoverflow.com/questions/50800605/using-binary-search-in-b-tree#:~:te
 - Endline ("\n") at the end of each line or record
 - First character or integer before the first comma (",") is our key
 
-2. Each data record has a maximum of 40 bytes including the endline ("\n")
+2. Each data record has a maximum of 40 bytes, bfr = 256/40 = 6 records
 
 3. Each block has a maximum of 256 bytes
 
 4. Index block allocation assumption:
-- child block # (integer) 4 bytes
-- key, block # (integer, integer) (4 bytes, 4 bytes)
-- blocking factor for index block: (256 - 4) / (4 * 3) = 21 bytes
+- child block # 5 bytes
+- key, block # (8 bytes, 5 bytes)
+- blocking factor (bfr) for index block: (256 - 5) / (8 + 5 + 5) = 13 key
 
 5. Directory Structure Assumptions:
 
-- Blocksize: 4 bytes
-- Database name: 24 bytes
-- Total size: 4 bytes
-- Number of total files (PFS): 4 bytes
-- Number of records of data file: 4 bytes
-- Total metadata size = 40 bytes
+- Database name: 50 bytes
+- Total size: 10 bytes
+- Number of total files (PFS): 2 bytes
+- Block size: 3 bytes
+- Number of FCBs: 1 byte
 
-Assume that there are 4 FCBs:
-- filename: 24 bytes
-- filesize: 4 bytes
-- time: 8 bytes
-- start block: 4 bytes
-- Index file info: 4 bytes (Root pointer of BTree)
-- Total (4 FCBs) = 44 * 4 = 176 bytes
+Assume that there are 3 FCBs:
+- filename: 50 bytes
+- filesize: 10 bytes
+- date/time: 20 bytes
+- start block: 5 bytes
+- Number of blocks used: 5 bytes
+- Starting block for index (i.e. root): 5 bytes
 
-Bit Map: 16 bytes
-- Number of blocks = 1 Mbytes / block = 1024 * 1024 / 256 = 4096 blocks
+Bit Map:
+- Number of blocks = 1 Mbytes / block size = 1024 * 1024 / 256 = 4096 blocks
 - Each block has 1 or 0. (bit)
-- 1 indicates free block, 0 indicates that the block is allocated.
-- Thus, we have a total of 4096 bit.
-- To convert to bytes = 4096 / 8 = 512 bytes. (Equivalent to around 2 blocks.)
+- 0 indicates a free block, 1 indicates that the block is allocated.
+- Total blocks in a PFS / BLOCK_SIZE = 4096 / 256 = 16 blocks
+- Thus, we will use 16 blocks to represent.
 
-- Directory uses up around 728 bytes (~ 3 block sizes), so we will reserve 3 * 256 = 768 bytes for the directory structure. 
+- Assume that metadata uses 1 block, each FCB uses 1 block (3 * 1 block), bitmap uses 16 blocks
+- The directory structure takes around 20 blocks.
 
 ## Authors
 
