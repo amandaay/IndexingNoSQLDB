@@ -66,7 +66,7 @@ https://stackoverflow.com/questions/50800605/using-binary-search-in-b-tree#:~:te
 - Total size: 10 bytes
 - Number of total files (PFS): 2 bytes
 - Block size: 3 bytes
-- Number of FCBs: 1 byte
+- Number of uploaded files: 1 byte
 
 Assume that there are 3 FCBs:
 - filename: 50 bytes

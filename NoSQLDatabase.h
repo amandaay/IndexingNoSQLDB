@@ -26,7 +26,7 @@ class NoSQLDatabase
 private:
     string databaseName;
     fstream databaseFile;
-    int currentPosInDb;    // position starts after the directory structure in each PFS file (e.g. .db0, .db1, .db2,...)
+    int currentPosInDb;    // position starts from 0 in each PFS file (e.g. .db0, .db1, .db2,...)
     int currentPosInBlock; // position starts from 0 to 255 in each block
     int currentBlock;      // block number starts from 0
     int dbNumber;          // database number starts from 0
@@ -41,6 +41,8 @@ private:
         int fileSize;     // Number of blocks used
         time_t timestamp; // Last modified time
         int startBlock;
+        int numberOfBlocksUsed;
+        int startingBlockIndex; //  root of the btree
         // TODO: index info
         // Add other necessary fields such as create time, create date, etc.
     };

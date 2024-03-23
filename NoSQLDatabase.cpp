@@ -12,7 +12,7 @@ using namespace std::filesystem;
 
 NoSQLDatabase::NoSQLDatabase() : bTree(0)
 {
-    currentPosInDb = 0;      // position starts after the directory structure starting 0 in the beginning
+    currentPosInDb = DIRECTORY_SIZE;      // position starts after the directory structure
     currentPosInBlock = 0; // position starts from 0 to 255 in each block
     currentBlock = 0;   // which block
     dbNumber = 0;   // defines database number (e.g. test.db0, test.db1, ...)
@@ -64,27 +64,36 @@ void NoSQLDatabase::openOrCreateDatabase(string &PFSFile, int dbNumber)
         cout << "Creating database " << databaseName << endl;
         cout << "Creating database file " << filePath << endl;
         // Open the database file
-        databaseFile.open(filePath, ios::out | ios::app | ios::in);
+        databaseFile.open(filePath, ios::out);
         if (!databaseFile.is_open())
         {
-            cout << "Error: Unable to create database file." << endl;
-            return;
+            if (!databaseFile.is_open()) {
+                cout << "Error: Unable to create a file." << endl;
+                return;
+            }
         }
 
         // Allocate a new 1 MByte "PFS" file if it does not already exist.
-        // databaseFile.seekp(INITIAL_SIZE);
         for (int i = 0; i < (INITIAL_SIZE / BLOCK_SIZE); i++)
         {
-            databaseFile << i;
             for (int j = 0; j < BLOCK_SIZE; j ++) {
-                databaseFile << "-";
+                databaseFile << " ";
             }
-            databaseFile << i << endl;
+            databaseFile << endl;
         }
+        
         // Explicitly set the get pointer's position to the beginning of the file
-        databaseFile.seekp(0, ios::beg);
         // replace "-" with metadata
-        databaseFile.put('*');
+
+        // databaseName
+        databaseFile.seekp(0, ios::beg);
+        databaseFile << databaseName;   // takes up 0-49th byte
+        databaseFile.flush();
+
+        // blocksize
+        databaseFile.seekp(70);
+        databaseFile << to_string(BLOCK_SIZE);
+        databaseFile.flush();
 
         // Initialize B-tree index
         bTree = BTree(indexBfr);
@@ -167,14 +176,12 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
                 // Move to the next block
                 cout << "Block is full." << endl;
                 currentBlock++;
-                // Add the next block number and next line for representation, BLOCK PER LINE
-                databaseFile.seekp(currentBlock * BLOCK_SIZE);
-                // databaseFile.seekp(DIRECTORY_SIZE + currentBlock * BLOCK_SIZE - CHILD_BLOCK_SIZE);
-                // databaseFile << currentBlock << endl;
-                databaseFile << endl;
-                databaseFile.flush(); // Flush the buffer to write the data to the file
                 // cout << "Writing to updated block " << currentBlock << endl;
                 currentPosInDb = DIRECTORY_SIZE + currentBlock * BLOCK_SIZE;
+                // Add the next block number and next line for representation, BLOCK PER LINE
+                databaseFile.seekp(currentPosInDb);
+                databaseFile << endl;
+                databaseFile.flush(); // Flush the buffer to write the data to the file
                 cout << "Writing to updated position in the dataFile " << currentPosInDb << endl;
                 currentPosInBlock = 0;
                 cout << "Writing at position in the block " << currentPosInBlock << endl;
@@ -204,9 +211,70 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
         }
     }
 
+    // update metadata 1 block total
+    // database total size
+    databaseFile.seekp(50);
+    databaseFile << to_string(INITIAL_SIZE * (dbNumber + 1)); // takes 50-59th byte
+    databaseFile.flush();
+
+    // how many uploaded files
+    databaseFile.seekp(80);
+    databaseFile << to_string(directory.size());
+    databaseFile << endl;
+    databaseFile.flush();
+
+    // total number of files (PFS)
+    databaseFile.seekp(60);
+    databaseFile << to_string((dbNumber+ 1));
+    databaseFile.flush();
+
     // Add the FCB to the directory
     directory.push_back(fcb);
+    // metadata total files uploaded
+    databaseFile.seekp(70);
+    databaseFile << to_string(directory.size());
+    databaseFile.flush();
+    
 
+    tm *localTime;
+    char time[100];
+
+    // Add FCB to the directory structure
+    for (int i = 0; i < directory.size(); i++) {
+        // filename
+        databaseFile.seekp(BLOCK_SIZE * (i + 1)); // starting from block 2, 0 - 49th byte
+        databaseFile << directory[i].filename;
+        databaseFile.flush();
+
+        // file size
+        databaseFile.seekp(BLOCK_SIZE * (i + 1) + 50); // starting from block 2, 50th byte 
+        databaseFile << to_string(directory[i].fileSize);
+        
+        // last modified time
+        databaseFile.seekp(BLOCK_SIZE * (i + 1) + 10);
+        localTime = localtime(&directory[i].timestamp);
+        strftime(time, 100, "%F,%T", localTime);
+        databaseFile << time;
+        databaseFile.flush();
+
+        // start block
+        databaseFile.seekp(BLOCK_SIZE * (i + 1) + 20);
+        databaseFile << to_string(directory[i].startBlock);
+        databaseFile.flush();
+
+        // Number of blocks used
+        databaseFile.seekp(BLOCK_SIZE * (i + 1) + 10);
+        databaseFile << to_string(directory[i].numberOfBlocksUsed);
+        databaseFile.flush();
+
+        // Starting block for index (i.e. root)
+        databaseFile.seekp(BLOCK_SIZE * (i + 1) + 10);
+        databaseFile << to_string(directory[i].startingBlockIndex);
+        databaseFile << endl;
+        databaseFile.flush();
+        
+    }
+    
     // Close the file to read
     fileToRead.close();
 
