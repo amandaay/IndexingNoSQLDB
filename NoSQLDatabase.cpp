@@ -287,7 +287,6 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
         // Starting block for index (i.e. root)
         databaseFile.seekp((i + 1) * (BLOCK_SIZE + 1) + 100);
         databaseFile << to_string(directory[i].startingBlockIndex);
-        databaseFile << endl;
         databaseFile.flush();
     }
 
