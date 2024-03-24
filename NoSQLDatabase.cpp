@@ -30,12 +30,12 @@ NoSQLDatabase::~NoSQLDatabase()
 
 void NoSQLDatabase::writeDataBoundaries(string &data, int currentBlock, int currentPosInBlock)
 {
-    // if (data.size() > BLOCK_SIZE) {
-        
-    // }
-    // // Write the data to the database file
-    // databaseFile.seekp(currentBlock * BLOCK_SIZE + currentPosInBlock);
-    // databaseFile << data;
+    // current block: row
+    // currentPosInBlock: column
+    databaseFile.seekp(currentBlock * BLOCK_SIZE + currentPosInBlock);
+    databaseFile << data;
+    databaseFile << endl;
+    databaseFile.flush();
 }
 
 // Implement B-tree insertion method
