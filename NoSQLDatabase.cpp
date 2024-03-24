@@ -249,8 +249,6 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
     // metadata total files uploaded
     databaseFile.seekp(80);
     databaseFile << to_string(directory.size());
-    databaseFile << endl;
-    databaseFile.flush();
 
     tm *localTime;
     char time[100];
@@ -258,28 +256,6 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
     // Add FCB to the directory structure
     for (int i = 0; i < directory.size(); i++)
     {
-        // filename
-    //     writeDataBoundaries(directory[i].filename, i + 1, 0);
-    //     // file size
-    //     string fileSize = to_string(directory[i].fileSize);
-    //     writeDataBoundaries(fileSize, i + 1, 50);
-    //     // last modified time
-    //     localTime = localtime(&directory[i].timestamp);
-    //     strftime(time, 100, "%F,%T", localTime);
-    //     string time = time;
-    //     writeDataBoundaries(time, i + 1, 10);
-    //     // start block
-    //     string startBlock = to_string(directory[i].startBlock);
-    //     writeDataBoundaries(startBlock, i + 1, 20);
-    //     // Number of blocks used
-    //     string numberOfBlocksUsed = to_string(directory[i].numberOfBlocksUsed);
-    //     writeDataBoundaries(numberOfBlocksUsed, i + 1, 30);
-    //     // Starting block for index (i.e. root)
-    //     string startingBlockIndex = to_string(directory[i].startingBlockIndex);
-    //     writeDataBoundaries(startingBlockIndex, i + 1, 40);
-    //     databaseFile.flush();
-    // }
-
         // filename
         databaseFile.seekp(BLOCK_SIZE * (i + 1)); // starting from block 2, 0 - 49th byte
         databaseFile << directory[i].filename;
@@ -294,7 +270,8 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
         // Adjust local time for GMT-7 (PST with DST)
         localTime->tm_hour -= 7;
         // Ensure hour is within 0-23 range
-        if (localTime->tm_hour < 0) {
+        if (localTime->tm_hour < 0)
+        {
             localTime->tm_hour += 24;
             localTime->tm_mday -= 1;
         }
