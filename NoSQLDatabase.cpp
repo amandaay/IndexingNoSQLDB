@@ -28,15 +28,14 @@ NoSQLDatabase::~NoSQLDatabase()
     }
 }
 
-void NoSQLDatabase::writeDataBoundaries(string &data)
+void NoSQLDatabase::writeDataBoundaries(string &data, int currentBlock, int currentPosInBlock)
 {
-    for (int row = 0; row < (INITIAL_SIZE / BLOCK_SIZE); row++)
-    {
-        if (data.size() < BLOCK_SIZE)
-        {
-            databaseFile << data << setw(BLOCK_SIZE - data.size()) << endl;
-        }
-    }
+    // if (data.size() > BLOCK_SIZE) {
+        
+    // }
+    // // Write the data to the database file
+    // databaseFile.seekp(currentBlock * BLOCK_SIZE + currentPosInBlock);
+    // databaseFile << data;
 }
 
 // Implement B-tree insertion method
@@ -101,22 +100,18 @@ void NoSQLDatabase::openOrCreateDatabase(string &PFSFile, int dbNumber)
         // databaseName
         databaseFile.seekp(0, ios::beg);
         databaseFile << databaseName; // takes up 0-49th byte
-        databaseFile.flush();
 
         // initial file size
         databaseFile.seekp(50);
         databaseFile << to_string(INITIAL_SIZE);
-        databaseFile.flush();
 
         // total number of files (PFS)
         databaseFile.seekp(60);
         databaseFile << to_string(dbNumber + 1);
-        databaseFile.flush();
 
         // blocksize
         databaseFile.seekp(70);
         databaseFile << to_string(BLOCK_SIZE);
-        databaseFile.flush();
 
         // number of uploaded files e.g. movies-small.csv, should be empty
         databaseFile.seekp(80);
@@ -239,29 +234,22 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
             cout << endl;
         }
     }
+    // Add the FCB to the directory
+    directory.push_back(fcb);
 
     // update metadata 1 block total
     // database total size
     databaseFile.seekp(50);
     databaseFile << to_string(INITIAL_SIZE * (dbNumber + 1)); // takes 50-59th byte
-    databaseFile.flush();
-
-    // how many uploaded files
-    databaseFile.seekp(80);
-    databaseFile << to_string(directory.size());
-    databaseFile << endl;
-    databaseFile.flush();
 
     // total number of files (PFS)
     databaseFile.seekp(60);
     databaseFile << to_string((dbNumber + 1));
-    databaseFile.flush();
 
-    // Add the FCB to the directory
-    directory.push_back(fcb);
     // metadata total files uploaded
-    databaseFile.seekp(70);
+    databaseFile.seekp(80);
     databaseFile << to_string(directory.size());
+    databaseFile << endl;
     databaseFile.flush();
 
     tm *localTime;
@@ -271,9 +259,30 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
     for (int i = 0; i < directory.size(); i++)
     {
         // filename
+    //     writeDataBoundaries(directory[i].filename, i + 1, 0);
+    //     // file size
+    //     string fileSize = to_string(directory[i].fileSize);
+    //     writeDataBoundaries(fileSize, i + 1, 50);
+    //     // last modified time
+    //     localTime = localtime(&directory[i].timestamp);
+    //     strftime(time, 100, "%F,%T", localTime);
+    //     string time = time;
+    //     writeDataBoundaries(time, i + 1, 10);
+    //     // start block
+    //     string startBlock = to_string(directory[i].startBlock);
+    //     writeDataBoundaries(startBlock, i + 1, 20);
+    //     // Number of blocks used
+    //     string numberOfBlocksUsed = to_string(directory[i].numberOfBlocksUsed);
+    //     writeDataBoundaries(numberOfBlocksUsed, i + 1, 30);
+    //     // Starting block for index (i.e. root)
+    //     string startingBlockIndex = to_string(directory[i].startingBlockIndex);
+    //     writeDataBoundaries(startingBlockIndex, i + 1, 40);
+    //     databaseFile.flush();
+    // }
+
+        // filename
         databaseFile.seekp(BLOCK_SIZE * (i + 1)); // starting from block 2, 0 - 49th byte
         databaseFile << directory[i].filename;
-        databaseFile.flush();
 
         // file size
         databaseFile.seekp(BLOCK_SIZE * (i + 1) + 50); // starting from block 2, 50th byte
@@ -284,17 +293,14 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
         localTime = localtime(&directory[i].timestamp);
         strftime(time, 100, "%F,%T", localTime);
         databaseFile << time;
-        databaseFile.flush();
 
         // start block
         databaseFile.seekp(BLOCK_SIZE * (i + 1) + 20);
         databaseFile << to_string(directory[i].startBlock);
-        databaseFile.flush();
 
         // Number of blocks used
         databaseFile.seekp(BLOCK_SIZE * (i + 1) + 10);
         databaseFile << to_string(directory[i].numberOfBlocksUsed);
-        databaseFile.flush();
 
         // Starting block for index (i.e. root)
         databaseFile.seekp(BLOCK_SIZE * (i + 1) + 10);
