@@ -32,10 +32,9 @@ void NoSQLDatabase::writeDataBoundaries(string &data, int currentBlock, int curr
 {
     // current block: row
     // currentPosInBlock: column
-    databaseFile.seekp(currentBlock * BLOCK_SIZE + currentPosInBlock);
-    databaseFile << data;
-    databaseFile << endl;
-    databaseFile.flush();
+    // adding 1 byte for newline character for formatting reasons
+    databaseFile.seekp(currentBlock * (BLOCK_SIZE + 1) + currentPosInBlock);
+    databaseFile << data << endl;
 }
 
 // Implement B-tree insertion method
@@ -257,15 +256,15 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
     for (int i = 0; i < directory.size(); i++)
     {
         // filename
-        databaseFile.seekp(BLOCK_SIZE * (i + 1)); // starting from block 2, 0 - 49th byte
+        databaseFile.seekp((i + 1) * (BLOCK_SIZE + 1)); // starting from block 2, 0 - 49th byte
         databaseFile << directory[i].filename;
 
         // file size
-        databaseFile.seekp(BLOCK_SIZE * (i + 1) + 50); // starting from block 2, 50th byte
+        databaseFile.seekp((i + 1) * (BLOCK_SIZE + 1) + 50); // starting from block 2, 50th byte
         databaseFile << to_string(directory[i].fileSize);
 
         // last modified time
-        databaseFile.seekp(BLOCK_SIZE * (i + 1) + 60);
+        databaseFile.seekp((i + 1) * (BLOCK_SIZE + 1) + 60);
         localTime = localtime(&directory[i].timestamp);
         // Adjust local time for GMT-7 (PST with DST)
         localTime->tm_hour -= 7;
@@ -278,15 +277,15 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
         databaseFile << put_time(localTime, "%Y-%m-%d,%H:%M:%S");
 
         // start block
-        databaseFile.seekp(BLOCK_SIZE * (i + 1) + 80);
+        databaseFile.seekp((i + 1) * (BLOCK_SIZE + 1) + 80);
         databaseFile << to_string(directory[i].startBlock);
 
         // Number of blocks used
-        databaseFile.seekp(BLOCK_SIZE * (i + 1) + 90);
+        databaseFile.seekp((i + 1) * (BLOCK_SIZE + 1) + 90);
         databaseFile << to_string(directory[i].numberOfBlocksUsed);
 
         // Starting block for index (i.e. root)
-        databaseFile.seekp(BLOCK_SIZE * (i + 1) + 10);
+        databaseFile.seekp((i + 1) * (BLOCK_SIZE + 1) + 100);
         databaseFile << to_string(directory[i].startingBlockIndex);
         databaseFile << endl;
         databaseFile.flush();
