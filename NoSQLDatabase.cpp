@@ -266,8 +266,7 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
         // last modified time
         databaseFile.seekp((i + 1) * (BLOCK_SIZE + 1) + 60);
         localTime = localtime(&directory[i].timestamp);
-        // Adjust local time for GMT-7 (PST with DST)
-        // localTime->tm_hour -= 7;
+        
         // Ensure hour is within 0-23 range
         if (localTime->tm_hour < 0)
         {
