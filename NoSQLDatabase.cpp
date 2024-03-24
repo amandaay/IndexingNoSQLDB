@@ -289,7 +289,7 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
         databaseFile << to_string(directory[i].fileSize);
 
         // last modified time
-        databaseFile.seekp(BLOCK_SIZE * (i + 1) + 10);
+        databaseFile.seekp(BLOCK_SIZE * (i + 1) + 60);
         localTime = localtime(&directory[i].timestamp);
         // Adjust local time for GMT-7 (PST with DST)
         localTime->tm_hour -= 7;
@@ -301,11 +301,11 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
         databaseFile << put_time(localTime, "%Y-%m-%d,%H:%M:%S");
 
         // start block
-        databaseFile.seekp(BLOCK_SIZE * (i + 1) + 20);
+        databaseFile.seekp(BLOCK_SIZE * (i + 1) + 80);
         databaseFile << to_string(directory[i].startBlock);
 
         // Number of blocks used
-        databaseFile.seekp(BLOCK_SIZE * (i + 1) + 10);
+        databaseFile.seekp(BLOCK_SIZE * (i + 1) + 90);
         databaseFile << to_string(directory[i].numberOfBlocksUsed);
 
         // Starting block for index (i.e. root)
