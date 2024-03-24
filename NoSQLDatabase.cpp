@@ -143,9 +143,9 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
 
     // Initialize FCB information
     fcb.filename = myFile;
-    fcb.fileSize = 0;              // Initialize to 0
-    fcb.timestamp = time(nullptr); // Set the timestamp to current time
-    fcb.startBlock = currentBlock; // Assuming currentBlock keeps track of the starting block
+    fcb.fileSize = file_size(myFile);             // The actual file size
+    fcb.timestamp = time(nullptr);                // Set the timestamp to current time
+    fcb.startBlock = DIRECTORY_SIZE / BLOCK_SIZE; // The data starts after the directory structure
 
     // Skip the first row (header)
     string header;
@@ -224,10 +224,10 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
 
             cout << "KEY inserting into BTree: " << key << endl;
 
-            currentPosInDb += DATA_RECORD_SIZE;    // include directory structure
-            currentPosInBlock += DATA_RECORD_SIZE; // each individual block
-            fcb.fileSize += DATA_RECORD_SIZE;      //  only the data size
-            fcb.timestamp = time(nullptr);         // update the timestamp
+            currentPosInDb += DATA_RECORD_SIZE;         // include directory structure
+            currentPosInBlock += DATA_RECORD_SIZE;      // each individual block
+            fcb.numberOfBlocksUsed += DATA_RECORD_SIZE; //  only the data size
+            fcb.timestamp = time(nullptr);              // update the timestamp
 
             cout << "Entered new record." << endl;
             cout << endl;
@@ -267,7 +267,7 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
         databaseFile.seekp((i + 1) * (BLOCK_SIZE + 1) + 60);
         localTime = localtime(&directory[i].timestamp);
         // Adjust local time for GMT-7 (PST with DST)
-        localTime->tm_hour -= 7;
+        // localTime->tm_hour -= 7;
         // Ensure hour is within 0-23 range
         if (localTime->tm_hour < 0)
         {

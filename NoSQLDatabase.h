@@ -17,9 +17,9 @@ using namespace std;
 constexpr int BLOCK_SIZE = 256;           // Block size in bytes
 constexpr int INITIAL_SIZE = 1024 * 1024; // Initial size of database file in bytes (1024 Mbytes)
 constexpr int DATA_RECORD_SIZE = 40;      // Size of each record in bytes (key + value)
-constexpr int BLOCK_NUMBER_SIZE = 5;       // Size of Block # or Child block # (5 digit block #)
-constexpr int KEY_NUMBER_SIZE = 8;          // Size of Key # in Index Block
-constexpr int DIRECTORY_SIZE = 256 * 20;   // Size of metadata, 3 FCBS, bit map
+constexpr int BLOCK_NUMBER_SIZE = 5;      // Size of Block # or Child block # (5 digit block #)
+constexpr int KEY_NUMBER_SIZE = 8;        // Size of Key # in Index Block
+constexpr int DIRECTORY_SIZE = 256 * 20;  // Size of metadata, 3 FCBS, bit map
 
 class NoSQLDatabase
 {
@@ -34,14 +34,16 @@ private:
     BTree bTree;  // include BTree for indexing
     int indexBfr; // index blocking factor
 
-    // Define structures for File Control Block (FCB) and directory entry
+// Define structures for File Control Block (FCB) and directory entry
+#include <cstdint>
+
     struct FCB
     {
         string filename;
-        int fileSize;     // Number of blocks used
+        uintmax_t fileSize;
         time_t timestamp; // Last modified time
         int startBlock;
-        int numberOfBlocksUsed;
+        int numberOfBlocksUsed; // Number of blocks used
         int startingBlockIndex; //  root of the btree
         // TODO: index info
         // Add other necessary fields such as create time, create date, etc.
