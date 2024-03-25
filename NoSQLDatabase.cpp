@@ -41,9 +41,6 @@ void NoSQLDatabase::writeDataBoundaries(string &data, int &currentBlock, int &cu
         fcb.numberOfBlocksUsed++;
         currentBlock++;
         currentPosInBlock = 0;
-        cout << "Moving to the next block " << currentBlock << endl;
-        cout << "Writing at position in the block " << currentPosInBlock << endl;
-        cout << "currentBlock * (BLOCK_SIZE + 1) + currentPosInBlock: " << currentBlock * (BLOCK_SIZE + 1) + currentPosInBlock<< endl;
     }
     databaseFile.seekp(currentBlock * (BLOCK_SIZE + 1) + currentPosInBlock);
     databaseFile << data;
@@ -170,6 +167,7 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
     fcb.timestamp = time(nullptr);                // Set the timestamp to current time
     fcb.startBlock = DIRECTORY_SIZE / BLOCK_SIZE; // The data starts after the directory structure
     fcb.numberOfBlocksUsed = 0;                   // Number of blocks used
+    fcb.startingBlockIndex = 0;                   // The starting block for the index (i.e. root)
 
     // Skip the first row (header)
     string header;
@@ -217,11 +215,7 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
                 currentBlock++;
             }
 
-            cout << "Writing at block " << currentBlock << endl;
-            cout << "Writing at position in the block " << currentPosInBlock << endl;
-            cout << "Writing current line database file: " << line << endl;
             writeDataBoundaries(line, currentBlock, currentPosInBlock);
-            cout << "updated curr pos in block" << currentPosInBlock << endl;
 
             // Index the key using B-tree
             insertIntoBTree(key);
