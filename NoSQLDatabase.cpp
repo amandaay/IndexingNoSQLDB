@@ -12,10 +12,10 @@ using namespace std::filesystem;
 
 NoSQLDatabase::NoSQLDatabase() : bTree(0)
 {
-    currentPosInDb = DIRECTORY_SIZE; // position starts after the directory structure
-    currentPosInBlock = 0;           // position starts from 0 to 255 in each block
-    currentBlock = 0;                // which block
-    dbNumber = 0;                    // defines database number (e.g. test.db0, test.db1, ...)
+    currentPosInDb = DIRECTORY_SIZE;            // position starts after the directory structure
+    currentPosInBlock = 0;                      // position starts from 0 to 255 in each block
+    currentBlock = DIRECTORY_SIZE / BLOCK_SIZE; // which block in each db, starts from block 20
+    dbNumber = 0;                               // defines database number (e.g. test.db0, test.db1, ...)
     indexBfr = (BLOCK_SIZE - BLOCK_NUMBER_SIZE) / (KEY_NUMBER_SIZE + (BLOCK_NUMBER_SIZE * 2));
 }
 
@@ -30,11 +30,38 @@ NoSQLDatabase::~NoSQLDatabase()
 
 void NoSQLDatabase::writeDataBoundaries(string &data, int currentBlock, int currentPosInBlock)
 {
-    // current block: row
-    // currentPosInBlock: column
+    // current block: row, currentPosInBlock: column
+    // Check if adding the record would exceed the block size
+    // Each block is 256 bytes that includes a child block size of 4 bytes
     // adding 1 byte for newline character for formatting reasons
-    databaseFile.seekp(currentBlock * (BLOCK_SIZE + 1) + currentPosInBlock);
-    databaseFile << data << endl;
+    if (currentPosInBlock + DATA_RECORD_SIZE >= BLOCK_SIZE)
+    {
+        // Move to the next block
+        cout << "Block is full." << endl;
+        fcb.numberOfBlocksUsed++;
+        currentBlock++;
+        currentPosInBlock = 0;
+        cout << "Moving to the next block " << currentBlock << endl;
+        cout << "Writing at position in the block " << currentPosInBlock << endl;
+        cout << "currentBlock * (BLOCK_SIZE + 1): " << currentBlock * (BLOCK_SIZE + 1) << endl;
+        databaseFile.seekp(currentBlock * (BLOCK_SIZE + 1) + currentPosInBlock);
+        databaseFile << data;
+        currentPosInBlock++;
+    }
+    else
+    {
+        databaseFile.seekp(currentBlock * (BLOCK_SIZE + 1) + currentPosInBlock);
+        databaseFile << data;
+    }
+    databaseFile.flush();
+}
+
+string NoSQLDatabase::intToFiveDigitString(int number)
+{
+    // Convert an integer to a 5-digit string
+    stringstream ss;
+    ss << setw(5) << setfill('0') << number;
+    return ss.str();
 }
 
 // Implement B-tree insertion method
@@ -146,6 +173,7 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
     fcb.fileSize = file_size(myFile);             // The actual file size
     fcb.timestamp = time(nullptr);                // Set the timestamp to current time
     fcb.startBlock = DIRECTORY_SIZE / BLOCK_SIZE; // The data starts after the directory structure
+    fcb.numberOfBlocksUsed = 0;                   // Number of blocks used
 
     // Skip the first row (header)
     string header;
@@ -189,45 +217,23 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
                 cout << "Updated position in DB " << currentPosInDb << endl;
                 currentPosInBlock = 0;
                 cout << "Updated position in the block " << currentPosInBlock << endl;
+                fcb.numberOfBlocksUsed++;
                 currentBlock++;
             }
 
-            // Check if adding the record would exceed the block size
-            // Each block is 256 bytes that includes a child block size of 4 bytes
-            if (currentPosInBlock + DATA_RECORD_SIZE >= BLOCK_SIZE)
-            {
-                // Move to the next block
-                cout << "Block is full." << endl;
-                currentBlock++;
-                // cout << "Writing to updated block " << currentBlock << endl;
-                currentPosInDb = DIRECTORY_SIZE + currentBlock * BLOCK_SIZE;
-                // Add the next block number and next line for representation, BLOCK PER LINE
-                databaseFile.seekp(currentPosInDb);
-                databaseFile << endl;
-                databaseFile.flush(); // Flush the buffer to write the data to the file
-                cout << "Writing to updated position in the dataFile " << currentPosInDb << endl;
-                currentPosInBlock = 0;
-                cout << "Writing at position in the block " << currentPosInBlock << endl;
-            }
-            // cout << "Writing to block: " << currentBlock << endl;
-            cout << "Writing at position in the dataFile " << currentPosInDb << endl;
+            cout << "Writing at block " << currentBlock << endl;
             cout << "Writing at position in the block " << currentPosInBlock << endl;
-            databaseFile.seekp(currentPosInDb);
-
             cout << "Writing current line database file: " << line << endl;
-            // Write the data to the database file
-            databaseFile << line;
-            databaseFile.flush(); // Flush the buffer to write the data to the file
+            writeDataBoundaries(line, currentBlock, currentPosInBlock);
 
             // Index the key using B-tree
             insertIntoBTree(key);
 
             cout << "KEY inserting into BTree: " << key << endl;
 
-            currentPosInDb += DATA_RECORD_SIZE;         // include directory structure
-            currentPosInBlock += DATA_RECORD_SIZE;      // each individual block
-            fcb.numberOfBlocksUsed += DATA_RECORD_SIZE; //  only the data size
-            fcb.timestamp = time(nullptr);              // update the timestamp
+            currentPosInDb += DATA_RECORD_SIZE;    // include directory structure
+            currentPosInBlock += DATA_RECORD_SIZE; // each individual block
+            fcb.timestamp = time(nullptr);         // update the timestamp
 
             cout << "Entered new record." << endl;
             cout << endl;
@@ -266,7 +272,7 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
         // last modified time
         databaseFile.seekp((i + 1) * (BLOCK_SIZE + 1) + 60);
         localTime = localtime(&directory[i].timestamp);
-        
+
         // Ensure hour is within 0-23 range
         if (localTime->tm_hour < 0)
         {
@@ -277,15 +283,15 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
 
         // start block
         databaseFile.seekp((i + 1) * (BLOCK_SIZE + 1) + 80);
-        databaseFile << to_string(directory[i].startBlock);
+        databaseFile << intToFiveDigitString(directory[i].startBlock);
 
         // Number of blocks used
         databaseFile.seekp((i + 1) * (BLOCK_SIZE + 1) + 90);
-        databaseFile << to_string(directory[i].numberOfBlocksUsed);
+        databaseFile << intToFiveDigitString(directory[i].numberOfBlocksUsed);
 
         // Starting block for index (i.e. root)
         databaseFile.seekp((i + 1) * (BLOCK_SIZE + 1) + 100);
-        databaseFile << to_string(directory[i].startingBlockIndex);
+        databaseFile << intToFiveDigitString(directory[i].startingBlockIndex);
         databaseFile.flush();
     }
 

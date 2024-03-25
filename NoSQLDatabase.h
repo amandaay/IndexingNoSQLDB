@@ -10,7 +10,7 @@
 #include <ctime>
 #include <unordered_map>
 #include "BTree.h"
-
+#include <cstdint>
 using namespace std;
 
 // Define constants for file system parameters
@@ -34,9 +34,7 @@ private:
     BTree bTree;  // include BTree for indexing
     int indexBfr; // index blocking factor
 
-// Define structures for File Control Block (FCB) and directory entry
-#include <cstdint>
-
+    // Define structures for File Control Block (FCB) and directory entry
     struct FCB
     {
         string filename;
@@ -67,7 +65,9 @@ private:
     Command getCommandType(const string &command);
     FCB fcb;
     vector<FCB> directory;
+    // formating the data to write into the database
     void writeDataBoundaries(string &data, int currentBlock, int currentPosInBlock);
+    string intToFiveDigitString(int number);
 
 public:
     // constructor of NoSQLDatabase
