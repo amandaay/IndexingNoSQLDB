@@ -66,7 +66,7 @@ private:
     FCB fcb;
     vector<FCB> directory;
     // formating the data to write into the database
-    void writeDataBoundaries(string &data, int currentBlock, int currentPosInBlock);
+    void writeDataBoundaries(string &data, int &currentBlock, int &currentPosInBlock);
     string intToFiveDigitString(int number);
 
 public:

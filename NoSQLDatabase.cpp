@@ -28,7 +28,7 @@ NoSQLDatabase::~NoSQLDatabase()
     }
 }
 
-void NoSQLDatabase::writeDataBoundaries(string &data, int currentBlock, int currentPosInBlock)
+void NoSQLDatabase::writeDataBoundaries(string &data, int &currentBlock, int &currentPosInBlock)
 {
     // current block: row, currentPosInBlock: column
     // Check if adding the record would exceed the block size
@@ -43,17 +43,13 @@ void NoSQLDatabase::writeDataBoundaries(string &data, int currentBlock, int curr
         currentPosInBlock = 0;
         cout << "Moving to the next block " << currentBlock << endl;
         cout << "Writing at position in the block " << currentPosInBlock << endl;
-        cout << "currentBlock * (BLOCK_SIZE + 1): " << currentBlock * (BLOCK_SIZE + 1) << endl;
-        databaseFile.seekp(currentBlock * (BLOCK_SIZE + 1) + currentPosInBlock);
-        databaseFile << data;
-        currentPosInBlock++;
+        cout << "currentBlock * (BLOCK_SIZE + 1) + currentPosInBlock: " << currentBlock * (BLOCK_SIZE + 1) + currentPosInBlock<< endl;
     }
-    else
-    {
-        databaseFile.seekp(currentBlock * (BLOCK_SIZE + 1) + currentPosInBlock);
-        databaseFile << data;
-    }
+    databaseFile.seekp(currentBlock * (BLOCK_SIZE + 1) + currentPosInBlock);
+    databaseFile << data;
     databaseFile.flush();
+    currentPosInBlock++;
+    currentPosInDb++;
 }
 
 string NoSQLDatabase::intToFiveDigitString(int number)
@@ -121,7 +117,7 @@ void NoSQLDatabase::openOrCreateDatabase(string &PFSFile, int dbNumber)
         }
 
         // Explicitly set the get pointer's position to the beginning of the file
-        // replace "-" with metadata
+        // replace " " with metadata
 
         // databaseName
         databaseFile.seekp(0, ios::beg);
@@ -225,6 +221,7 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
             cout << "Writing at position in the block " << currentPosInBlock << endl;
             cout << "Writing current line database file: " << line << endl;
             writeDataBoundaries(line, currentBlock, currentPosInBlock);
+            cout << "updated curr pos in block" << currentPosInBlock << endl;
 
             // Index the key using B-tree
             insertIntoBTree(key);
