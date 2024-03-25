@@ -15,9 +15,6 @@ NoSQLDatabase::NoSQLDatabase() : bTree(0)
     currentPosInBlock = 0; // position starts from 0 to 255 in each block
     currentBlock = 0;      // which block in each db
     dbNumber = 0;          // defines database number (e.g. test.db0, test.db1, ...)
-    metaDataSizePos = 50;  // position of metadata size in the block
-    totalPfsFilesPos = 60; // position of total pfs files in the block
-    blocksizePos = 70;     // position of block size in the block
     uploadedFilesPos = 80; // position of uploaded files in the block
     indexBfr = (BLOCK_SIZE - BLOCK_NUMBER_SIZE) / (KEY_NUMBER_SIZE + (BLOCK_NUMBER_SIZE * 2));
 }
@@ -40,7 +37,7 @@ void NoSQLDatabase::writeDataBoundaries(string &data, int &currentBlock, int &cu
     if ((currentPosInBlock + (currentBlock * (BLOCK_SIZE + 1))) + DATA_RECORD_SIZE >= (INITIAL_SIZE * (dbNumber + 1)))
     {
         cout << "Database file is full." << endl;
-        addFCBToDirectoryStructure();
+        updateDirectory();
         databaseFile.close();
         dbNumber++;
         openOrCreateDatabase(databaseName, dbNumber);
@@ -73,11 +70,30 @@ string NoSQLDatabase::intToFiveDigitString(int number)
     return ss.str();
 }
 
-void NoSQLDatabase::addFCBToDirectoryStructure()
+// tm *NoSQLDatabase::getTimestamp(time_t timestamp)
+// {
+//     // Get the current timestamp
+//     tm *localTime;
+//     // Ensure hour is within 0-23 range
+//     if (localTime->tm_hour < 0)
+//     {
+//         localTime->tm_hour += 24;
+//         localTime->tm_mday -= 1;
+//     }
+//     return localtime(&timestamp);
+// }
+
+void NoSQLDatabase::updateDirectory()
 {
-    cout << "enter addFCBToDirectoryStructure" << endl;
+    cout << "enter update directory" << endl;
+    // metadata total files uploaded
+    uploadedFilesPos = 80; // position of uploaded files in the block
+    databaseFile.seekp(uploadedFilesPos);
+    databaseFile << to_string(directory.size() + 1);
+    cout << "# of uploaded Files:   " << to_string(directory.size()) << endl;
+    cout << "Current Block:    " << currentBlock << endl;
+    cout << "Current Position: " << currentPosInBlock << endl;
     tm *localTime;
-    char time[100];
     if (directory.empty())
     {
         // filename
@@ -140,6 +156,7 @@ void NoSQLDatabase::addFCBToDirectoryStructure()
         databaseFile << intToFiveDigitString(directory[i].startBlock);
 
         // Number of blocks used
+        cout << "Number of blocks used: " << directory[i].numberOfBlocksUsed << endl;
         databaseFile.seekp((i + 1) * (BLOCK_SIZE + 1) + 90);
         databaseFile << intToFiveDigitString(directory[i].numberOfBlocksUsed);
 
@@ -160,7 +177,7 @@ void NoSQLDatabase::openOrCreateDatabase(string &PFSFile, int dbNumber)
         // open file
         for (int i = 0; i < dbNumber; i++)
         {
-            databaseFile.open(databaseName + ".db" + to_string(i), ios::out | ios::in);
+            databaseFile.open(databaseName + ".db" + to_string(i), ios::in | ios::app);
             // check file path
             cout << "Open database file " << databaseName << ".db" << i << endl;
             if (!databaseFile.is_open())
@@ -203,21 +220,26 @@ void NoSQLDatabase::openOrCreateDatabase(string &PFSFile, int dbNumber)
         // databaseName
         writeDataBoundaries(databaseName, currentBlock, currentPosInBlock); // takes up 0-49th byte
 
-        // initial file size
-        string initialSize = to_string(INITIAL_SIZE);
-        writeDataBoundaries(initialSize, currentBlock, metaDataSizePos); // takes up 50-59th byte
+        // total size of the database (1 PFS = 1 Mbyte)
+        int metaDataSizePos = 50; // position of metadata size in the block
+        string pfsSize = to_string(INITIAL_SIZE * (dbNumber + 1));
+        writeDataBoundaries(pfsSize, currentBlock, metaDataSizePos); // takes up 50-59th byte
 
         // total number of files (PFS)
+        int totalPfsFilesPos = 60; // position of total pfs files in the block
         string totalPfsFiles = to_string(dbNumber + 1);
         writeDataBoundaries(totalPfsFiles, currentBlock, totalPfsFilesPos); // takes up 60-69th byte
 
         // blocksize
+        int blocksizePos = 70; // position of block size in the block
         string blocksize = to_string(BLOCK_SIZE);
         writeDataBoundaries(blocksize, currentBlock, blocksizePos); // takes up 70-79th byte
 
         // number of uploaded files e.g. movies-small.csv, should be empty
-        fcb.fileSize = 0;
-        string uploadedFiles = to_string(fcb.fileSize);
+        // when the database is created, there's no file uploaded yet
+        // it gets updated when a file is uploaded (PUT command)
+        uploadedFilesPos = 80; // position of uploaded files in the block
+        string uploadedFiles = to_string(directory.size());
         writeDataBoundaries(uploadedFiles, currentBlock, uploadedFilesPos); // takes up 80-89th byte
 
         // Initialize B-tree index
@@ -251,7 +273,7 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
     fcb.fileSize = file_size(myFile); // The actual file size
     fcb.timestamp = time(nullptr);    // Set the timestamp to current time
     fcb.startBlock = currentBlock;    // The data starts after the directory structure
-    fcb.numberOfBlocksUsed = 0;       // Number of blocks used
+    fcb.numberOfBlocksUsed = 1;       // Number of blocks used
     fcb.startingBlockIndex = 0;       // The starting block for the index (i.e. root)
 
     // Skip the first row (header)
@@ -299,21 +321,10 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
     // Add the FCB to the directory
     directory.push_back(fcb);
 
-    // update metadata 1 block total
-    // database total size
-    databaseFile.seekp(50);
-    databaseFile << to_string(INITIAL_SIZE * (dbNumber + 1)); // takes 50-59th byte
-
-    // total number of files (PFS)
-    databaseFile.seekp(60);
-    databaseFile << to_string((dbNumber + 1));
-
-    // metadata total files uploaded
-    databaseFile.seekp(80);
-    databaseFile << to_string(directory.size());
+    cout << fcb.numberOfBlocksUsed << " blocks used." << endl;
 
     // Add FCB to the directory structure
-    addFCBToDirectoryStructure();
+    updateDirectory();
 
     // Close the file to read
     fileToRead.close();

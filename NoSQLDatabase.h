@@ -20,6 +20,7 @@ constexpr int DATA_RECORD_SIZE = 40;      // Size of each record in bytes (key +
 constexpr int BLOCK_NUMBER_SIZE = 5;      // Size of Block # or Child block # (5 digit block #)
 constexpr int KEY_NUMBER_SIZE = 8;        // Size of Key # in Index Block
 constexpr int DIRECTORY_SIZE = 256 * 20;  // Size of metadata, 3 FCBS, bit map
+constexpr int METADATA_START_POS = 0;     // Start position of metadata in the block
 
 class NoSQLDatabase
 {
@@ -29,9 +30,6 @@ private:
     int currentPosInBlock; // position starts from 0 to 255 in each block
     int currentBlock;      // block number starts from 0
     int dbNumber;          // database number starts from 0
-    int metaDataSizePos;   // position of metadata size in the block
-    int totalPfsFilesPos;  // position of total pfs files in the block
-    int blocksizePos;      // position of block size in the block
     int uploadedFilesPos;  // position of uploaded files in the block
 
     BTree bTree;  // include BTree for indexing
@@ -41,7 +39,7 @@ private:
     struct FCB
     {
         string filename;
-        uintmax_t fileSize;
+        uintmax_t fileSize; // actual file size of the uploaded file (e.g. movies-small.csv)
         time_t timestamp; // Last modified time
         int startBlock;
         int numberOfBlocksUsed; // Number of blocks used
@@ -65,11 +63,12 @@ private:
 
     Command getCommandType(const string &command);
     FCB fcb;
-    void addFCBToDirectoryStructure();
+    void updateDirectory();
     vector<FCB> directory;
     // formating the data to write into the database
     void writeDataBoundaries(string &data, int &currentBlock, int &currentPosInBlock);
     string intToFiveDigitString(int number);
+    // tm* getTimestamp(time_t timestamp);
 
 public:
     // constructor of NoSQLDatabase
