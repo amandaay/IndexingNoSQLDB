@@ -29,6 +29,10 @@ private:
     int currentPosInBlock; // position starts from 0 to 255 in each block
     int currentBlock;      // block number starts from 0
     int dbNumber;          // database number starts from 0
+    int metaDataSizePos;   // position of metadata size in the block
+    int totalPfsFilesPos;  // position of total pfs files in the block
+    int blocksizePos;      // position of block size in the block
+    int uploadedFilesPos;  // position of uploaded files in the block
 
     BTree bTree;  // include BTree for indexing
     int indexBfr; // index blocking factor
@@ -42,8 +46,6 @@ private:
         int startBlock;
         int numberOfBlocksUsed; // Number of blocks used
         int startingBlockIndex; //  root of the btree
-        // TODO: index info
-        // Add other necessary fields such as create time, create date, etc.
     };
 
     // Other private members for block management, file operations, etc.
@@ -63,6 +65,7 @@ private:
 
     Command getCommandType(const string &command);
     FCB fcb;
+    void addFCBToDirectoryStructure();
     vector<FCB> directory;
     // formating the data to write into the database
     void writeDataBoundaries(string &data, int &currentBlock, int &currentPosInBlock);

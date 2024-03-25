@@ -12,9 +12,13 @@ using namespace std::filesystem;
 
 NoSQLDatabase::NoSQLDatabase() : bTree(0)
 {
-    currentPosInBlock = 0;                      // position starts from 0 to 255 in each block
-    currentBlock = DIRECTORY_SIZE / BLOCK_SIZE; // which block in each db, starts from block 20
-    dbNumber = 0;                               // defines database number (e.g. test.db0, test.db1, ...)
+    currentPosInBlock = 0; // position starts from 0 to 255 in each block
+    currentBlock = 0;      // which block in each db
+    dbNumber = 0;          // defines database number (e.g. test.db0, test.db1, ...)
+    metaDataSizePos = 50;  // position of metadata size in the block
+    totalPfsFilesPos = 60; // position of total pfs files in the block
+    blocksizePos = 70;     // position of block size in the block
+    uploadedFilesPos = 80; // position of uploaded files in the block
     indexBfr = (BLOCK_SIZE - BLOCK_NUMBER_SIZE) / (KEY_NUMBER_SIZE + (BLOCK_NUMBER_SIZE * 2));
 }
 
@@ -30,9 +34,23 @@ NoSQLDatabase::~NoSQLDatabase()
 void NoSQLDatabase::writeDataBoundaries(string &data, int &currentBlock, int &currentPosInBlock)
 {
     // current block: row, currentPosInBlock: column
+    // adding 1 byte for newline character for formatting reasons
+
+    // check if the current data file is full
+    if ((currentPosInBlock + (currentBlock * (BLOCK_SIZE + 1))) + DATA_RECORD_SIZE >= (INITIAL_SIZE * (dbNumber + 1)))
+    {
+        cout << "Database file is full." << endl;
+        addFCBToDirectoryStructure();
+        databaseFile.close();
+        dbNumber++;
+        openOrCreateDatabase(databaseName, dbNumber);
+        currentPosInBlock = 0;
+        fcb.numberOfBlocksUsed++;
+        currentBlock = DIRECTORY_SIZE / BLOCK_SIZE;
+    }
+
     // Check if adding the record would exceed the block size
     // Each block is 256 bytes that includes a child block size of 4 bytes
-    // adding 1 byte for newline character for formatting reasons
     if (currentPosInBlock + DATA_RECORD_SIZE >= BLOCK_SIZE)
     {
         // Move to the next block
@@ -55,196 +73,46 @@ string NoSQLDatabase::intToFiveDigitString(int number)
     return ss.str();
 }
 
-// Implement B-tree insertion method
-void NoSQLDatabase::insertIntoBTree(int key)
+void NoSQLDatabase::addFCBToDirectoryStructure()
 {
-    bTree.Insert(key);
-}
-
-// Implement B-tree search method
-bool NoSQLDatabase::searchInBTree(int key)
-{
-    vector<int> NodeIds;
-    return bTree.Lookup(bTree.getRootNode(), key, NodeIds);
-}
-
-void NoSQLDatabase::openOrCreateDatabase(string &PFSFile, int dbNumber)
-{
-    databaseName = PFSFile;
-    // Open the database file or Create if db not exist
-    string filePath = databaseName + ".db" + to_string(dbNumber);
-    if (exists(filePath))
-    {
-        // check file path
-        cout << "filePath: " << filePath << endl;
-        // open file
-        databaseFile.open(filePath, ios::out);
-        if (!databaseFile.is_open())
-        {
-            cout << "Error: Unable to open database file." << endl;
-            return;
-        }
-        cout << "Database opened successfully." << endl;
-    }
-    else
-    {
-        cout << "Creating database " << databaseName << endl;
-        cout << "Creating database file " << filePath << endl;
-        // Open the database file
-        databaseFile.open(filePath, ios::out);
-        if (!databaseFile.is_open())
-        {
-            if (!databaseFile.is_open())
-            {
-                cout << "Error: Unable to create a file." << endl;
-                return;
-            }
-        }
-
-        // Allocate a new 1 MByte "PFS" file if it does not already exist.
-        for (int i = 0; i < (INITIAL_SIZE / BLOCK_SIZE); i++)
-        {
-            for (int j = 0; j < BLOCK_SIZE; j++)
-            {
-                databaseFile << " ";
-            }
-            databaseFile << endl;
-        }
-
-        // Explicitly set the get pointer's position to the beginning of the file
-        // replace " " with metadata
-
-        // databaseName
-        databaseFile.seekp(0, ios::beg);
-        databaseFile << databaseName; // takes up 0-49th byte
-
-        // initial file size
-        databaseFile.seekp(50);
-        databaseFile << to_string(INITIAL_SIZE);
-
-        // total number of files (PFS)
-        databaseFile.seekp(60);
-        databaseFile << to_string(dbNumber + 1);
-
-        // blocksize
-        databaseFile.seekp(70);
-        databaseFile << to_string(BLOCK_SIZE);
-
-        // number of uploaded files e.g. movies-small.csv, should be empty
-        databaseFile.seekp(80);
-        fcb.fileSize = 0;
-        databaseFile << to_string(fcb.fileSize);
-        databaseFile.flush();
-
-        // Initialize B-tree index
-        bTree = BTree(indexBfr);
-    }
-}
-
-void NoSQLDatabase::putDataIntoDatabase(string &myFile)
-{
-    // Insert data from OS file into NoSQL database
-    // Accessing the databaseName member variable
-    cout << "Putting data into database " << databaseName << " from file " << myFile << endl;
-    ifstream fileToRead(myFile);
-    if (!fileToRead.is_open())
-    {
-        cout << "Error: Unable to open file " << myFile << endl;
-        return;
-    }
-
-    if (!databaseFile.is_open())
-    {
-        cout << "Error: Unable to open database file " << databaseName << endl;
-        return;
-    }
-
-    // Initialize FCB information
-    fcb.filename = myFile;
-    fcb.fileSize = file_size(myFile);             // The actual file size
-    fcb.timestamp = time(nullptr);                // Set the timestamp to current time
-    fcb.startBlock = DIRECTORY_SIZE / BLOCK_SIZE; // The data starts after the directory structure
-    fcb.numberOfBlocksUsed = 0;                   // Number of blocks used
-    fcb.startingBlockIndex = 0;                   // The starting block for the index (i.e. root)
-
-    // Skip the first row (header)
-    string header;
-    getline(fileToRead, header);
-
-    // Read and parse the remaining lines of the CSV file
-    string line;
-    while (getline(fileToRead, line))
-    {
-        stringstream ss(line);
-        string keyString;
-
-        // Assuming the key is located in the first field of each line
-        if (getline(ss, keyString, ','))
-        {
-            // Convert the key to the appropriate data type (e.g., integer)
-            int key = stoi(keyString);
-
-            // Cuts of at DATA_RECORD_SIZE (40 bytes)
-            // Truncate the data to fit within DATA_RECORD_SIZE bytes
-            if (line.size() > DATA_RECORD_SIZE)
-            {
-                // leaves 1 byte to account for nextline character
-                line.resize(DATA_RECORD_SIZE);
-            }
-            else if (line.size() < DATA_RECORD_SIZE)
-            {
-                // Remove the newline character
-                line.resize(line.size() - 1);
-                // Pad the line with spaces to reach 40 bytes
-                line.resize(DATA_RECORD_SIZE, ' ');
-            }
-
-            // check if the current data file is full
-            if ((currentPosInBlock + (currentBlock * (BLOCK_SIZE + 1))) + DATA_RECORD_SIZE >= (INITIAL_SIZE * (dbNumber + 1)))
-            {
-                cout << "Database file is full." << endl;
-                databaseFile.close();
-                dbNumber++;
-                openOrCreateDatabase(databaseName, dbNumber);
-                // cout << "Updated position in DB " << currentPosInDb << endl;
-                currentPosInBlock = 0;
-                cout << "Updated position in the block " << currentPosInBlock << endl;
-                fcb.numberOfBlocksUsed++;
-                currentBlock++;
-            }
-
-            writeDataBoundaries(line, currentBlock, currentPosInBlock);
-
-            // Index the key using B-tree
-            insertIntoBTree(key);
-
-            cout << "KEY inserting into BTree: " << key << endl;
-            currentPosInBlock += DATA_RECORD_SIZE; // each individual block
-            fcb.timestamp = time(nullptr);         // update the timestamp
-            cout << "Entered new record." << endl;
-            cout << endl;
-        }
-    }
-    // Add the FCB to the directory
-    directory.push_back(fcb);
-
-    // update metadata 1 block total
-    // database total size
-    databaseFile.seekp(50);
-    databaseFile << to_string(INITIAL_SIZE * (dbNumber + 1)); // takes 50-59th byte
-
-    // total number of files (PFS)
-    databaseFile.seekp(60);
-    databaseFile << to_string((dbNumber + 1));
-
-    // metadata total files uploaded
-    databaseFile.seekp(80);
-    databaseFile << to_string(directory.size());
-
+    cout << "enter addFCBToDirectoryStructure" << endl;
     tm *localTime;
     char time[100];
+    if (directory.empty())
+    {
+        // filename
+        databaseFile.seekp(BLOCK_SIZE + 1); // starting from block 2, 0 - 49th byte
+        databaseFile << fcb.filename;
 
-    // Add FCB to the directory structure
+        // file size
+        databaseFile.seekp((BLOCK_SIZE + 1) + 50); // starting from block 2, 50th byte
+        databaseFile << to_string(fcb.fileSize);
+
+        // last modified time
+        databaseFile.seekp((BLOCK_SIZE + 1) + 60);
+        localTime = localtime(&fcb.timestamp);
+
+        // Ensure hour is within 0-23 range
+        if (localTime->tm_hour < 0)
+        {
+            localTime->tm_hour += 24;
+            localTime->tm_mday -= 1;
+        }
+        databaseFile << put_time(localTime, "%Y-%m-%d,%H:%M:%S");
+
+        // start block
+        databaseFile.seekp((BLOCK_SIZE + 1) + 80);
+        databaseFile << intToFiveDigitString(fcb.startBlock);
+
+        // Number of blocks used
+        databaseFile.seekp((BLOCK_SIZE + 1) + 90);
+        databaseFile << intToFiveDigitString(fcb.numberOfBlocksUsed);
+
+        // Starting block for index (i.e. root)
+        databaseFile.seekp((BLOCK_SIZE + 1) + 100);
+        databaseFile << intToFiveDigitString(fcb.startingBlockIndex);
+        databaseFile.flush();
+    }
     for (int i = 0; i < directory.size(); i++)
     {
         // filename
@@ -280,11 +148,190 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
         databaseFile << intToFiveDigitString(directory[i].startingBlockIndex);
         databaseFile.flush();
     }
+}
+
+void NoSQLDatabase::openOrCreateDatabase(string &PFSFile, int dbNumber)
+{
+    databaseName = PFSFile;
+    // Open the database file or Create if db not exist
+    string filePath = databaseName + ".db" + to_string(dbNumber);
+    if (exists(filePath))
+    {
+        // open file
+        for (int i = 0; i < dbNumber; i++)
+        {
+            databaseFile.open(databaseName + ".db" + to_string(i), ios::out | ios::in);
+            // check file path
+            cout << "Open database file " << databaseName << ".db" << i << endl;
+            if (!databaseFile.is_open())
+            {
+                cout << "Error: Unable to open database file." << endl;
+                return;
+            }
+        }
+        cout << "Database opened successfully." << endl;
+    }
+    else
+    {
+        cout << "Creating database file " << filePath << endl;
+        // Open the database file
+        databaseFile.open(filePath, ios::out);
+        if (!databaseFile.is_open())
+        {
+            if (!databaseFile.is_open())
+            {
+                cout << "Error: Unable to create a file." << endl;
+                return;
+            }
+        }
+
+        // Allocate a new 1 MByte "PFS" file if it does not already exist.
+        for (int i = 0; i < (INITIAL_SIZE / BLOCK_SIZE); i++)
+        {
+            for (int j = 0; j < BLOCK_SIZE; j++)
+            {
+                databaseFile << " ";
+            }
+            databaseFile << endl;
+        }
+
+        // Explicitly set the get pointer's position to the beginning of the file
+        // replace " " with metadata
+        currentBlock = 0;
+        currentPosInBlock = 0;
+
+        // databaseName
+        writeDataBoundaries(databaseName, currentBlock, currentPosInBlock); // takes up 0-49th byte
+
+        // initial file size
+        string initialSize = to_string(INITIAL_SIZE);
+        writeDataBoundaries(initialSize, currentBlock, metaDataSizePos); // takes up 50-59th byte
+
+        // total number of files (PFS)
+        string totalPfsFiles = to_string(dbNumber + 1);
+        writeDataBoundaries(totalPfsFiles, currentBlock, totalPfsFilesPos); // takes up 60-69th byte
+
+        // blocksize
+        string blocksize = to_string(BLOCK_SIZE);
+        writeDataBoundaries(blocksize, currentBlock, blocksizePos); // takes up 70-79th byte
+
+        // number of uploaded files e.g. movies-small.csv, should be empty
+        fcb.fileSize = 0;
+        string uploadedFiles = to_string(fcb.fileSize);
+        writeDataBoundaries(uploadedFiles, currentBlock, uploadedFilesPos); // takes up 80-89th byte
+
+        // Initialize B-tree index
+        bTree = BTree(indexBfr);
+    }
+}
+
+void NoSQLDatabase::putDataIntoDatabase(string &myFile)
+{
+    // Insert data from OS file into NoSQL database
+    // Accessing the databaseName member variable
+    cout << "Putting data into database " << databaseName << " from file " << myFile << endl;
+    ifstream fileToRead(myFile);
+    if (!fileToRead.is_open())
+    {
+        cout << "Error: Unable to open file " << myFile << endl;
+        return;
+    }
+
+    if (!databaseFile.is_open())
+    {
+        cout << "Error: Unable to open database file " << databaseName << endl;
+        return;
+    }
+    // data block starts after the directory structure
+    currentBlock = DIRECTORY_SIZE / BLOCK_SIZE;
+    currentPosInBlock = 0;
+
+    // Initialize FCB information
+    fcb.filename = myFile;
+    fcb.fileSize = file_size(myFile); // The actual file size
+    fcb.timestamp = time(nullptr);    // Set the timestamp to current time
+    fcb.startBlock = currentBlock;    // The data starts after the directory structure
+    fcb.numberOfBlocksUsed = 0;       // Number of blocks used
+    fcb.startingBlockIndex = 0;       // The starting block for the index (i.e. root)
+
+    // Skip the first row (header)
+    string header;
+    getline(fileToRead, header);
+
+    // Read and parse the remaining lines of the CSV file
+    string line;
+    while (getline(fileToRead, line))
+    {
+        stringstream ss(line);
+        string keyString;
+
+        // Assuming the key is located in the first field of each line
+        if (getline(ss, keyString, ','))
+        {
+            // Convert the key to the appropriate data type (e.g., integer)
+            int key = stoi(keyString);
+
+            // Cuts of at DATA_RECORD_SIZE (40 bytes)
+            // Truncate the data to fit within DATA_RECORD_SIZE bytes
+            if (line.size() > DATA_RECORD_SIZE)
+            {
+                // leaves 1 byte to account for nextline character
+                line.resize(DATA_RECORD_SIZE);
+            }
+            else
+            {
+                // Remove the newline character
+                line.resize(line.size() - 1);
+                // Pad the line with spaces to reach 40 bytes
+                line.resize(DATA_RECORD_SIZE, ' ');
+            }
+            // Write the data to the database
+            writeDataBoundaries(line, currentBlock, currentPosInBlock);
+
+            // Index the key using B-tree
+            insertIntoBTree(key);
+
+            cout << "KEY inserting into BTree: " << key << endl;
+            currentPosInBlock += DATA_RECORD_SIZE; // each individual block
+            fcb.timestamp = time(nullptr);         // update the timestamp
+        }
+    }
+    // Add the FCB to the directory
+    directory.push_back(fcb);
+
+    // update metadata 1 block total
+    // database total size
+    databaseFile.seekp(50);
+    databaseFile << to_string(INITIAL_SIZE * (dbNumber + 1)); // takes 50-59th byte
+
+    // total number of files (PFS)
+    databaseFile.seekp(60);
+    databaseFile << to_string((dbNumber + 1));
+
+    // metadata total files uploaded
+    databaseFile.seekp(80);
+    databaseFile << to_string(directory.size());
+
+    // Add FCB to the directory structure
+    addFCBToDirectoryStructure();
 
     // Close the file to read
     fileToRead.close();
 
     cout << "Data from file " << myFile << " inserted into database " << databaseName << " successfully." << endl;
+}
+
+// Implement B-tree insertion method
+void NoSQLDatabase::insertIntoBTree(int key)
+{
+    bTree.Insert(key);
+}
+
+// Implement B-tree search method
+bool NoSQLDatabase::searchInBTree(int key)
+{
+    vector<int> NodeIds;
+    return bTree.Lookup(bTree.getRootNode(), key, NodeIds);
 }
 
 void NoSQLDatabase::getDataFromDatabase()
