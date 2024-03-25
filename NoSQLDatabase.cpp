@@ -12,7 +12,6 @@ using namespace std::filesystem;
 
 NoSQLDatabase::NoSQLDatabase() : bTree(0)
 {
-    currentPosInDb = DIRECTORY_SIZE;            // position starts after the directory structure
     currentPosInBlock = 0;                      // position starts from 0 to 255 in each block
     currentBlock = DIRECTORY_SIZE / BLOCK_SIZE; // which block in each db, starts from block 20
     dbNumber = 0;                               // defines database number (e.g. test.db0, test.db1, ...)
@@ -46,7 +45,6 @@ void NoSQLDatabase::writeDataBoundaries(string &data, int &currentBlock, int &cu
     databaseFile << data;
     databaseFile.flush();
     currentPosInBlock++;
-    currentPosInDb++;
 }
 
 string NoSQLDatabase::intToFiveDigitString(int number)
@@ -80,7 +78,7 @@ void NoSQLDatabase::openOrCreateDatabase(string &PFSFile, int dbNumber)
         // check file path
         cout << "filePath: " << filePath << endl;
         // open file
-        databaseFile.open(filePath);
+        databaseFile.open(filePath, ios::out);
         if (!databaseFile.is_open())
         {
             cout << "Error: Unable to open database file." << endl;
@@ -202,13 +200,13 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
             }
 
             // check if the current data file is full
-            if (currentPosInDb + DATA_RECORD_SIZE >= (INITIAL_SIZE * (dbNumber + 1)))
+            if ((currentPosInBlock + (currentBlock * (BLOCK_SIZE + 1))) + DATA_RECORD_SIZE >= (INITIAL_SIZE * (dbNumber + 1)))
             {
                 cout << "Database file is full." << endl;
                 databaseFile.close();
                 dbNumber++;
                 openOrCreateDatabase(databaseName, dbNumber);
-                cout << "Updated position in DB " << currentPosInDb << endl;
+                // cout << "Updated position in DB " << currentPosInDb << endl;
                 currentPosInBlock = 0;
                 cout << "Updated position in the block " << currentPosInBlock << endl;
                 fcb.numberOfBlocksUsed++;
@@ -221,11 +219,8 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
             insertIntoBTree(key);
 
             cout << "KEY inserting into BTree: " << key << endl;
-
-            currentPosInDb += DATA_RECORD_SIZE;    // include directory structure
             currentPosInBlock += DATA_RECORD_SIZE; // each individual block
             fcb.timestamp = time(nullptr);         // update the timestamp
-
             cout << "Entered new record." << endl;
             cout << endl;
         }
