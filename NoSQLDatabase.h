@@ -84,7 +84,7 @@ public:
     // get myFile: Download data file "myfile" from your NoSQL database, i.e., PFS file, and save it to the current OS directory.
     void getDataFromDatabase();
     // rm myFile: Delete "myfile" from your NoSQL database, i.e. PFS file.
-    void delFileFromDatabase();
+    void delFileFromDatabase(string &myFile);
     // dir: List all data files in your NoSQL database, i.e., PFS file.
     void listAllDataFromDatabase();
     // find [myfile.key]: Find ‘value’ using a given ‘key’, i.e., return a record which is associate with a key from ‘myfile’ in your NoSQL database. In addition, you need to show how many blocks are accessed during ‘find’

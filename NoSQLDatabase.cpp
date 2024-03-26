@@ -314,10 +314,12 @@ void NoSQLDatabase::getDataFromDatabase()
     // Download data file from NoSQL database to OS directory
 }
 
-void NoSQLDatabase::delFileFromDatabase()
+void NoSQLDatabase::delFileFromDatabase(string &myFile)
 {
     // Delete myfile from NoSQL database
-    
+    // deletes the data, the index, fcb (within the directory), 
+    // and update metadata (size, total PFS files, total uploaded files)
+    // rm the PFS files if there's extra
 }
 
 void NoSQLDatabase::listAllDataFromDatabase()
@@ -464,7 +466,7 @@ void NoSQLDatabase::runCLI()
             getDataFromDatabase();
             break;
         case RM:
-            delFileFromDatabase();
+            delFileFromDatabase(file);
             break;
         case DIR:
             listAllDataFromDatabase();
