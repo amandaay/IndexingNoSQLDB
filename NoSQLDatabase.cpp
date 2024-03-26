@@ -30,6 +30,9 @@ NoSQLDatabase::~NoSQLDatabase()
 
 void NoSQLDatabase::writeDataBoundaries(string &data, int &currentBlock, int &currentPosInBlock)
 {
+    cout << "write data within boundaries: " << data << endl;
+    cout << "Current block: " << currentBlock << endl << "Current position in block: " << currentPosInBlock << endl;
+
     // current block: row, currentPosInBlock: column
     // adding 1 byte for newline character for formatting reasons
 
@@ -55,10 +58,10 @@ void NoSQLDatabase::writeDataBoundaries(string &data, int &currentBlock, int &cu
         currentBlock++;
         currentPosInBlock = 0;
     }
+    cout << "currentBlock * (BLOCK_SIZE + 1) + currentPosInBlock: " << currentBlock * (BLOCK_SIZE + 1) + currentPosInBlock << endl;
     databaseFile.seekp(currentBlock * (BLOCK_SIZE + 1) + currentPosInBlock);
     databaseFile << data;
     databaseFile.flush();
-    currentPosInBlock++;
 }
 
 string NoSQLDatabase::intToFiveDigitString(int number)
@@ -128,7 +131,6 @@ void NoSQLDatabase::updateDirectory(int dbNumber)
         databaseFile << intToFiveDigitString(directory[i].startBlock);
 
         // Number of blocks used
-        cout << "Number of blocks used: " << directory[i].numberOfBlocksUsed << endl;
         databaseFile.seekp((i + 1) * (BLOCK_SIZE + 1) + 90);
         databaseFile << intToFiveDigitString(directory[i].numberOfBlocksUsed);
 
@@ -238,18 +240,29 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
 
             // Cuts of at DATA_RECORD_SIZE (40 bytes)
             // Truncate the data to fit within DATA_RECORD_SIZE bytes
-            if (line.size() > DATA_RECORD_SIZE)
-            {
-                // leaves 1 byte to account for nextline character
-                line.resize(DATA_RECORD_SIZE);
-            }
-            else
-            {
-                // Remove the newline character
-                line.resize(line.size() - 1);
-                // Pad the line with spaces to reach 40 bytes
+            // rm newline character
+            line.pop_back();
+            // consider special character like single " ' " and double " " " quotes
+            // int specialChar = 0;
+            // for (int i = 0; i < DATA_RECORD_SIZE; i++)
+            // {
+            //     if (line[i] == '\"')
+            //     { // find occurrence of double quotes
+            //         specialChar++;
+            //     }
+            // }
+            // if (specialChar == 1)
+            // {
+            //     line.resize(DATA_RECORD_SIZE + 1, ' '); // pad the rest of the line with spaces
+            //     cout << specialChar << "Special character found: " << line << endl;
+            // }
+            // else
+            // {
+                // pad the rest of the line with spaces
                 line.resize(DATA_RECORD_SIZE, ' ');
-            }
+                cout << "Special character not found: " << line << endl;
+            // }
+
             // Write the data to the database
             writeDataBoundaries(line, currentBlock, currentPosInBlock);
 
@@ -257,6 +270,9 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
             insertIntoBTree(key);
 
             cout << "KEY inserting into BTree: " << key << endl;
+            // if (specialChar == 1) {
+            //     currentPosInBlock += 1; // for display purpose
+            // }
             currentPosInBlock += DATA_RECORD_SIZE; // each individual block
             fcb.timestamp = time(nullptr);         // update the timestamp
         }
