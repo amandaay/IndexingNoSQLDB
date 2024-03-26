@@ -37,10 +37,9 @@ void NoSQLDatabase::writeDataBoundaries(string &data, int &currentBlock, int &cu
     if ((currentPosInBlock + (currentBlock * (BLOCK_SIZE + 1))) + DATA_RECORD_SIZE >= (INITIAL_SIZE * (dbNumber + 1)))
     {
         cout << "Database file is full." << endl;
-        updateDirectory();
         databaseFile.close();
         dbNumber++;
-        openOrCreateDatabase(databaseName, dbNumber);
+        openOrCreateDatabase(databaseName, dbNumber); // create the new PFS file
         currentPosInBlock = 0;
         fcb.numberOfBlocksUsed++;
         currentBlock = DIRECTORY_SIZE / BLOCK_SIZE;
@@ -70,65 +69,39 @@ string NoSQLDatabase::intToFiveDigitString(int number)
     return ss.str();
 }
 
-// tm *NoSQLDatabase::getTimestamp(time_t timestamp)
-// {
-//     // Get the current timestamp
-//     tm *localTime;
-//     // Ensure hour is within 0-23 range
-//     if (localTime->tm_hour < 0)
-//     {
-//         localTime->tm_hour += 24;
-//         localTime->tm_mday -= 1;
-//     }
-//     return localtime(&timestamp);
-// }
-
-void NoSQLDatabase::updateDirectory()
+void NoSQLDatabase::updateDirectory(int dbNumber)
 {
-    cout << "enter update directory" << endl;
-    // metadata total files uploaded
+    cout << "update directory" << endl;
+    currentBlock = 0;
+    currentPosInBlock = 0;
+
+    // databaseName
+    writeDataBoundaries(databaseName, currentBlock, currentPosInBlock); // takes up 0-49th byte
+
+    // total size of the database (1 PFS = 1 Mbyte)
+    int metaDataSizePos = 50; // position of metadata size in the block
+    string pfsSize = to_string(INITIAL_SIZE * (dbNumber + 1));
+    writeDataBoundaries(pfsSize, currentBlock, metaDataSizePos); // takes up 50-59th byte
+
+    // total number of files (PFS)
+    int totalPfsFilesPos = 60; // position of total pfs files in the block
+    string totalPfsFiles = to_string(dbNumber + 1);
+    writeDataBoundaries(totalPfsFiles, currentBlock, totalPfsFilesPos); // takes up 60-69th byte
+
+    // blocksize
+    int blocksizePos = 70; // position of block size in the block
+    string blocksize = to_string(BLOCK_SIZE);
+    writeDataBoundaries(blocksize, currentBlock, blocksizePos); // takes up 70-79th byte
+
+    // number of uploaded files e.g. movies-small.csv, should be empty
+    // when the database is created, there's no file uploaded yet
+    // it gets updated when a file is uploaded (PUT command)
     uploadedFilesPos = 80; // position of uploaded files in the block
-    databaseFile.seekp(uploadedFilesPos);
-    databaseFile << to_string(directory.size() + 1);
-    cout << "# of uploaded Files:   " << to_string(directory.size()) << endl;
-    cout << "Current Block:    " << currentBlock << endl;
-    cout << "Current Position: " << currentPosInBlock << endl;
+    string uploadedFiles = to_string(directory.size());
+    writeDataBoundaries(uploadedFiles, currentBlock, uploadedFilesPos); // takes up 80-89th byte
+
     tm *localTime;
-    if (directory.empty())
-    {
-        // filename
-        databaseFile.seekp(BLOCK_SIZE + 1); // starting from block 2, 0 - 49th byte
-        databaseFile << fcb.filename;
-
-        // file size
-        databaseFile.seekp((BLOCK_SIZE + 1) + 50); // starting from block 2, 50th byte
-        databaseFile << to_string(fcb.fileSize);
-
-        // last modified time
-        databaseFile.seekp((BLOCK_SIZE + 1) + 60);
-        localTime = localtime(&fcb.timestamp);
-
-        // Ensure hour is within 0-23 range
-        if (localTime->tm_hour < 0)
-        {
-            localTime->tm_hour += 24;
-            localTime->tm_mday -= 1;
-        }
-        databaseFile << put_time(localTime, "%Y-%m-%d,%H:%M:%S");
-
-        // start block
-        databaseFile.seekp((BLOCK_SIZE + 1) + 80);
-        databaseFile << intToFiveDigitString(fcb.startBlock);
-
-        // Number of blocks used
-        databaseFile.seekp((BLOCK_SIZE + 1) + 90);
-        databaseFile << intToFiveDigitString(fcb.numberOfBlocksUsed);
-
-        // Starting block for index (i.e. root)
-        databaseFile.seekp((BLOCK_SIZE + 1) + 100);
-        databaseFile << intToFiveDigitString(fcb.startingBlockIndex);
-        databaseFile.flush();
-    }
+    // Update the directory structure
     for (int i = 0; i < directory.size(); i++)
     {
         // filename
@@ -175,16 +148,13 @@ void NoSQLDatabase::openOrCreateDatabase(string &PFSFile, int dbNumber)
     if (exists(filePath))
     {
         // open file
-        for (int i = 0; i < dbNumber; i++)
+        databaseFile.open(filePath, ios::out | ios::in);
+        // check file path
+        cout << "Opening database file " << filePath << endl;
+        if (!databaseFile.is_open())
         {
-            databaseFile.open(databaseName + ".db" + to_string(i), ios::in | ios::app);
-            // check file path
-            cout << "Open database file " << databaseName << ".db" << i << endl;
-            if (!databaseFile.is_open())
-            {
-                cout << "Error: Unable to open database file." << endl;
-                return;
-            }
+            cout << "Error: Unable to open database file." << endl;
+            return;
         }
         cout << "Database opened successfully." << endl;
     }
@@ -214,33 +184,7 @@ void NoSQLDatabase::openOrCreateDatabase(string &PFSFile, int dbNumber)
 
         // Explicitly set the get pointer's position to the beginning of the file
         // replace " " with metadata
-        currentBlock = 0;
-        currentPosInBlock = 0;
-
-        // databaseName
-        writeDataBoundaries(databaseName, currentBlock, currentPosInBlock); // takes up 0-49th byte
-
-        // total size of the database (1 PFS = 1 Mbyte)
-        int metaDataSizePos = 50; // position of metadata size in the block
-        string pfsSize = to_string(INITIAL_SIZE * (dbNumber + 1));
-        writeDataBoundaries(pfsSize, currentBlock, metaDataSizePos); // takes up 50-59th byte
-
-        // total number of files (PFS)
-        int totalPfsFilesPos = 60; // position of total pfs files in the block
-        string totalPfsFiles = to_string(dbNumber + 1);
-        writeDataBoundaries(totalPfsFiles, currentBlock, totalPfsFilesPos); // takes up 60-69th byte
-
-        // blocksize
-        int blocksizePos = 70; // position of block size in the block
-        string blocksize = to_string(BLOCK_SIZE);
-        writeDataBoundaries(blocksize, currentBlock, blocksizePos); // takes up 70-79th byte
-
-        // number of uploaded files e.g. movies-small.csv, should be empty
-        // when the database is created, there's no file uploaded yet
-        // it gets updated when a file is uploaded (PUT command)
-        uploadedFilesPos = 80; // position of uploaded files in the block
-        string uploadedFiles = to_string(directory.size());
-        writeDataBoundaries(uploadedFiles, currentBlock, uploadedFilesPos); // takes up 80-89th byte
+        updateDirectory(dbNumber);
 
         // Initialize B-tree index
         bTree = BTree(indexBfr);
@@ -321,10 +265,15 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
     // Add the FCB to the directory
     directory.push_back(fcb);
 
-    cout << fcb.numberOfBlocksUsed << " blocks used." << endl;
-
-    // Add FCB to the directory structure
-    updateDirectory();
+    // Update the directory structure in each PFS file
+    for (int i = 0; i <= dbNumber; i++)
+    {
+        // close the database File (PFS file) we were working on first then update the rest
+        databaseFile.close();
+        openOrCreateDatabase(databaseName, i); //  opens each PFS file prior
+        updateDirectory(dbNumber);
+        databaseFile.close();
+    }
 
     // Close the file to read
     fileToRead.close();
