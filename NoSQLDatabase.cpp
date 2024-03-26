@@ -71,7 +71,6 @@ string NoSQLDatabase::intToFiveDigitString(int number)
 
 void NoSQLDatabase::updateDirectory(int dbNumber)
 {
-    cout << "update directory" << endl;
     currentBlock = 0;
     currentPosInBlock = 0;
 
