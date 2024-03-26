@@ -40,7 +40,7 @@ private:
     {
         string filename;
         uintmax_t fileSize; // actual file size of the uploaded file (e.g. movies-small.csv)
-        time_t timestamp; // Last modified time
+        time_t timestamp;   // Last modified time
         int startBlock;
         int numberOfBlocksUsed; // Number of blocks used
         int startingBlockIndex; //  root of the btree
@@ -63,12 +63,11 @@ private:
 
     Command getCommandType(const string &command);
     FCB fcb;
-    void updateDirectory();
+    void updateDirectory(int dbNumber);
     vector<FCB> directory;
     // formating the data to write into the database
     void writeDataBoundaries(string &data, int &currentBlock, int &currentPosInBlock);
     string intToFiveDigitString(int number);
-    // tm* getTimestamp(time_t timestamp);
 
 public:
     // constructor of NoSQLDatabase
