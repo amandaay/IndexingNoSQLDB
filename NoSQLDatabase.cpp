@@ -327,6 +327,11 @@ void NoSQLDatabase::listAllDataFromDatabase()
     // List all data files in NoSQL database
     // e.g. movie 128 bytes 12:30 PM September 2
     //      myFiles filesize timestamp
+    if (directory.empty())
+    {
+        cout << "No files found in the database." << endl;
+        return;
+    }
     tm *localTime;
     char time[50];
 
@@ -363,6 +368,9 @@ void NoSQLDatabase::killDatabase(string &PFSFile)
             }
             else
             {
+                for (int i = 0; i < directory.size(); i ++) {
+                    directory.pop_back();
+                }
                 cout << "File " << filePath << " deleted successfully." << endl;
             }
         }
