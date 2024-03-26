@@ -31,7 +31,8 @@ NoSQLDatabase::~NoSQLDatabase()
 void NoSQLDatabase::writeDataBoundaries(string &data, int &currentBlock, int &currentPosInBlock)
 {
     cout << "write data within boundaries: " << data << endl;
-    cout << "Current block: " << currentBlock << endl << "Current position in block: " << currentPosInBlock << endl;
+    cout << "Current block: " << currentBlock << endl
+         << "Current position in block: " << currentPosInBlock << endl;
 
     // current block: row, currentPosInBlock: column
     // adding 1 byte for newline character for formatting reasons
@@ -58,7 +59,6 @@ void NoSQLDatabase::writeDataBoundaries(string &data, int &currentBlock, int &cu
         currentBlock++;
         currentPosInBlock = 0;
     }
-    cout << "currentBlock * (BLOCK_SIZE + 1) + currentPosInBlock: " << currentBlock * (BLOCK_SIZE + 1) + currentPosInBlock << endl;
     databaseFile.seekp(currentBlock * (BLOCK_SIZE + 1) + currentPosInBlock);
     databaseFile << data;
     databaseFile.flush();
@@ -258,9 +258,9 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
             // }
             // else
             // {
-                // pad the rest of the line with spaces
-                line.resize(DATA_RECORD_SIZE, ' ');
-                cout << "Special character not found: " << line << endl;
+            // pad the rest of the line with spaces
+            line.resize(DATA_RECORD_SIZE, ' ');
+            cout << "Special character not found: " << line << endl;
             // }
 
             // Write the data to the database
@@ -316,7 +316,8 @@ void NoSQLDatabase::getDataFromDatabase()
 
 void NoSQLDatabase::delFileFromDatabase()
 {
-    // Delete file from NoSQL database
+    // Delete myfile from NoSQL database
+    
 }
 
 void NoSQLDatabase::listAllDataFromDatabase()
@@ -340,9 +341,34 @@ void NoSQLDatabase::findValueFromDatabase()
     // Find value using a given key
 }
 
-void NoSQLDatabase::killDatabase()
+void NoSQLDatabase::killDatabase(string &PFSFile)
 {
     // Delete the NoSQL database
+    // e.g. rm PFSFile
+    databaseName = PFSFile;
+    cout << "Deleting file " << PFSFile << " from database " << databaseName << endl;
+
+    for (int i = 0; i <= dbNumber; i++)
+    {
+        // check if the file exist first
+        string filePath = databaseName + ".db" + to_string(i);
+        if (exists(filePath))
+        {
+            // delete the file
+            if (!remove(filePath))
+            {
+                cerr << "Error: Unable to delete file " << filePath << endl;
+            }
+            else
+            {
+                cout << "File " << filePath << " deleted successfully." << endl;
+            }
+        }
+        else
+        {
+            cout << "File " << filePath << " does not exist." << endl;
+        }
+    }
 }
 
 void NoSQLDatabase::quitDatabase()
@@ -447,7 +473,7 @@ void NoSQLDatabase::runCLI()
             findValueFromDatabase();
             break;
         case KILL:
-            killDatabase();
+            killDatabase(file);
             break;
         case QUIT:
             quitDatabase();

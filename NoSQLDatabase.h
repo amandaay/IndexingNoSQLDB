@@ -90,7 +90,7 @@ public:
     // find [myfile.key]: Find ‘value’ using a given ‘key’, i.e., return a record which is associate with a key from ‘myfile’ in your NoSQL database. In addition, you need to show how many blocks are accessed during ‘find’
     void findValueFromDatabase();
     // kill PFSfile: Delete the NoSQL database, i.e., remove PFSfile from OS file system
-    void killDatabase();
+    void killDatabase(string &PFSFile);
     // quit: exit NoSQL database
     void quitDatabase();
 
