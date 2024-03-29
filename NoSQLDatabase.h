@@ -69,6 +69,7 @@ private:
     void writeDataBoundaries(string &data, int &currentBlock, int &currentPosInBlock);
     string intToFiveDigitString(int number);
     void bitMap(int &currentBlock, bool isSet, bool initialize);
+    bool isBlockAvailable(int &currentBlock);
 
 public:
     // constructor of NoSQLDatabase
