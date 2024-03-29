@@ -190,7 +190,7 @@ bool NoSQLDatabase::isBlockAvailable(int &currentBlock)
 {
     // Check if the block is available
     // 0 indicates a free block, 1 indicates that the block is allocated.
-    databaseFile.seekg((floor(currentBlock / BLOCK_SIZE) + 4) * (BLOCK_SIZE + 1) + (currentBlock % BLOCK_SIZE));
+    databaseFile.seekg((floor(currentBlock / (INITIAL_SIZE/BLOCK_SIZE)) + 4) * (BLOCK_SIZE + 1) + (currentBlock % BLOCK_SIZE));
     char blockStatus;
     databaseFile >> blockStatus;
     return blockStatus == '0';
