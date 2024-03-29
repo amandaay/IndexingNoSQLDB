@@ -180,7 +180,7 @@ void NoSQLDatabase::bitMap(int &currentBlock, bool isSet, bool initialize)
     // 0 indicates a free block, 1 indicates that the block is allocated.
     if (isSet)
     {
-        databaseFile.seekp((floor(currentBlock / (INITIAL_SIZE / BLOCK_SIZE)) + 4) * (BLOCK_SIZE + 1) + (currentBlock % BLOCK_SIZE));
+        databaseFile.seekp((floor(currentBlock / BLOCK_SIZE) + 4) * (BLOCK_SIZE + 1) + (currentBlock % BLOCK_SIZE));
         databaseFile << "1";
         databaseFile.flush();
         isSet = false;
@@ -191,7 +191,7 @@ bool NoSQLDatabase::isBlockAvailable(int &currentBlock)
 {
     // Check if the block is available
     // 0 indicates a free block, 1 indicates that the block is allocated.
-    databaseFile.seekg((floor(currentBlock / (INITIAL_SIZE / BLOCK_SIZE)) + 4) * (BLOCK_SIZE + 1) + (currentBlock % BLOCK_SIZE));
+    databaseFile.seekg((floor(currentBlock / BLOCK_SIZE) + 4) * (BLOCK_SIZE + 1) + (currentBlock % BLOCK_SIZE));
     char blockStatus;
     databaseFile >> blockStatus;
     return blockStatus == '0';
