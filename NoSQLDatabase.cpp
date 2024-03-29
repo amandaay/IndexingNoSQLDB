@@ -309,17 +309,16 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
             line.pop_back();
 
             // consider special character like single " ' " and double " " " quotes
-
             for (int i = 0; i < line.size(); i++)
             {
-                const unsigned char value = (unsigned char) line[i];
+                const unsigned char value = (unsigned char)line[i];
                 if (!isalnum(value) && !iswspace(value) && !ispunct(value))
                 {
                     line.erase(i, 1);
                     i--;
                 }
             }
-            
+
             // pad the rest of the line with spaces
             line.resize(DATA_RECORD_SIZE, ' ');
 
