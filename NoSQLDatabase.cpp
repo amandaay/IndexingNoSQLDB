@@ -39,9 +39,10 @@ void NoSQLDatabase::writeDataBoundaries(string &data, int &currentBlock, int &cu
 
     // check if the current data file is full
     if ((currentPosInBlock + ((currentBlock % (INITIAL_SIZE/BLOCK_SIZE)) * (BLOCK_SIZE + 1))) + DATA_RECORD_SIZE >= (INITIAL_SIZE * (dbNumber + 1)))
+    // change to if there's empty in our bitmap
     {
         cout << "Database file is full." << endl;
-        bitMap(currentBlock);
+        bitMap(currentBlock, true, false);
         databaseFile.close();
         dbNumber++;
         openOrCreateDatabase(databaseName, dbNumber); // create the new PFS file
@@ -56,7 +57,7 @@ void NoSQLDatabase::writeDataBoundaries(string &data, int &currentBlock, int &cu
     {
         // Move to the next block
         cout << "Block is full." << endl;
-        bitMap(currentBlock);
+        bitMap(currentBlock, true, false);
         fcb.numberOfBlocksUsed++;
         currentBlock++;
         currentPosInBlock = 0;
@@ -105,7 +106,7 @@ void NoSQLDatabase::updateDirectory(int dbNumber)
     writeDataBoundaries(uploadedFiles, currentBlock, uploadedFilesPos); // takes up 80-89th byte
 
     // update metadata bitmap
-    bitMap(currentBlock);
+    bitMap(currentBlock, true, false);
 
     // fcb structure
     currentBlock = 1; // start from block 1
@@ -145,20 +146,44 @@ void NoSQLDatabase::updateDirectory(int dbNumber)
         // Starting block for index (i.e. root)
         databaseFile.seekp((i + 1) * (BLOCK_SIZE + 1) + 100);
         databaseFile << intToFiveDigitString(directory[i].startingBlockIndex);
-        bitMap(currentBlock);
-        currentBlock++;
+        bitMap(currentBlock, true, false);
+        currentBlock++; // change to bitmap when empty
         databaseFile.flush();
     }
 }
 
-void NoSQLDatabase::bitMap(int &currentBlock)
+void NoSQLDatabase::bitMap(int &currentBlock, bool isSet, bool initialize)
 {
+    // initialize the bitmap
+    if (initialize) {
+        // Initialize bitmap
+        for (int i = 4; i < DIRECTORY_SIZE / BLOCK_SIZE; i++)
+        {
+            for (int j = 0; j < BLOCK_SIZE; j++)
+            {
+                databaseFile.seekp(j + (i * (BLOCK_SIZE + 1)));
+                if (i == 4 && j >= 4 && j <= 19)
+                {
+                    databaseFile << "1";
+                }
+                else
+                {
+                    databaseFile << "0";
+                }
+            }
+        }
+        initialize = false;
+    }
     // Update the bitmap to indicate that the block is allocated
     // bit map
     // 0 indicates a free block, 1 indicates that the block is allocated.
-    databaseFile.seekp((floor(currentBlock / BLOCK_SIZE) + 4) * (BLOCK_SIZE + 1) + (currentBlock % BLOCK_SIZE));
-    databaseFile << "1";
-    databaseFile.flush();
+    if (isSet)
+    {
+        databaseFile.seekp((floor(currentBlock / BLOCK_SIZE) + 4) * (BLOCK_SIZE + 1) + (currentBlock % BLOCK_SIZE));
+        databaseFile << "1";
+        databaseFile.flush();
+        isSet = false;
+    }
 }
 
 void NoSQLDatabase::openOrCreateDatabase(string &PFSFile, int dbNumber)
@@ -209,22 +234,8 @@ void NoSQLDatabase::openOrCreateDatabase(string &PFSFile, int dbNumber)
             databaseFile << endl;
         }
 
-        // Initialize bitmap
-        for (int i = 4; i < DIRECTORY_SIZE / BLOCK_SIZE; i++)
-        {
-            for (int j = 0; j < BLOCK_SIZE; j++)
-            {
-                databaseFile.seekp(j + (i * (BLOCK_SIZE + 1)));
-                if (i == 4 && j >= 4 && j <= 19)
-                {
-                    databaseFile << "1";
-                }
-                else
-                {
-                    databaseFile << "0";
-                }
-            }
-        }
+        // Initialize the bitmap
+        bitMap(currentBlock, false, true);
 
         // Explicitly set the get pointer's position to the beginning of the file
         // replace " " with metadata
@@ -320,7 +331,7 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
             fcb.timestamp = time(nullptr);         // update the timestamp
         }
     }
-    bitMap(currentBlock);
+    bitMap(currentBlock, true, false);
 
     // Add the FCB to the directory
     directory.push_back(fcb);

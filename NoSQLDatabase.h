@@ -68,7 +68,7 @@ private:
     // formating the data to write into the database
     void writeDataBoundaries(string &data, int &currentBlock, int &currentPosInBlock);
     string intToFiveDigitString(int number);
-    void bitMap(int &currentBlock);
+    void bitMap(int &currentBlock, bool isSet, bool initialize);
 
 public:
     // constructor of NoSQLDatabase
