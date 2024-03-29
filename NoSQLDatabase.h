@@ -103,7 +103,6 @@ public:
     bool searchInBTree(int key);
 
     // Free block management
-    // Add functions for bit map vector approach
 
     // Command-line interface
     void runCLI();

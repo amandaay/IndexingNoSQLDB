@@ -38,7 +38,7 @@ void NoSQLDatabase::writeDataBoundaries(string &data, int &currentBlock, int &cu
     // adding 1 byte for newline character for formatting reasons
 
     // check if the current data file is full
-    if ((currentPosInBlock + ((currentBlock % (INITIAL_SIZE/BLOCK_SIZE)) * (BLOCK_SIZE + 1))) + DATA_RECORD_SIZE >= (INITIAL_SIZE * (dbNumber + 1)))
+    if ((currentPosInBlock + ((currentBlock % (INITIAL_SIZE / BLOCK_SIZE)) * (BLOCK_SIZE + 1))) + DATA_RECORD_SIZE >= (INITIAL_SIZE * (dbNumber + 1)))
     // change to if there's empty in our bitmap
     {
         cout << "Database file is full." << endl;
@@ -48,7 +48,7 @@ void NoSQLDatabase::writeDataBoundaries(string &data, int &currentBlock, int &cu
         openOrCreateDatabase(databaseName, dbNumber); // create the new PFS file
         currentPosInBlock = 0;
         fcb.numberOfBlocksUsed++;
-        currentBlock = DIRECTORY_SIZE / BLOCK_SIZE + dbNumber * (INITIAL_SIZE/BLOCK_SIZE);
+        currentBlock = DIRECTORY_SIZE / BLOCK_SIZE + dbNumber * (INITIAL_SIZE / BLOCK_SIZE);
     }
 
     // Check if adding the record would exceed the block size
@@ -62,7 +62,7 @@ void NoSQLDatabase::writeDataBoundaries(string &data, int &currentBlock, int &cu
         currentBlock++; // change to bitmap when empty
         currentPosInBlock = 0;
     }
-    databaseFile.seekp((currentBlock % (INITIAL_SIZE/BLOCK_SIZE)) * (BLOCK_SIZE + 1) + currentPosInBlock);
+    databaseFile.seekp((currentBlock % (INITIAL_SIZE / BLOCK_SIZE)) * (BLOCK_SIZE + 1) + currentPosInBlock);
     databaseFile << data;
     databaseFile.flush();
 }
@@ -77,7 +77,7 @@ string NoSQLDatabase::intToFiveDigitString(int number)
 
 void NoSQLDatabase::updateDirectory(int dbNumber)
 {
-    currentBlock = floor(dbNumber/(INITIAL_SIZE/BLOCK_SIZE)) * (INITIAL_SIZE/BLOCK_SIZE);
+    currentBlock = floor(dbNumber / (INITIAL_SIZE / BLOCK_SIZE)) * (INITIAL_SIZE / BLOCK_SIZE);
     currentPosInBlock = 0;
 
     // databaseName
@@ -155,7 +155,8 @@ void NoSQLDatabase::updateDirectory(int dbNumber)
 void NoSQLDatabase::bitMap(int &currentBlock, bool isSet, bool initialize)
 {
     // initialize the bitmap
-    if (initialize) {
+    if (initialize)
+    {
         // Initialize bitmap
         for (int i = 4; i < DIRECTORY_SIZE / BLOCK_SIZE; i++)
         {
@@ -179,7 +180,7 @@ void NoSQLDatabase::bitMap(int &currentBlock, bool isSet, bool initialize)
     // 0 indicates a free block, 1 indicates that the block is allocated.
     if (isSet)
     {
-        databaseFile.seekp((floor(currentBlock / (INITIAL_SIZE/BLOCK_SIZE)) + 4) * (BLOCK_SIZE + 1) + (currentBlock % BLOCK_SIZE));
+        databaseFile.seekp((floor(currentBlock / (INITIAL_SIZE / BLOCK_SIZE)) + 4) * (BLOCK_SIZE + 1) + (currentBlock % BLOCK_SIZE));
         databaseFile << "1";
         databaseFile.flush();
         isSet = false;
@@ -190,7 +191,7 @@ bool NoSQLDatabase::isBlockAvailable(int &currentBlock)
 {
     // Check if the block is available
     // 0 indicates a free block, 1 indicates that the block is allocated.
-    databaseFile.seekg((floor(currentBlock / (INITIAL_SIZE/BLOCK_SIZE)) + 4) * (BLOCK_SIZE + 1) + (currentBlock % BLOCK_SIZE));
+    databaseFile.seekg((floor(currentBlock / (INITIAL_SIZE / BLOCK_SIZE)) + 4) * (BLOCK_SIZE + 1) + (currentBlock % BLOCK_SIZE));
     char blockStatus;
     databaseFile >> blockStatus;
     return blockStatus == '0';
@@ -274,7 +275,7 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
         return;
     }
     // data block starts after the directory structure
-    currentBlock = DIRECTORY_SIZE / BLOCK_SIZE; // find first free block in bitmap 
+    currentBlock = DIRECTORY_SIZE / BLOCK_SIZE; // find first free block in bitmap
     currentPosInBlock = 0;
 
     // Initialize FCB information
@@ -307,25 +308,17 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
             // rm newline character
             line.pop_back();
             // consider special character like single " ' " and double " " " quotes
-            // int specialChar = 0;
-            // for (int i = 0; i < DATA_RECORD_SIZE; i++)
-            // {
-            //     if (line[i] == '\"')
-            //     { // find occurrence of double quotes
-            //         specialChar++;
-            //     }
-            // }
-            // if (specialChar == 1)
-            // {
-            //     line.resize(DATA_RECORD_SIZE + 1, ' '); // pad the rest of the line with spaces
-            //     cout << specialChar << "Special character found: " << line << endl;
-            // }
-            // else
-            // {
+            for (int i = 0; i < line.size(); i++)
+            {
+                if (!isalnum(line[i]) && !iswspace(line[i]) && !ispunct(line[i]))
+                {
+                    line.erase(i, 1);
+                    i--;
+                }
+            }
+
             // pad the rest of the line with spaces
             line.resize(DATA_RECORD_SIZE, ' ');
-            cout << "Special character not found: " << line << endl;
-            // }
 
             // Write the data to the database
             writeDataBoundaries(line, currentBlock, currentPosInBlock);
@@ -334,9 +327,7 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
             insertIntoBTree(key);
 
             cout << "KEY inserting into BTree: " << key << endl;
-            // if (specialChar == 1) {
-            //     currentPosInBlock += 1; // for display purpose
-            // }
+            
             currentPosInBlock += DATA_RECORD_SIZE; // each individual block
             fcb.timestamp = time(nullptr);         // update the timestamp
         }
