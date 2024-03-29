@@ -59,7 +59,7 @@ void NoSQLDatabase::writeDataBoundaries(string &data, int &currentBlock, int &cu
         cout << "Block is full." << endl;
         bitMap(currentBlock, true, false);
         fcb.numberOfBlocksUsed++;
-        currentBlock++;
+        currentBlock++; // change to bitmap when empty
         currentPosInBlock = 0;
     }
     databaseFile.seekp((currentBlock % (INITIAL_SIZE/BLOCK_SIZE)) * (BLOCK_SIZE + 1) + currentPosInBlock);
@@ -109,7 +109,7 @@ void NoSQLDatabase::updateDirectory(int dbNumber)
     bitMap(currentBlock, true, false);
 
     // fcb structure
-    currentBlock = 1; // start from block 1
+    currentBlock += 1; // start from block 1
 
     tm *localTime;
     // Update the directory structure
@@ -147,7 +147,7 @@ void NoSQLDatabase::updateDirectory(int dbNumber)
         databaseFile.seekp((i + 1) * (BLOCK_SIZE + 1) + 100);
         databaseFile << intToFiveDigitString(directory[i].startingBlockIndex);
         bitMap(currentBlock, true, false);
-        currentBlock++; // change to bitmap when empty
+        currentBlock++;
         databaseFile.flush();
     }
 }
@@ -179,7 +179,7 @@ void NoSQLDatabase::bitMap(int &currentBlock, bool isSet, bool initialize)
     // 0 indicates a free block, 1 indicates that the block is allocated.
     if (isSet)
     {
-        databaseFile.seekp((floor(currentBlock / BLOCK_SIZE) + 4) * (BLOCK_SIZE + 1) + (currentBlock % BLOCK_SIZE));
+        databaseFile.seekp((floor(currentBlock / (INITIAL_SIZE/BLOCK_SIZE)) + 4) * (BLOCK_SIZE + 1) + (currentBlock % BLOCK_SIZE));
         databaseFile << "1";
         databaseFile.flush();
         isSet = false;
@@ -264,7 +264,7 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
         return;
     }
     // data block starts after the directory structure
-    currentBlock = DIRECTORY_SIZE / BLOCK_SIZE;
+    currentBlock = DIRECTORY_SIZE / BLOCK_SIZE; // find first free block in bitmap 
     currentPosInBlock = 0;
 
     // Initialize FCB information
