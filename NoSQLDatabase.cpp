@@ -312,7 +312,7 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
             for (int i = 0; i < line.size(); i++)
             {
                 const unsigned char value = (unsigned char)line[i];
-                if (!isalnum(value) && !iswspace(value) && !ispunct(value))
+                if (!isalnum(value) && !isspace(value) && !ispunct(value))
                 {
                     line.erase(i, 1);
                     i--;
@@ -412,7 +412,6 @@ void NoSQLDatabase::killDatabase(string &PFSFile)
     // Delete the NoSQL database
     // e.g. rm PFSFile
     databaseName = PFSFile;
-    cout << "Deleting file " << PFSFile << " from database " << databaseName << endl;
 
     for (int i = 0; i <= dbNumber; i++)
     {
