@@ -59,7 +59,7 @@ void NoSQLDatabase::writeDataBoundaries(string &data, int &currentBlock, int &cu
         cout << "Block is full." << endl;
         bitMap(currentBlock, true, false);
         fcb.numberOfBlocksUsed++;
-        currentBlock++;
+        currentBlock++; // change to bitmap when empty
         currentPosInBlock = 0;
     }
     databaseFile.seekp((currentBlock % (INITIAL_SIZE/BLOCK_SIZE)) * (BLOCK_SIZE + 1) + currentPosInBlock);
@@ -184,6 +184,16 @@ void NoSQLDatabase::bitMap(int &currentBlock, bool isSet, bool initialize)
         databaseFile.flush();
         isSet = false;
     }
+}
+
+bool NoSQLDatabase::isBlockAvailable(int &currentBlock)
+{
+    // Check if the block is available
+    // 0 indicates a free block, 1 indicates that the block is allocated.
+    databaseFile.seekg((floor(currentBlock / BLOCK_SIZE) + 4) * (BLOCK_SIZE + 1) + (currentBlock % BLOCK_SIZE));
+    char blockStatus;
+    databaseFile >> blockStatus;
+    return blockStatus == '0';
 }
 
 void NoSQLDatabase::openOrCreateDatabase(string &PFSFile, int dbNumber)
