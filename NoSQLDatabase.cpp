@@ -307,16 +307,19 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
             // Truncate the data to fit within DATA_RECORD_SIZE bytes
             // rm newline character
             line.pop_back();
+
             // consider special character like single " ' " and double " " " quotes
+
             for (int i = 0; i < line.size(); i++)
             {
-                if (!isalnum(line[i]) && !iswspace(line[i]) && !ispunct(line[i]))
+                const unsigned char value = (unsigned char) line[i];
+                if (!isalnum(value) && !iswspace(value) && !ispunct(value))
                 {
                     line.erase(i, 1);
                     i--;
                 }
             }
-
+            
             // pad the rest of the line with spaces
             line.resize(DATA_RECORD_SIZE, ' ');
 
@@ -327,7 +330,7 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
             insertIntoBTree(key);
 
             cout << "KEY inserting into BTree: " << key << endl;
-            
+
             currentPosInBlock += DATA_RECORD_SIZE; // each individual block
             fcb.timestamp = time(nullptr);         // update the timestamp
         }
