@@ -30,10 +30,6 @@ NoSQLDatabase::~NoSQLDatabase()
 
 void NoSQLDatabase::writeDataBoundaries(string &data, int &currentBlock, int &currentPosInBlock)
 {
-    cout << "write data within boundaries: " << data << endl;
-    cout << "Current block: " << currentBlock << endl
-         << "Current position in block: " << currentPosInBlock << endl;
-
     // current block: row, currentPosInBlock: column
     // adding 1 byte for newline character for formatting reasons
 
@@ -183,9 +179,9 @@ void NoSQLDatabase::bitMap(int &currentBlock, bool isSet, bool initialize)
     {
         databaseFile.seekp((floor(currentBlock / BLOCK_SIZE) + 4) * (BLOCK_SIZE + 1) + (currentBlock % BLOCK_SIZE));
         databaseFile << "1";
-        databaseFile.flush();
         isSet = false;
     }
+    databaseFile.flush();
 }
 
 int NoSQLDatabase::firstBlockAvailable()
@@ -193,10 +189,12 @@ int NoSQLDatabase::firstBlockAvailable()
     // Checks first available block
     // return currentBlock = first available block
     // 0 indicates a free block, 1 indicates that the block is allocated.
-    for (int i = 4; i < (INITIAL_SIZE / BLOCK_SIZE); i++)
+    openOrCreateDatabase(databaseName, dbNumber);
+    for (int i = 4; i < (DIRECTORY_SIZE / BLOCK_SIZE); i++)
     {
         for (int j = 0; j < BLOCK_SIZE; j++)
         {
+
             databaseFile.seekg(j + (i * (BLOCK_SIZE + 1)));
             char blockStatus;
             databaseFile >> blockStatus;
