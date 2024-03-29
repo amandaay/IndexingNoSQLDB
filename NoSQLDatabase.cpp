@@ -38,7 +38,8 @@ void NoSQLDatabase::writeDataBoundaries(string &data, int &currentBlock, int &cu
     // adding 1 byte for newline character for formatting reasons
 
     // check if the current data file is full
-    if ((currentPosInBlock + ((currentBlock % (INITIAL_SIZE / BLOCK_SIZE)) * (BLOCK_SIZE + 1))) + DATA_RECORD_SIZE >= (INITIAL_SIZE * (dbNumber + 1)))
+    // if ((currentPosInBlock + ((currentBlock % (INITIAL_SIZE / BLOCK_SIZE)) * (BLOCK_SIZE + 1))) + DATA_RECORD_SIZE >= (INITIAL_SIZE * (dbNumber + 1)))
+    if (firstBlockAvailable() == -1)
     // change to if there's empty in our bitmap
     {
         cout << "Database file is full." << endl;
@@ -59,7 +60,7 @@ void NoSQLDatabase::writeDataBoundaries(string &data, int &currentBlock, int &cu
         cout << "Block is full." << endl;
         bitMap(currentBlock, true, false);
         fcb.numberOfBlocksUsed++;
-        currentBlock++; // change to bitmap when empty
+        currentBlock = firstBlockAvailable();
         currentPosInBlock = 0;
     }
     databaseFile.seekp((currentBlock % (INITIAL_SIZE / BLOCK_SIZE)) * (BLOCK_SIZE + 1) + currentPosInBlock);
@@ -187,14 +188,25 @@ void NoSQLDatabase::bitMap(int &currentBlock, bool isSet, bool initialize)
     }
 }
 
-bool NoSQLDatabase::isBlockAvailable(int &currentBlock)
+int NoSQLDatabase::firstBlockAvailable()
 {
-    // Check if the block is available
+    // Checks first available block
+    // return currentBlock = first available block
     // 0 indicates a free block, 1 indicates that the block is allocated.
-    databaseFile.seekg((floor(currentBlock / BLOCK_SIZE) + 4) * (BLOCK_SIZE + 1) + (currentBlock % BLOCK_SIZE));
-    char blockStatus;
-    databaseFile >> blockStatus;
-    return blockStatus == '0';
+    for (int i = 4; i < (INITIAL_SIZE / BLOCK_SIZE); i++)
+    {
+        for (int j = 0; j < BLOCK_SIZE; j++)
+        {
+            databaseFile.seekg(j + (i * (BLOCK_SIZE + 1)));
+            char blockStatus;
+            databaseFile >> blockStatus;
+            if (blockStatus == '0')
+            {
+                return i * BLOCK_SIZE + j;
+            }
+        }
+    }
+    return -1; // open a new PFS file
 }
 
 void NoSQLDatabase::openOrCreateDatabase(string &PFSFile, int dbNumber)
@@ -275,7 +287,7 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
         return;
     }
     // data block starts after the directory structure
-    currentBlock = DIRECTORY_SIZE / BLOCK_SIZE; // find first free block in bitmap
+    currentBlock = firstBlockAvailable();
     currentPosInBlock = 0;
 
     // Initialize FCB information
