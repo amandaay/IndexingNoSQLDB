@@ -38,7 +38,7 @@ void NoSQLDatabase::writeDataBoundaries(string &data, int &currentBlock, int &cu
     // adding 1 byte for newline character for formatting reasons
 
     // check if the current data file is full
-    if ((currentPosInBlock + (currentBlock * (BLOCK_SIZE + 1))) + DATA_RECORD_SIZE >= (INITIAL_SIZE * (dbNumber + 1)))
+    if ((currentPosInBlock + ((currentBlock % (INITIAL_SIZE/BLOCK_SIZE)) * (BLOCK_SIZE + 1))) + DATA_RECORD_SIZE >= (INITIAL_SIZE * (dbNumber + 1)))
     {
         cout << "Database file is full." << endl;
         bitMap(currentBlock);
@@ -47,7 +47,7 @@ void NoSQLDatabase::writeDataBoundaries(string &data, int &currentBlock, int &cu
         openOrCreateDatabase(databaseName, dbNumber); // create the new PFS file
         currentPosInBlock = 0;
         fcb.numberOfBlocksUsed++;
-        currentBlock = DIRECTORY_SIZE / BLOCK_SIZE;
+        currentBlock = DIRECTORY_SIZE / BLOCK_SIZE + dbNumber * (INITIAL_SIZE/BLOCK_SIZE);
     }
 
     // Check if adding the record would exceed the block size
@@ -61,7 +61,7 @@ void NoSQLDatabase::writeDataBoundaries(string &data, int &currentBlock, int &cu
         currentBlock++;
         currentPosInBlock = 0;
     }
-    databaseFile.seekp(currentBlock * (BLOCK_SIZE + 1) + currentPosInBlock);
+    databaseFile.seekp((currentBlock % (INITIAL_SIZE/BLOCK_SIZE)) * (BLOCK_SIZE + 1) + currentPosInBlock);
     databaseFile << data;
     databaseFile.flush();
 }
@@ -76,7 +76,7 @@ string NoSQLDatabase::intToFiveDigitString(int number)
 
 void NoSQLDatabase::updateDirectory(int dbNumber)
 {
-    currentBlock = 0;
+    currentBlock = floor(dbNumber/(INITIAL_SIZE/BLOCK_SIZE)) * (INITIAL_SIZE/BLOCK_SIZE);
     currentPosInBlock = 0;
 
     // databaseName
