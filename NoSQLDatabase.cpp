@@ -34,8 +34,9 @@ void NoSQLDatabase::writeDataBoundaries(string &data, int &currentBlock, int &cu
     // adding 1 byte for newline character for formatting reasons
 
     // check if the current data file is full
-    // if ((currentPosInBlock + ((currentBlock % (INITIAL_SIZE / BLOCK_SIZE)) * (BLOCK_SIZE + 1))) + DATA_RECORD_SIZE >= (INITIAL_SIZE * (dbNumber + 1)))
-    if (firstBlockAvailable() == -1)
+    currentBlock = firstBlockAvailable();
+    if (currentBlock == (INITIAL_SIZE / BLOCK_SIZE) * (dbNumber + 1))
+    // if (currentBlock == -1)
     // change to if there's empty in our bitmap
     {
         cout << "Database file is full." << endl;
@@ -44,7 +45,7 @@ void NoSQLDatabase::writeDataBoundaries(string &data, int &currentBlock, int &cu
         openOrCreateDatabase(databaseName, dbNumber); // create the new PFS file
         currentPosInBlock = 0;
         fcb.numberOfBlocksUsed++;
-        currentBlock = DIRECTORY_SIZE / BLOCK_SIZE + dbNumber * (INITIAL_SIZE / BLOCK_SIZE);
+        // currentBlock = DIRECTORY_SIZE / BLOCK_SIZE + dbNumber * (INITIAL_SIZE / BLOCK_SIZE);
     }
 
     // Check if adding the record would exceed the block size
@@ -56,6 +57,7 @@ void NoSQLDatabase::writeDataBoundaries(string &data, int &currentBlock, int &cu
         bitMap(currentBlock, true, false);
         fcb.numberOfBlocksUsed++;
         currentBlock = firstBlockAvailable();
+        cout << "current block: " << currentBlock << endl;
         currentPosInBlock = 0;
     }
     databaseFile.seekp((currentBlock % (INITIAL_SIZE / BLOCK_SIZE)) * (BLOCK_SIZE + 1) + currentPosInBlock);
@@ -73,33 +75,44 @@ string NoSQLDatabase::intToFiveDigitString(int number)
 
 void NoSQLDatabase::updateDirectory(int dbNumber)
 {
-    currentBlock = floor(dbNumber / (INITIAL_SIZE / BLOCK_SIZE)) * (INITIAL_SIZE / BLOCK_SIZE);
+    currentBlock = (currentBlock / (INITIAL_SIZE / BLOCK_SIZE)) * (INITIAL_SIZE / BLOCK_SIZE);
+    cout << "update directory curr block: " << currentBlock << endl;
     currentPosInBlock = 0;
 
     // databaseName
-    writeDataBoundaries(databaseName, currentBlock, currentPosInBlock); // takes up 0-49th byte
+    databaseFile.seekp((currentBlock % (INITIAL_SIZE / BLOCK_SIZE)) * (BLOCK_SIZE + 1) + currentPosInBlock);
+    databaseFile << databaseName;
+    // writeDataBoundaries(databaseName, currentBlock, currentPosInBlock); // takes up 0-49th byte
 
     // total size of the database (1 PFS = 1 Mbyte)
     int metaDataSizePos = 50; // position of metadata size in the block
     string pfsSize = to_string(INITIAL_SIZE * (dbNumber + 1));
-    writeDataBoundaries(pfsSize, currentBlock, metaDataSizePos); // takes up 50-59th byte
+    // writeDataBoundaries(pfsSize, currentBlock, metaDataSizePos); // takes up 50-59th byte
+    databaseFile.seekp((currentBlock % (INITIAL_SIZE / BLOCK_SIZE)) * (BLOCK_SIZE + 1) + metaDataSizePos);
+    databaseFile << pfsSize;
 
     // total number of files (PFS)
     int totalPfsFilesPos = 60; // position of total pfs files in the block
     string totalPfsFiles = to_string(dbNumber + 1);
-    writeDataBoundaries(totalPfsFiles, currentBlock, totalPfsFilesPos); // takes up 60-69th byte
+    // writeDataBoundaries(totalPfsFiles, currentBlock, totalPfsFilesPos); // takes up 60-69th byte
+    databaseFile.seekp((currentBlock % (INITIAL_SIZE / BLOCK_SIZE)) * (BLOCK_SIZE + 1) + totalPfsFilesPos);
+    databaseFile << totalPfsFiles;
 
     // blocksize
     int blocksizePos = 70; // position of block size in the block
     string blocksize = to_string(BLOCK_SIZE);
-    writeDataBoundaries(blocksize, currentBlock, blocksizePos); // takes up 70-79th byte
+    // writeDataBoundaries(blocksize, currentBlock, blocksizePos); // takes up 70-79th byte
+    databaseFile.seekp((currentBlock % (INITIAL_SIZE / BLOCK_SIZE)) * (BLOCK_SIZE + 1) + blocksizePos);
+    databaseFile << blocksize;
 
     // number of uploaded files e.g. movies-small.csv, should be empty
     // when the database is created, there's no file uploaded yet
     // it gets updated when a file is uploaded (PUT command)
     uploadedFilesPos = 80; // position of uploaded files in the block
     string uploadedFiles = to_string(directory.size());
-    writeDataBoundaries(uploadedFiles, currentBlock, uploadedFilesPos); // takes up 80-89th byte
+    // writeDataBoundaries(uploadedFiles, currentBlock, uploadedFilesPos); // takes up 80-89th byte
+    databaseFile.seekp((currentBlock % (INITIAL_SIZE / BLOCK_SIZE)) * (BLOCK_SIZE + 1) + uploadedFilesPos);
+    databaseFile << uploadedFiles;
 
     // update metadata bitmap
     bitMap(currentBlock, true, false);
@@ -144,12 +157,15 @@ void NoSQLDatabase::updateDirectory(int dbNumber)
         databaseFile << intToFiveDigitString(directory[i].startingBlockIndex);
         bitMap(currentBlock, true, false);
         currentBlock++;
+        cout << "current block after fcb: " << currentBlock << endl;
         databaseFile.flush();
     }
+    databaseFile.flush();
 }
 
 void NoSQLDatabase::bitMap(int &currentBlock, bool isSet, bool initialize)
 {
+    cout << "database file: " << databaseName + to_string(dbNumber)<< " current block: " << currentBlock << " isSet: " << isSet << " initialize: " << initialize << endl;
     // initialize the bitmap
     if (initialize)
     {
@@ -161,6 +177,7 @@ void NoSQLDatabase::bitMap(int &currentBlock, bool isSet, bool initialize)
                 databaseFile.seekp(j + (i * (BLOCK_SIZE + 1)));
                 if (i == 4 && j >= 4 && j <= 19)
                 {
+                    // bitmap itself
                     databaseFile << "1";
                 }
                 else
@@ -176,7 +193,8 @@ void NoSQLDatabase::bitMap(int &currentBlock, bool isSet, bool initialize)
     // 0 indicates a free block, 1 indicates that the block is allocated.
     if (isSet)
     {
-        databaseFile.seekp((floor(currentBlock / BLOCK_SIZE) + 4) * (BLOCK_SIZE + 1) + (currentBlock % BLOCK_SIZE));
+        cout << "Setting block " << currentBlock << " to 1" << endl;
+        databaseFile.seekp(((currentBlock / BLOCK_SIZE) + 4) * (BLOCK_SIZE + 1) + (currentBlock % BLOCK_SIZE));
         databaseFile << "1";
         isSet = false;
     }
@@ -208,7 +226,8 @@ int NoSQLDatabase::firstBlockAvailable()
             }
         }
     }
-    return -1; // open a new PFS file
+    return (INITIAL_SIZE / BLOCK_SIZE) * (dbNumber + 1);
+    // return -1;
 }
 
 void NoSQLDatabase::openOrCreateDatabase(string &PFSFile, int dbNumber)
