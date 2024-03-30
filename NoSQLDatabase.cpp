@@ -277,6 +277,7 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
     // Accessing the databaseName member variable
     cout << "Putting data into database " << databaseName << " from file " << myFile << endl;
     ifstream fileToRead(myFile);
+    openOrCreateDatabase(databaseName, dbNumber);
     if (!fileToRead.is_open())
     {
         cout << "Error: Unable to open file " << myFile << endl;
