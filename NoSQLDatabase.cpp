@@ -116,6 +116,7 @@ void NoSQLDatabase::updateDirectory(int dbNumber)
 
     // update metadata bitmap
     bitMap(currentBlock, true, false);
+    cout << "print line 118 current block: " << currentBlock << endl;
 
     // fcb structure
     currentBlock += 1; // start from block 1
