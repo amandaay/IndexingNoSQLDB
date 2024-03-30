@@ -39,7 +39,6 @@ void NoSQLDatabase::writeDataBoundaries(string &data, int &currentBlock, int &cu
     // change to if there's empty in our bitmap
     {
         cout << "Database file is full." << endl;
-        bitMap(currentBlock, true, false);
         databaseFile.close();
         dbNumber++;
         openOrCreateDatabase(databaseName, dbNumber); // create the new PFS file
@@ -186,21 +185,26 @@ void NoSQLDatabase::bitMap(int &currentBlock, bool isSet, bool initialize)
 
 int NoSQLDatabase::firstBlockAvailable()
 {
+    // to read the bitmap
+    openOrCreateDatabase(databaseName, dbNumber);
     // Checks first available block
     // return currentBlock = first available block
     // 0 indicates a free block, 1 indicates that the block is allocated.
-    openOrCreateDatabase(databaseName, dbNumber);
+    
     for (int i = 4; i < (DIRECTORY_SIZE / BLOCK_SIZE); i++)
     {
         for (int j = 0; j < BLOCK_SIZE; j++)
         {
-
+            if (i == 4 && j < DIRECTORY_SIZE / BLOCK_SIZE)
+            {
+                continue;
+            }
             databaseFile.seekg(j + (i * (BLOCK_SIZE + 1)));
             char blockStatus;
             databaseFile >> blockStatus;
             if (blockStatus == '0')
             {
-                return i * BLOCK_SIZE + j;
+                return ((i - 4) * BLOCK_SIZE + (INITIAL_SIZE/BLOCK_SIZE * dbNumber) + j);
             }
         }
     }
@@ -213,7 +217,7 @@ void NoSQLDatabase::openOrCreateDatabase(string &PFSFile, int dbNumber)
     if (databaseFile.is_open())
     {
         databaseFile.close();
-        cout << "Closed: " << databaseName << endl;
+        // cout << "Closed: " << databaseName << endl;
     }
     databaseName = PFSFile;
     // Open the database file or Create if db not exist
@@ -223,13 +227,13 @@ void NoSQLDatabase::openOrCreateDatabase(string &PFSFile, int dbNumber)
         // open file
         databaseFile.open(filePath, ios::out | ios::in);
         // check file path
-        cout << "Opening database file " << filePath << endl;
+        // cout << "Opening database file " << filePath << endl;
         if (!databaseFile.is_open())
         {
             cout << "Error: Unable to open database file." << endl;
             return;
         }
-        cout << "Database opened successfully." << endl;
+        // cout << "Database opened successfully." << endl;
     }
     else
     {
