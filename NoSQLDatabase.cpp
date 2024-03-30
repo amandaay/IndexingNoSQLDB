@@ -195,7 +195,6 @@ void NoSQLDatabase::bitMap(int &currentBlock, bool isSet, bool initialize)
     if (isSet)
     {
         cout << "Setting block " << currentBlock << " to 1" << endl;
-        // databaseFile.seekp(((currentBlock / BLOCK_SIZE) + 4) * (BLOCK_SIZE + 1) + (currentBlock % BLOCK_SIZE));
         databaseFile.seekp(((currentBlock % (INITIAL_SIZE/BLOCK_SIZE)) / BLOCK_SIZE + 4 ) * (BLOCK_SIZE + 1) + (currentBlock % BLOCK_SIZE));
         databaseFile << "1";
         isSet = false;
