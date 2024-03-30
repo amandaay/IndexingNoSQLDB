@@ -166,7 +166,7 @@ void NoSQLDatabase::updateDirectory(int dbNumber)
 
 void NoSQLDatabase::bitMap(int &currentBlock, bool isSet, bool initialize)
 {
-    cout << "database file: " << databaseName + to_string(dbNumber)<< " current block: " << currentBlock << " isSet: " << isSet << " initialize: " << initialize << endl;
+    cout << "database file: " << databaseName + to_string(dbNumber) << " current block: " << currentBlock << " isSet: " << isSet << " initialize: " << initialize << endl;
     // initialize the bitmap
     if (initialize)
     {
@@ -209,7 +209,6 @@ int NoSQLDatabase::firstBlockAvailable()
     // Checks first available block
     // return currentBlock = first available block
     // 0 indicates a free block, 1 indicates that the block is allocated.
-    
     for (int i = 4; i < (DIRECTORY_SIZE / BLOCK_SIZE); i++)
     {
         for (int j = 0; j < BLOCK_SIZE; j++)
@@ -223,12 +222,11 @@ int NoSQLDatabase::firstBlockAvailable()
             databaseFile >> blockStatus;
             if (blockStatus == '0')
             {
-                return ((i - 4) * BLOCK_SIZE + (INITIAL_SIZE/BLOCK_SIZE * dbNumber) + j);
+                return ((i - 4) * BLOCK_SIZE + (INITIAL_SIZE / BLOCK_SIZE * dbNumber) + j);
             }
         }
     }
     return (INITIAL_SIZE / BLOCK_SIZE) * (dbNumber + 1);
-    // return -1;
 }
 
 void NoSQLDatabase::openOrCreateDatabase(string &PFSFile, int dbNumber)
