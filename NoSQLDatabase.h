@@ -70,7 +70,7 @@ private:
     string intToFiveDigitString(int number);
     void bitMap(int &currentBlock, bool isSet, bool initialize);
     // check first available block
-    int firstBlockAvailable(); 
+    int firstAvailableBlock(); 
 
 public:
     // constructor of NoSQLDatabase

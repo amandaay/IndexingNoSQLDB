@@ -34,7 +34,7 @@ void NoSQLDatabase::writeDataBoundaries(string &data, int &currentBlock, int &cu
     // adding 1 byte for newline character for formatting reasons
 
     // check if the current data file is full
-    currentBlock = firstBlockAvailable();
+    currentBlock = firstAvailableBlock();
 
     // Check if adding the record would exceed the block size
     // Each block is 256 bytes that includes a child block size of 4 bytes
@@ -50,7 +50,7 @@ void NoSQLDatabase::writeDataBoundaries(string &data, int &currentBlock, int &cu
             dbNumber++;
             openOrCreateDatabase(databaseName, dbNumber); // create the new PFS file
         }
-        currentBlock = firstBlockAvailable();
+        currentBlock = firstAvailableBlock();
         fcb.numberOfBlocksUsed++;
         currentPosInBlock = 0;
     }
@@ -186,27 +186,30 @@ void NoSQLDatabase::bitMap(int &currentBlock, bool isSet, bool initialize)
     databaseFile.flush();
 }
 
-int NoSQLDatabase::firstBlockAvailable()
+int NoSQLDatabase::firstAvailableBlock()
 {
-    // to read the bitmap
-    openOrCreateDatabase(databaseName, dbNumber);
-    // Checks first available block
-    // return currentBlock = first available block
-    // 0 indicates a free block, 1 indicates that the block is allocated.
-    for (int i = 4; i < (DIRECTORY_SIZE / BLOCK_SIZE); i++)
+    for (int db = 0; db <= dbNumber; db++)
     {
-        for (int j = 0; j < BLOCK_SIZE; j++)
+        // to read the bitmap (seekg usage)
+        openOrCreateDatabase(databaseName, db);
+        // Checks first available block
+        // return currentBlock = first available block
+        // 0 indicates a free block, 1 indicates that the block is allocated.
+        for (int i = 4; i < (DIRECTORY_SIZE / BLOCK_SIZE); i++)
         {
-            if (i == 4 && j < DIRECTORY_SIZE / BLOCK_SIZE)
+            for (int j = 0; j < BLOCK_SIZE; j++)
             {
-                continue;
-            }
-            databaseFile.seekg(j + (i * (BLOCK_SIZE + 1)));
-            char blockStatus;
-            databaseFile >> blockStatus;
-            if (blockStatus == '0')
-            {
-                return ((i - 4) * BLOCK_SIZE + (INITIAL_SIZE / BLOCK_SIZE * dbNumber) + j);
+                if (i == 4 && j < DIRECTORY_SIZE / BLOCK_SIZE)
+                {
+                    continue;
+                }
+                databaseFile.seekg(j + (i * (BLOCK_SIZE + 1)));
+                char blockStatus;
+                databaseFile >> blockStatus;
+                if (blockStatus == '0')
+                {
+                    return ((i - 4) * BLOCK_SIZE + (INITIAL_SIZE / BLOCK_SIZE * db) + j);
+                }
             }
         }
     }
@@ -219,7 +222,6 @@ void NoSQLDatabase::openOrCreateDatabase(string &PFSFile, int dbNumber)
     if (databaseFile.is_open())
     {
         databaseFile.close();
-        // cout << "Closed: " << databaseName << endl;
     }
     databaseName = PFSFile;
     // Open the database file or Create if db not exist
@@ -229,13 +231,11 @@ void NoSQLDatabase::openOrCreateDatabase(string &PFSFile, int dbNumber)
         // open file
         databaseFile.open(filePath, ios::out | ios::in);
         // check file path
-        // cout << "Opening database file " << filePath << endl;
         if (!databaseFile.is_open())
         {
             cout << "Error: Unable to open database file." << endl;
             return;
         }
-        // cout << "Database opened successfully." << endl;
     }
     else
     {
@@ -244,11 +244,8 @@ void NoSQLDatabase::openOrCreateDatabase(string &PFSFile, int dbNumber)
         databaseFile.open(filePath, ios::out);
         if (!databaseFile.is_open())
         {
-            if (!databaseFile.is_open())
-            {
-                cout << "Error: Unable to create a file." << endl;
-                return;
-            }
+            cout << "Error: Unable to create a file." << endl;
+            return;
         }
 
         // Allocate a new 1 MByte "PFS" file if it does not already exist.
@@ -267,9 +264,6 @@ void NoSQLDatabase::openOrCreateDatabase(string &PFSFile, int dbNumber)
         // Explicitly set the get pointer's position to the beginning of the file
         // replace " " with metadata
         updateDirectory(dbNumber);
-
-        // Initialize B-tree index
-        bTree = BTree(indexBfr);
     }
 }
 
@@ -291,8 +285,12 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
         cout << "Error: Unable to open database file " << databaseName << endl;
         return;
     }
+
+    // Initialize B-tree index
+    bTree = BTree(indexBfr);
+
     // data block starts after the directory structure
-    currentBlock = firstBlockAvailable();
+    currentBlock = firstAvailableBlock();
     currentPosInBlock = 0;
 
     // Initialize FCB information

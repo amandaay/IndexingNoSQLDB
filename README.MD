@@ -58,7 +58,7 @@ https://stackoverflow.com/questions/50800605/using-binary-search-in-b-tree#:~:te
 4. Index block allocation assumption:
 - child block # 5 bytes
 - key, block # (8 bytes, 5 bytes)
-- blocking factor (bfr) for index block: (256 - 5) / (8 + 5 + 5) = 13 key
+- index blocking factor (bfri) for index block: (256 - 5) / (8 + 5 + 5) = 13 key
 
 5. Directory Structure Assumptions:
 
