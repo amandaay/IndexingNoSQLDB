@@ -356,13 +356,15 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
 
             cout << "KEY inserting into BTree: " << key << endl;
             // Index the key using B-tree
-            insertIntoBTree(key);
+            // insertIntoBTree(key);
+            bTree.Insert(key);
 
             currentPosInBlock += DATA_RECORD_SIZE; // each individual block
             fcb.timestamp = time(nullptr);         // update the timestamp
         }
     }
     bitMap(currentBlock, true, false);
+    bTree.Display();
 
     // Add the FCB to the directory
     directory.push_back(fcb);
@@ -388,11 +390,11 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
 }
 
 // Implement B-tree insertion method
-void NoSQLDatabase::insertIntoBTree(int key)
-{
-    bTree.Insert(key);
-    bTree.Display();
-}
+// void NoSQLDatabase::insertIntoBTree(int key)
+// {
+//     bTree.Insert(key);
+//     // bTree.Display();
+// }
 
 // Implement B-tree search method
 bool NoSQLDatabase::searchInBTree(int key)

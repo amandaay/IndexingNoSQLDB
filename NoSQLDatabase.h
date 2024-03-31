@@ -100,7 +100,7 @@ public:
     // Index operations
 
     // Index operations using B-tree
-    void insertIntoBTree(int key);
+    // void insertIntoBTree(int key);
     bool searchInBTree(int key);
 
     // Free block management
