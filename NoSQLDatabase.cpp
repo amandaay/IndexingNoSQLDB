@@ -10,15 +10,12 @@
 using namespace std;
 using namespace std::filesystem;
 
-NoSQLDatabase::NoSQLDatabase() 
-// : bTree(0)
+NoSQLDatabase::NoSQLDatabase() : bTree(INDEX_BFR)
 {
     currentPosInBlock = 0; // position starts from 0 to 255 in each block
     currentBlock = 0;      // which block in each db
     dbNumber = 0;          // defines database number (e.g. test.db0, test.db1, ...)
     uploadedFilesPos = 80; // position of uploaded files in the block
-    indexBfr = (BLOCK_SIZE - BLOCK_NUMBER_SIZE) / (KEY_NUMBER_SIZE + (BLOCK_NUMBER_SIZE * 2));
-    BTree bTree(indexBfr);
 }
 
 NoSQLDatabase::~NoSQLDatabase()
@@ -76,7 +73,6 @@ string NoSQLDatabase::intToEightDigitString(int number)
     ss << setw(8) << setfill('0') << number;
     return ss.str();
 }
-
 
 void NoSQLDatabase::updateDirectory(int dbNumber)
 {
@@ -298,7 +294,7 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
     }
 
     // Initialize B-tree index
-    BTree btree(indexBfr);
+    bTree = BTree(INDEX_BFR);
 
     // data block starts after the directory structure
     currentBlock = firstAvailableBlock();
@@ -326,9 +322,6 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
         // Assuming the key is located in the first field of each line
         if (getline(ss, keyString, ','))
         {
-            // Convert the key to the appropriate data type (e.g., integer)
-            // int key = stoi(keyString);
-
             // Cuts of at DATA_RECORD_SIZE (40 bytes)
             // Truncate the data to fit within DATA_RECORD_SIZE bytes
             // rm newline character
@@ -351,6 +344,7 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
             // Write the data to the database
             writeDataBoundaries(line, currentBlock, currentPosInBlock);
 
+            // Convert the key to the appropriate data type (e.g., integer)
             // concatenate the unpadded (supposingly 8 byte) key with current block number
             // when presenting in the index block, we will pad the key to 8 bytes, e.g. 00000002
             // e.g. key = 2, currentBlock = 00001, key = 200001, int key = 200001
@@ -359,11 +353,10 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
             ss << keyStr;
             int key = 0;
             ss >> key;
-            
-            // Index the key using B-tree
-            insertIntoBTree(key);
 
             cout << "KEY inserting into BTree: " << key << endl;
+            // Index the key using B-tree
+            insertIntoBTree(key);
 
             currentPosInBlock += DATA_RECORD_SIZE; // each individual block
             fcb.timestamp = time(nullptr);         // update the timestamp
@@ -377,7 +370,6 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
     // Add Index structure to the database
     currentBlock = firstAvailableBlock();
     currentPosInBlock = 0;
-    
 
     // Update the directory structure in each PFS file
     for (int i = 0; i <= dbNumber; i++)
@@ -399,7 +391,7 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
 void NoSQLDatabase::insertIntoBTree(int key)
 {
     bTree.Insert(key);
-    // bTree.Display();
+    bTree.Display();
 }
 
 // Implement B-tree search method

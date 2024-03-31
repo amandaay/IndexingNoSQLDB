@@ -14,13 +14,14 @@
 using namespace std;
 
 // Define constants for file system parameters
-constexpr int BLOCK_SIZE = 256;           // Block size in bytes
-constexpr int INITIAL_SIZE = 1024 * 1024; // Initial size of database file in bytes (1024 Mbytes)
-constexpr int DATA_RECORD_SIZE = 40;      // Size of each record in bytes (key + value)
-constexpr int BLOCK_NUMBER_SIZE = 5;      // Size of Block # or Child block # (5 digit block #)
-constexpr int KEY_NUMBER_SIZE = 8;        // Size of Key # in Index Block
-constexpr int DIRECTORY_SIZE = 256 * 20;  // Size of metadata, 3 FCBS, bit map
-constexpr int METADATA_START_POS = 0;     // Start position of metadata in the block
+constexpr int BLOCK_SIZE = 256;                                                                           // Block size in bytes
+constexpr int INITIAL_SIZE = 1024 * 1024;                                                                 // Initial size of database file in bytes (1024 Mbytes)
+constexpr int DATA_RECORD_SIZE = 40;                                                                      // Size of each record in bytes (key + value)
+constexpr int BLOCK_NUMBER_SIZE = 5;                                                                      // Size of Block # or Child block # (5 digit block #)
+constexpr int KEY_NUMBER_SIZE = 8;                                                                        // Size of Key # in Index Block
+constexpr int DIRECTORY_SIZE = 256 * 20;                                                                  // Size of metadata, 3 FCBS, bit map
+constexpr int METADATA_START_POS = 0;      
+constexpr int INDEX_BFR = (BLOCK_SIZE - BLOCK_NUMBER_SIZE) / (KEY_NUMBER_SIZE + (BLOCK_NUMBER_SIZE * 2));                                                               // Start position of metadata in the block
 
 class NoSQLDatabase
 {
@@ -31,9 +32,7 @@ private:
     int currentBlock;      // block number starts from 0
     int dbNumber;          // database number starts from 0
     int uploadedFilesPos;  // position of uploaded files in the block
-
-    BTree bTree;  // include BTree for indexing
-    int indexBfr; // index blocking factor
+    BTree bTree;           // include BTree for indexing
 
     // Define structures for File Control Block (FCB) and directory entry
     struct FCB
@@ -71,7 +70,7 @@ private:
     string intToEightDigitString(int number);
     void bitMap(int &currentBlock, bool isSet, bool initialize);
     // check first available block
-    int firstAvailableBlock(); 
+    int firstAvailableBlock();
 
 public:
     // constructor of NoSQLDatabase

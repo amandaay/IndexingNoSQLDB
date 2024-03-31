@@ -208,13 +208,6 @@ Node::~Node()
 }
 
 /**
- * @brief Construct a default constructor BTree::BTree object
- * take cares of 0 nodesize
- * 
- */
-BTree::BTree() : nodesize(0), nodes(nullptr), NodeIdCounter(0), layers(-1) {}
-
-/**
  * @brief BTree constructor
  * Construct a new BTree::BTree object
  * @param _nodesize user input nodesize

@@ -72,8 +72,6 @@ private:
     int layers;
 
 public:
-    // default constructor
-    BTree();
     // constructor for BTree
     BTree(int nodesize);
     // Lookup - True if the value was found.
