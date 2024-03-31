@@ -68,6 +68,7 @@ private:
     // formating the data to write into the database
     void writeDataBoundaries(string &data, int &currentBlock, int &currentPosInBlock);
     string intToFiveDigitString(int number);
+    string intToEightDigitString(int number);
     void bitMap(int &currentBlock, bool isSet, bool initialize);
     // check first available block
     int firstAvailableBlock(); 
