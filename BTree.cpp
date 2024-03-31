@@ -422,14 +422,15 @@ void BTree::Insert(int value)
  * @brief Display of the entire constructed tree using level order traversal
  *
  */
-void BTree::Display()
+int BTree::Display(int &currentBlock)
 {
     // if root is null, we ignore
     if (!nodes)
     {
         cout << "No tree found" << endl;
-        return;
+        return -1;
     }
+    int noOfNodes;
     queue<Node *> q;
     q.push(nodes);
     int level = 0;
@@ -444,8 +445,8 @@ void BTree::Display()
             Node *node = q.front();
             q.pop();
             // display the current node
-            cout << node->getNodeId() << "[";
-            node->Display(node->size, node->getNodeId());
+            cout << node->getNodeId() + currentBlock << "[";
+            node->Display(node->size, node->getNodeId() + currentBlock);
             cout << "] ";
 
             // enqueue the children
@@ -457,11 +458,14 @@ void BTree::Display()
                 }
             }
             NodeCount--;
+            noOfNodes = node->getNodeId();
         }
         level++;
         cout << endl;
     }
     cout << endl;
+    cout << "noOfNodes: " << noOfNodes << endl;
+    return currentBlock + noOfNodes;
 }
 
 /**

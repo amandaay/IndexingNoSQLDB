@@ -195,31 +195,33 @@ void NoSQLDatabase::bitMap(int &currentBlock, bool isSet, bool initialize)
 
 int NoSQLDatabase::firstAvailableBlock()
 {
-    for (int db = 0; db <= dbNumber; db++)
+    // for (int db = 0; db <= dbNumber; db++)
+    // {
+    // to read the bitmap (seekg usage)
+    // openOrCreateDatabase(databaseName, db);
+    openOrCreateDatabase(databaseName, dbNumber);
+    // Checks first available block
+    // return currentBlock = first available block
+    // 0 indicates a free block, 1 indicates that the block is allocated.
+    for (int i = 4; i < (DIRECTORY_SIZE / BLOCK_SIZE); i++)
     {
-        // to read the bitmap (seekg usage)
-        openOrCreateDatabase(databaseName, db);
-        // Checks first available block
-        // return currentBlock = first available block
-        // 0 indicates a free block, 1 indicates that the block is allocated.
-        for (int i = 4; i < (DIRECTORY_SIZE / BLOCK_SIZE); i++)
+        for (int j = 0; j < BLOCK_SIZE; j++)
         {
-            for (int j = 0; j < BLOCK_SIZE; j++)
+            if (i == 4 && j < DIRECTORY_SIZE / BLOCK_SIZE)
             {
-                if (i == 4 && j < DIRECTORY_SIZE / BLOCK_SIZE)
-                {
-                    continue;
-                }
-                databaseFile.seekg(j + (i * (BLOCK_SIZE + 1)));
-                char blockStatus;
-                databaseFile >> blockStatus;
-                if (blockStatus == '0')
-                {
-                    return ((i - 4) * BLOCK_SIZE + (INITIAL_SIZE / BLOCK_SIZE * db) + j);
-                }
+                continue;
+            }
+            databaseFile.seekg(j + (i * (BLOCK_SIZE + 1)));
+            char blockStatus;
+            databaseFile >> blockStatus;
+            if (blockStatus == '0')
+            {
+                // return ((i - 4) * BLOCK_SIZE + (INITIAL_SIZE / BLOCK_SIZE * db) + j);
+                return ((i - 4) * BLOCK_SIZE + (INITIAL_SIZE / BLOCK_SIZE * dbNumber) + j);
             }
         }
     }
+    // }
     return (INITIAL_SIZE / BLOCK_SIZE) * (dbNumber + 1) + (DIRECTORY_SIZE / BLOCK_SIZE); // after directory structure
 }
 
@@ -363,8 +365,17 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
             fcb.timestamp = time(nullptr);         // update the timestamp
         }
     }
+    // set the last data block bitmap to 1
     bitMap(currentBlock, true, false);
-    bTree.Display();
+
+    // start of index blocks
+    currentBlock += 1;
+    int lastIndexNode = bTree.Display(currentBlock);
+    // set the bitmap from current block to last index block to 1
+    for (int i = currentBlock; i <= lastIndexNode; i++)
+    {
+        bitMap(i, true, false);
+    }
 
     // Add the FCB to the directory
     directory.push_back(fcb);
