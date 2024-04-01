@@ -77,7 +77,8 @@ int Node::getNodeId()
  *
  * @return string return the childKeyBlk
  */
-string Node::getChildKeyBlk(){
+string Node::getChildKeyBlk()
+{
     return childKeyBlk;
 }
 
@@ -367,7 +368,7 @@ Node *BTree::getRootNode()
 
 /**
  * @brief get Root ID
- * 
+ *
  */
 int BTree::getRootId()
 {

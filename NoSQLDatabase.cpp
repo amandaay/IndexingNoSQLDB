@@ -378,7 +378,7 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
         bitMap(i, true, false);
     }
     // write to database
-    // databaseFile << 
+    // databaseFile <<
 
     // Add the FCB to the directory
     directory.push_back(fcb);
