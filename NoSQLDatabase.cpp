@@ -6,6 +6,8 @@
 #include <sstream>
 #include <string>
 #include <iomanip>
+#include <queue>
+#include "BTree.h"
 
 using namespace std;
 using namespace std::filesystem;
@@ -17,62 +19,6 @@ NoSQLDatabase::NoSQLDatabase() : bTree(INDEX_BFR)
     dbNumber = 0;          // defines database number (e.g. test.db0, test.db1, ...)
     uploadedFilesPos = 80; // position of uploaded files in the block
 }
-
-NoSQLDatabase::~NoSQLDatabase()
-{
-    // Close the database file
-    if (databaseFile.is_open())
-    {
-        databaseFile.close();
-    }
-}
-
-void NoSQLDatabase::writeDataBoundaries(string &data, int &currentBlock, int &currentPosInBlock)
-{
-    // current block: row, currentPosInBlock: column
-    // adding 1 byte for newline character for formatting reasons
-
-    // check if the current data file is full
-    currentBlock = firstAvailableBlock();
-
-    // Check if adding the record would exceed the block size
-    // Each block is 256 bytes that includes a child block size of 4 bytes
-    if (currentPosInBlock + DATA_RECORD_SIZE >= BLOCK_SIZE)
-    {
-        // Move to the next block
-        cout << "Block is full." << endl;
-        bitMap(currentBlock, true, false);
-        // if curr block = 4095 and it's marked as 1, we should create a new PFS file
-        if (currentBlock == (INITIAL_SIZE / BLOCK_SIZE) * (dbNumber + 1) - 1)
-        {
-            cout << "Database file is full." << endl;
-            dbNumber++;
-            openOrCreateDatabase(databaseName, dbNumber); // create the new PFS file
-        }
-        currentBlock = firstAvailableBlock();
-        fcb.numberOfBlocksUsed++;
-        currentPosInBlock = 0;
-    }
-    databaseFile.seekp((currentBlock % (INITIAL_SIZE / BLOCK_SIZE)) * (BLOCK_SIZE + 1) + currentPosInBlock);
-    databaseFile << data;
-    databaseFile.flush();
-}
-
-string NoSQLDatabase::intToFiveDigitString(int number)
-{
-    // Convert an integer to a 5-digit string
-    stringstream ss;
-    ss << setw(5) << setfill('0') << number;
-    return ss.str();
-}
-
-// string NoSQLDatabase::intToEightDigitString(int number)
-// {
-//     // Convert an integer to a 8-digit string
-//     stringstream ss;
-//     ss << setw(8) << setfill('0') << number;
-//     return ss.str();
-// }
 
 void NoSQLDatabase::updateDirectory(int dbNumber)
 {
@@ -141,7 +87,7 @@ void NoSQLDatabase::updateDirectory(int dbNumber)
 
         // start block
         databaseFile.seekp((i + 1) * (BLOCK_SIZE + 1) + 80);
-        databaseFile << intToFiveDigitString(directory[i].startBlock);
+        databaseFile << intToFiveDigitString(directory[i].dataStartBlock);
 
         // Number of blocks used
         databaseFile.seekp((i + 1) * (BLOCK_SIZE + 1) + 90);
@@ -149,7 +95,7 @@ void NoSQLDatabase::updateDirectory(int dbNumber)
 
         // Starting block for index (i.e. root)
         databaseFile.seekp((i + 1) * (BLOCK_SIZE + 1) + 100);
-        databaseFile << intToFiveDigitString(directory[i].startingBlockIndex);
+        databaseFile << intToFiveDigitString(directory[i].indexStartingBlock);
         bitMap(currentBlock, true, false);
         currentBlock++;
         databaseFile.flush();
@@ -223,6 +169,115 @@ int NoSQLDatabase::firstAvailableBlock()
     }
     // }
     return (INITIAL_SIZE / BLOCK_SIZE) * (dbNumber + 1) + (DIRECTORY_SIZE / BLOCK_SIZE); // after directory structure
+}
+
+string NoSQLDatabase::intToFiveDigitString(int number)
+{
+    // Convert an integer to a 5-digit string
+    stringstream ss;
+    ss << setw(5) << setfill('0') << number;
+    return ss.str();
+}
+
+// string NoSQLDatabase::intToEightDigitString(int number)
+// {
+//     // Convert an integer to a 8-digit string
+//     stringstream ss;
+//     ss << setw(8) << setfill('0') << number;
+//     return ss.str();
+// }
+
+void NoSQLDatabase::writeDataBoundaries(string &data, int &currentBlock, int &currentPosInBlock)
+{
+    // current block: row, currentPosInBlock: column
+    // adding 1 byte for newline character for formatting reasons
+
+    // check if the current data file is full
+    currentBlock = firstAvailableBlock();
+
+    // Check if adding the record would exceed the block size
+    // Each block is 256 bytes that includes a child block size of 4 bytes
+    if (currentPosInBlock + DATA_RECORD_SIZE >= BLOCK_SIZE)
+    {
+        // Move to the next block
+        cout << "Block is full." << endl;
+        bitMap(currentBlock, true, false);
+        // if curr block = 4095 and it's marked as 1, we should create a new PFS file
+        if (currentBlock == (INITIAL_SIZE / BLOCK_SIZE) * (dbNumber + 1) - 1)
+        {
+            cout << "Database file is full." << endl;
+            dbNumber++;
+            openOrCreateDatabase(databaseName, dbNumber); // create the new PFS file
+        }
+        currentBlock = firstAvailableBlock();
+        fcb.numberOfBlocksUsed++;
+        currentPosInBlock = 0;
+    }
+    databaseFile.seekp((currentBlock % (INITIAL_SIZE / BLOCK_SIZE)) * (BLOCK_SIZE + 1) + currentPosInBlock);
+    databaseFile << data;
+    databaseFile.flush();
+}
+
+void NoSQLDatabase::handleIndexAllocation(int &currentBlock)
+{
+    // Index operations
+    // Index operations using B-tree
+    int totalIndexNode = bTree.Display(currentBlock);
+    fcb.indexStartingBlock = bTree.getRootId(); // The starting block for the index (i.e. root)
+    // set the bitmap from current block to last index block to 1
+    for (int i = currentBlock; i < totalIndexNode; i++)
+    {
+        bitMap(i, true, false);
+    }
+    // write to database 
+    // if root is null, we ignore
+    if (!bTree.getRootNode())
+    {
+        return;
+    }
+    queue<Node *> q;
+    q.push(bTree.getRootNode());
+    int level = 0;
+    while (!q.empty())
+    {
+        int NodeCount = q.size();
+        while (NodeCount > 0)
+        {
+            Node *node = q.front();
+            q.pop();
+            // display the current node
+            // TODO: feed it to the database file
+            cout << node->getNodeId() + currentBlock;
+            cout << ": " << node->getChildKeyBlk();
+
+            // enqueue the children
+            for (int i = 0; i < node->getChildSize(); i++)
+            {
+                if (node->getChildren()[i])
+                {
+                    q.push(node->getChildren()[i]);
+                }
+            }
+            cout << endl;
+            NodeCount--;
+        }
+        level++;
+        cout << endl;
+    }
+}
+
+// Implement B-tree insertion method
+// void NoSQLDatabase::insertIntoBTree(int key)
+// {
+//     bTree.Insert(key);
+//     // bTree.Display();
+// }
+
+// Implement B-tree search method
+bool NoSQLDatabase::searchInBTree(int key)
+{
+    vector<int> NodeIds;
+    return bTree.Lookup(bTree.getRootNode(), key, NodeIds);
 }
 
 void NoSQLDatabase::openOrCreateDatabase(string &PFSFile, int dbNumber)
@@ -304,11 +359,10 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
 
     // Initialize FCB information
     fcb.filename = myFile;
-    fcb.fileSize = file_size(myFile); // The actual file size
-    fcb.timestamp = time(nullptr);    // Set the timestamp to current time
-
-    fcb.numberOfBlocksUsed = 1; // Number of blocks used
-    fcb.startingBlockIndex = 0; // The starting block for the index (i.e. root)
+    fcb.fileSize = file_size(myFile);  // The actual file size
+    fcb.timestamp = time(nullptr);     // Set the timestamp to current time
+    fcb.dataStartBlock = currentBlock; // The starting block
+    fcb.numberOfBlocksUsed = 1;        // Number of blocks used
 
     // Skip the first row (header)
     string header;
@@ -370,22 +424,13 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
 
     // start of index blocks
     currentBlock += 1;
-    int totalIndexNode = bTree.Display(currentBlock);
-    fcb.startBlock = bTree.getRootId();
-    // set the bitmap from current block to last index block to 1
-    for (int i = currentBlock; i < totalIndexNode; i++)
-    {
-        bitMap(i, true, false);
-    }
-    // write to database
-    // databaseFile <<
+    handleIndexAllocation(currentBlock);
+    // Add Index structure to the database
+    // currentBlock = firstAvailableBlock();
+    // currentPosInBlock = 0;
 
     // Add the FCB to the directory
     directory.push_back(fcb);
-
-    // Add Index structure to the database
-    currentBlock = firstAvailableBlock();
-    currentPosInBlock = 0;
 
     // Update the directory structure in each PFS file
     for (int i = 0; i <= dbNumber; i++)
@@ -401,20 +446,6 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
     fileToRead.close();
 
     cout << "Data from file " << myFile << " inserted into database " << databaseName << " successfully." << endl;
-}
-
-// Implement B-tree insertion method
-// void NoSQLDatabase::insertIntoBTree(int key)
-// {
-//     bTree.Insert(key);
-//     // bTree.Display();
-// }
-
-// Implement B-tree search method
-bool NoSQLDatabase::searchInBTree(int key)
-{
-    vector<int> NodeIds;
-    return bTree.Lookup(bTree.getRootNode(), key, NodeIds);
 }
 
 void NoSQLDatabase::getDataFromDatabase()
@@ -493,6 +524,15 @@ void NoSQLDatabase::quitDatabase()
 {
     // Exit NoSQL database
     exit(0);
+}
+
+NoSQLDatabase::~NoSQLDatabase()
+{
+    // Close the database file
+    if (databaseFile.is_open())
+    {
+        databaseFile.close();
+    }
 }
 
 NoSQLDatabase::Command NoSQLDatabase::getCommandType(const string &command)

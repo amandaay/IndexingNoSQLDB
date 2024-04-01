@@ -83,6 +83,26 @@ string Node::getChildKeyBlk()
 }
 
 /**
+ * @brief return children
+ *
+ * @return Node** return the children
+ */
+Node **Node::getChildren(){
+
+    return children;
+}
+
+/**
+ * @brief return child size
+ *
+ * @return int return the child size
+ */
+int Node::getChildSize(){
+
+    return size + 1;
+}
+
+/**
  * @brief assuming the leaf node is non full
  * insertion of the dedicated value will be performed
  *
@@ -250,7 +270,6 @@ void Node::Display(int _size, int &currentBlock)
             childKeyBlk += intToThirteenDigitString(values[i]);
         }
     }
-    cout << "final chain in nodeId: " << getNodeId() + currentBlock << ": " << childKeyBlk;
 }
 
 /**
@@ -527,7 +546,6 @@ int BTree::Display(int &currentBlock)
                     q.push(node->children[i]);
                 }
             }
-            cout << endl;
             NodeCount--;
             if (level == 0)
             {
