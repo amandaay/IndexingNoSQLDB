@@ -23,6 +23,7 @@ int main(int argc, char *argv[])
 {
     // default size
     int nodesize = 5;
+    int currBlock = 0;
     // check if there's an input file with the same arg length
     if (argc != 2 && argc != 3)
     {
@@ -58,7 +59,7 @@ int main(int argc, char *argv[])
             DemoTree.Insert(value);
         }
         // creating a tree
-        DemoTree.Display();
+        DemoTree.Display(currBlock);
     }
 
     bool quit = false;
@@ -123,7 +124,7 @@ int main(int argc, char *argv[])
                 break;
             }
             DemoTree.Insert(InsertVal);
-            DemoTree.Display();
+            DemoTree.Display(currBlock);
             break;
         }
         case 'q':

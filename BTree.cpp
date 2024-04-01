@@ -432,12 +432,15 @@ pair<int, int> BTree::Display(int &currentBlock)
     }
     int noOfNodes;
     int startBlock;
+    unordered_map<int, string> nodeMap;
     queue<Node *> q;
     q.push(nodes);
     int level = 0;
     while (!q.empty())
     {
         int NodeCount = q.size();
+        vector<string> child;
+        vector<string> childKeyBlkList;
         // display levels
         cout << "L-" << level << ": ";
         layers = level + 1;
@@ -449,14 +452,32 @@ pair<int, int> BTree::Display(int &currentBlock)
             cout << node->getNodeId() + currentBlock << "[";
             node->Display(node->size, node->getNodeId() + currentBlock);
             cout << "] ";
+            cout << endl;
 
             // enqueue the children
             for (int i = 0; i < node->size + 1; i++)
             {
                 if (node->children[i])
                 {
+                    cout << "children node id: " << node->children[i]->getNodeId() + currentBlock << " ";
+                    child.push_back(to_string(node->children[i]->getNodeId() + currentBlock));
                     q.push(node->children[i]);
                 }
+            }
+            cout << endl;
+            string childKeyBlk;
+            for (int j = 0; j < child.size() + 1; j++)
+            {
+                if (!node->values[j])
+                {
+                    childKeyBlk = child[j];
+                }
+                else
+                {
+                    childKeyBlk = child[j]+ to_string(node->values[j]);
+                }
+                cout << "keyBlkChild: " << childKeyBlk << endl;
+                // keyBlkChild.push_back(keyBlkChild);
             }
             NodeCount--;
             noOfNodes = node->getNodeId();
