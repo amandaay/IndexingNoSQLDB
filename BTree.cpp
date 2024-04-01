@@ -12,6 +12,9 @@
 #include <iostream>
 #include <queue>
 #include <cmath>
+#include <sstream>
+#include <string>
+#include <iomanip>
 
 using namespace std;
 
@@ -162,13 +165,42 @@ void Node::SplitChild(int i, Node *CurrNode, int &NodeIdCounter)
 }
 
 /**
+ * @brief convert child to 5 digit string
+ *
+ * @param number key value
+ * @return string converted key value
+ */
+string Node::intToFiveDigitString(int number)
+{
+    // Convert an integer to a 5-digit string
+    stringstream ss;
+    ss << setw(5) << setfill('0') << number;
+    return ss.str();
+}
+
+/**
+ * @brief to convert key+block# to 8+5 digit string
+ *
+ * @param number key value
+ * @return string converted key value
+ */
+string Node::intToThirteenDigitString(int number)
+{
+    // Convert an integer to an 8-digit string
+    stringstream ss;
+    ss << setw(13) << setfill('0') << number;
+    return ss.str();
+}
+
+/**
  * @brief displaying every single done with its node index
  *
  * @param _size current size of the nodes
- * @param NodeId node ID's index
+ * @param currentBlock current index block number
  */
-void Node::Display(int _size, int NodeId)
+void Node::Display(int _size, int &currentBlock)
 {
+    cout << "[";
     int i = 0;
     for (i = 0; i < _size; i++)
     {
@@ -188,6 +220,27 @@ void Node::Display(int _size, int NodeId)
         cout << ",";
         CurrSize++;
     }
+    cout << "] " << endl;
+    string childKeyBlk;
+    for (int i = 0; i <= _size; i++)
+    {
+        if (i <= _size && children[i] != nullptr)
+        {
+            // child ID
+            childKeyBlk += intToFiveDigitString(children[i]->getNodeId() + currentBlock);
+        }
+        else
+        {
+            // no child: NULL
+            childKeyBlk += "99999";
+        }
+        if (i < _size)
+        {
+            // key exists
+            childKeyBlk += intToThirteenDigitString(values[i]);
+        }
+    }
+    cout << "final chain in nodeId: " << getNodeId() + currentBlock << ": " << childKeyBlk;
 }
 
 /**
@@ -301,6 +354,15 @@ bool BTree::Lookup(Node *root, int value, vector<Node *> &FullNodes)
 Node *BTree::getRootNode()
 {
     return nodes;
+}
+
+/**
+ * @brief get Root ID
+ * 
+ */
+int BTree::getRootId()
+{
+    return rootId;
 }
 
 /**
@@ -422,25 +484,21 @@ void BTree::Insert(int value)
  * @brief Display of the entire constructed tree using level order traversal
  *
  */
-pair<int, int> BTree::Display(int &currentBlock)
+int BTree::Display(int &currentBlock)
 {
     // if root is null, we ignore
     if (!nodes)
     {
         cout << "No tree found" << endl;
-        return make_pair(-1, -1);
+        return -1;
     }
     int noOfNodes;
-    int startBlock;
-    unordered_map<int, string> nodeMap;
     queue<Node *> q;
     q.push(nodes);
     int level = 0;
     while (!q.empty())
     {
         int NodeCount = q.size();
-        vector<string> child;
-        vector<string> childKeyBlkList;
         // display levels
         cout << "L-" << level << ": ";
         layers = level + 1;
@@ -449,41 +507,26 @@ pair<int, int> BTree::Display(int &currentBlock)
             Node *node = q.front();
             q.pop();
             // display the current node
-            cout << node->getNodeId() + currentBlock << "[";
-            node->Display(node->size, node->getNodeId() + currentBlock);
-            cout << "] ";
-            cout << endl;
+            cout << node->getNodeId() + currentBlock;
+            // << "[";
+            // node->Display(node->size, node->getNodeId() + currentBlock);
+            node->Display(node->size, currentBlock);
+            // cout << "] ";
 
             // enqueue the children
             for (int i = 0; i < node->size + 1; i++)
             {
                 if (node->children[i])
                 {
-                    cout << "children node id: " << node->children[i]->getNodeId() + currentBlock << " ";
-                    child.push_back(to_string(node->children[i]->getNodeId() + currentBlock));
                     q.push(node->children[i]);
                 }
             }
             cout << endl;
-            string childKeyBlk;
-            for (int j = 0; j < child.size() + 1; j++)
-            {
-                if (!node->values[j])
-                {
-                    childKeyBlk = child[j];
-                }
-                else
-                {
-                    childKeyBlk = child[j]+ to_string(node->values[j]);
-                }
-                cout << "keyBlkChild: " << childKeyBlk << endl;
-                // keyBlkChild.push_back(keyBlkChild);
-            }
             NodeCount--;
             noOfNodes = node->getNodeId();
             if (level == 0)
             {
-                startBlock = node->getNodeId() + currentBlock;
+                rootId = node->getNodeId() + currentBlock;
             }
         }
         level++;
@@ -491,8 +534,8 @@ pair<int, int> BTree::Display(int &currentBlock)
     }
     cout << endl;
     cout << "noOfNodes: " << noOfNodes << endl;
-    cout << "startBlock: " << startBlock << endl;
-    return make_pair(currentBlock + noOfNodes, startBlock);
+    cout << "startBlock: " << rootId << endl;
+    return currentBlock + noOfNodes;
 }
 
 /**

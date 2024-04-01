@@ -66,13 +66,13 @@ string NoSQLDatabase::intToFiveDigitString(int number)
     return ss.str();
 }
 
-string NoSQLDatabase::intToEightDigitString(int number)
-{
-    // Convert an integer to a 8-digit string
-    stringstream ss;
-    ss << setw(8) << setfill('0') << number;
-    return ss.str();
-}
+// string NoSQLDatabase::intToEightDigitString(int number)
+// {
+//     // Convert an integer to a 8-digit string
+//     stringstream ss;
+//     ss << setw(8) << setfill('0') << number;
+//     return ss.str();
+// }
 
 void NoSQLDatabase::updateDirectory(int dbNumber)
 {
@@ -370,8 +370,8 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
 
     // start of index blocks
     currentBlock += 1;
-    int lastIndexNode = bTree.Display(currentBlock).first;
-    fcb.startBlock = bTree.Display(currentBlock).second;
+    int lastIndexNode = bTree.Display(currentBlock);
+    fcb.startBlock = bTree.getRootId();
     // set the bitmap from current block to last index block to 1
     for (int i = currentBlock; i <= lastIndexNode; i++)
     {

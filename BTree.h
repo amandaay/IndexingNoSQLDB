@@ -46,8 +46,12 @@ public:
     void NodeInsert(int value, int &NodeIdCounter);
     // split child helper function if current node is full
     void SplitChild(int i, Node *CurrNode, int &NodeIdCounter);
+    // to convert child to 5 digit string
+    string intToFiveDigitString(int number);
+    // to convert key+block# to 8+5 digit string
+    string intToThirteenDigitString(int number);
     // Display node
-    void Display(int _size, int NodeId);
+    void Display(int _size, int &currentBlock);
     // deconstructor
     ~Node();
 
@@ -70,6 +74,8 @@ private:
     int nodesize;
     // count layers if there's more than 2 layers meaning internal nodes exist
     int layers;
+    // root node ID
+    int rootId;
 
 public:
     // constructor for BTree
@@ -80,6 +86,8 @@ public:
     bool Lookup(Node *root, int value, vector<Node* > &FullNodes);
     // Public method to access the root nodes
     Node *getRootNode();
+    // Get root node ID
+    int getRootId();
     // Setter method for the root node pointer
     void setRootNode(Node *root);
     // helper function for inserting a new value
@@ -87,7 +95,7 @@ public:
     // Insert specific value to the tree
     void Insert(int value);
     // Display of the entire tree
-    pair<int, int> Display(int &currentBlock);
+    int Display(int &currentBlock);
     // deconstructor
     ~BTree();
 };
