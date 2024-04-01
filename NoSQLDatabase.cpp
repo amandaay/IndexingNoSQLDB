@@ -225,7 +225,6 @@ void NoSQLDatabase::handleIndexAllocation(int &currentBlock)
     // for testing purpose
     bTree.Display(currentBlock);
     int lastIndexBlk = bTree.getTotalNodes() + currentBlock - 1;
-    string parent = "99999"; // parent block number
     fcb.indexStartBlock = bTree.getRootId(); // The starting block for the index (i.e. root)
     // set the bitmap from current block to last index block to 1
     for (int i = currentBlock; i <= lastIndexBlk; i++)
@@ -238,23 +237,23 @@ void NoSQLDatabase::handleIndexAllocation(int &currentBlock)
     {
         return;
     }
-    queue<Node *> q;
-    q.push(bTree.getRootNode());
+    queue<pair<Node *, string>> q;
+    string parent = "99999"; // parent block number
+    q.push({bTree.getRootNode(), parent});
     int level = 0;
     while (!q.empty())
     {
         int NodeCount = q.size();
         while (NodeCount > 0)
         {
-            Node *node = q.front();
+            auto [node, parent] = q.front();
             q.pop();
 
             // index block number
             indexBlock = node->getNodeId() + currentBlock;
 
             cout << node->getNodeId() + currentBlock;
-            cout << ": " << node->getChildKeyBlk();
-            cout << " " << parent << endl;
+            cout << ": " << node->getChildKeyBlk() << " " << parent << endl;
 
             databaseFile.seekp(indexBlock % (INITIAL_SIZE / BLOCK_SIZE) * (BLOCK_SIZE + 1));
             databaseFile << node->getChildKeyBlk();
@@ -267,12 +266,11 @@ void NoSQLDatabase::handleIndexAllocation(int &currentBlock)
             {
                 if (node->getChildren()[i])
                 {
-                    q.push(node->getChildren()[i]);
+                    q.push({node->getChildren()[i], intToFiveDigitString(indexBlock)});
                 }
             }
             NodeCount--;
         }
-        parent = intToFiveDigitString(indexBlock);
         level++;
     }
 }
