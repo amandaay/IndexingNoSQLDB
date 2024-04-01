@@ -12,6 +12,7 @@
 #ifndef BTREE_H
 #define BTREE_H
 #include <vector>
+#include <string>
 using namespace std;
 
 /*
