@@ -87,7 +87,7 @@ public:
     // Insert specific value to the tree
     void Insert(int value);
     // Display of the entire tree
-    int Display(int &currentBlock);
+    pair<int, int> Display(int &currentBlock);
     // deconstructor
     ~BTree();
 };

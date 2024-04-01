@@ -306,9 +306,9 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
     fcb.filename = myFile;
     fcb.fileSize = file_size(myFile); // The actual file size
     fcb.timestamp = time(nullptr);    // Set the timestamp to current time
-    fcb.startBlock = currentBlock;    // The data starts after the directory structure
-    fcb.numberOfBlocksUsed = 1;       // Number of blocks used
-    fcb.startingBlockIndex = 0;       // The starting block for the index (i.e. root)
+
+    fcb.numberOfBlocksUsed = 1; // Number of blocks used
+    fcb.startingBlockIndex = 0; // The starting block for the index (i.e. root)
 
     // Skip the first row (header)
     string header;
@@ -370,7 +370,8 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
 
     // start of index blocks
     currentBlock += 1;
-    int lastIndexNode = bTree.Display(currentBlock);
+    int lastIndexNode = bTree.Display(currentBlock).first;
+    fcb.startBlock = bTree.Display(currentBlock).second;
     // set the bitmap from current block to last index block to 1
     for (int i = currentBlock; i <= lastIndexNode; i++)
     {
