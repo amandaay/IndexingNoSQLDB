@@ -225,6 +225,7 @@ void NoSQLDatabase::handleIndexAllocation(int &currentBlock)
     // for testing purpose
     bTree.Display(currentBlock);
     int lastIndexBlk = bTree.getTotalNodes() + currentBlock - 1;
+    string parent = "99999";
     fcb.indexStartBlock = bTree.getRootId(); // The starting block for the index (i.e. root)
     // set the bitmap from current block to last index block to 1
     for (int i = currentBlock; i <= lastIndexBlk; i++)
@@ -247,16 +248,21 @@ void NoSQLDatabase::handleIndexAllocation(int &currentBlock)
         {
             Node *node = q.front();
             q.pop();
-            // display the current node
-            // TODO: feed it to the database file
 
             // index block number
-            cout << node->getNodeId() + currentBlock;
-            cout << ": " << node->getChildKeyBlk();
-
+            // cout << node->getNodeId() << endl;
             indexBlock = node->getNodeId() + currentBlock;
+            cout << indexBlock;
+            cout << ": " << node->getChildKeyBlk();
+            cout << " " << parent << endl;
+
             databaseFile.seekp(indexBlock % (INITIAL_SIZE / BLOCK_SIZE) * (BLOCK_SIZE + 1));
             databaseFile << node->getChildKeyBlk();
+            databaseFile.seekp((indexBlock % (INITIAL_SIZE / BLOCK_SIZE)) * (BLOCK_SIZE + 1) + (BLOCK_SIZE - 5));
+            databaseFile << parent;
+            databaseFile.flush();
+
+            parent = indexBlock;
 
             // enqueue the children
             for (int i = 0; i < node->getChildrenSize(); i++)
@@ -266,11 +272,9 @@ void NoSQLDatabase::handleIndexAllocation(int &currentBlock)
                     q.push(node->getChildren()[i]);
                 }
             }
-            cout << endl;
             NodeCount--;
         }
         level++;
-        cout << endl;
     }
 }
 
