@@ -33,6 +33,7 @@ private:
     int dbNumber;          // database number starts from 0
     int uploadedFilesPos;  // position of uploaded files in the block
     BTree bTree;           // include BTree for indexing
+    int indexBlock;        // index block number
 
     // Define structures for File Control Block (FCB) and directory entry
     struct FCB

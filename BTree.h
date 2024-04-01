@@ -96,6 +96,8 @@ public:
     Node *getRootNode();
     // Get root node ID
     int getRootId();
+    // get total number of nodes used
+    int getTotalNodes();
     // Setter method for the root node pointer
     void setRootNode(Node *root);
     // helper function for inserting a new value
@@ -103,7 +105,7 @@ public:
     // Insert specific value to the tree
     void Insert(int value);
     // Display of the entire tree
-    int Display(int &currentBlock);
+    void Display(int &currentBlock);
     // deconstructor
     ~BTree();
 };

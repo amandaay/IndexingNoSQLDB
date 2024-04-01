@@ -222,10 +222,12 @@ void NoSQLDatabase::handleIndexAllocation(int &currentBlock)
 {
     // Index operations
     // Index operations using B-tree
-    int totalIndexNode = bTree.Display(currentBlock);
+    // for testing purpose
+    bTree.Display(currentBlock);
+    int lastIndexBlk = bTree.getTotalNodes() + currentBlock - 1;
     fcb.indexStartingBlock = bTree.getRootId(); // The starting block for the index (i.e. root)
     // set the bitmap from current block to last index block to 1
-    for (int i = currentBlock; i < totalIndexNode; i++)
+    for (int i = currentBlock; i <= lastIndexBlk; i++)
     {
         bitMap(i, true, false);
     }
@@ -247,11 +249,15 @@ void NoSQLDatabase::handleIndexAllocation(int &currentBlock)
             q.pop();
             // display the current node
             // TODO: feed it to the database file
-            // databaseFile.seekp()
+            
             // index block number
             cout << node->getNodeId() + currentBlock;
-            // databaseFile << 
             cout << ": " << node->getChildKeyBlk();
+
+            indexBlock = node->getNodeId() + currentBlock;
+            databaseFile.seekp(indexBlock % (INITIAL_SIZE / BLOCK_SIZE) * (BLOCK_SIZE + 1));
+            databaseFile << node->getChildKeyBlk();
+            
 
             // enqueue the children
             for (int i = 0; i < node->getChildrenSize(); i++)

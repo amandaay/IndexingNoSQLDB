@@ -395,6 +395,14 @@ int BTree::getRootId()
 }
 
 /**
+ * @brief get total number of nodes used
+ * 
+ */
+int BTree::getTotalNodes(){
+    return NodeIdCounter;
+}
+
+/**
  * @brief reset root nodes to its root
  *
  * @param root root pointer
@@ -513,13 +521,14 @@ void BTree::Insert(int value)
  * @brief Display of the entire constructed tree using level order traversal
  *
  */
-int BTree::Display(int &currentBlock)
+void BTree::Display(int &currentBlock)
 {
     // if root is null, we ignore
     if (!nodes)
     {
         cout << "No tree found" << endl;
-        return -1;
+        // return -1;
+        return;
     }
     queue<Node *> q;
     q.push(nodes);
@@ -556,7 +565,7 @@ int BTree::Display(int &currentBlock)
         cout << endl;
     }
     cout << endl;
-    return currentBlock + NodeIdCounter;
+    // return currentBlock + NodeIdCounter;
 }
 
 /**
