@@ -34,6 +34,8 @@ private:
     int NodeId;
     // nodesize
     int nodesize;
+    // string for child key block
+    string childKeyBlk;
 
 public:
     // Node Constructor Declaration: initiates a new node
@@ -42,6 +44,8 @@ public:
     int NodeLookup(int value);
     // getter for nodeId
     int getNodeId();
+    // getter for childKeyBlk chain
+    string getChildKeyBlk();
     // Node insert values to the specific node
     void NodeInsert(int value, int &NodeIdCounter);
     // split child helper function if current node is full

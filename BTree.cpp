@@ -24,7 +24,7 @@ using namespace std;
  * @param _leaf if it's leafnode or not
  *
  */
-Node::Node(int _nodesize, bool _leaf) : nodesize(_nodesize), leaf(_leaf), NodeId(-1)
+Node::Node(int _nodesize, bool _leaf) : nodesize(_nodesize), leaf(_leaf), NodeId(-1), childKeyBlk("")
 {
     values = new int[nodesize];
     // initialize node pointers for the Node's children ptr
@@ -70,6 +70,15 @@ int Node::NodeLookup(int value)
 int Node::getNodeId()
 {
     return NodeId;
+}
+
+/**
+ * @brief return childKeyBlk
+ *
+ * @return string return the childKeyBlk
+ */
+string Node::getChildKeyBlk(){
+    return childKeyBlk;
 }
 
 /**
@@ -221,12 +230,11 @@ void Node::Display(int _size, int &currentBlock)
         CurrSize++;
     }
     cout << "] " << endl;
-    string childKeyBlk;
     for (int i = 0; i <= _size; i++)
     {
         if (i <= _size && children[i] != nullptr)
         {
-            // child ID
+            // child ID: 5 byte
             childKeyBlk += intToFiveDigitString(children[i]->getNodeId() + currentBlock);
         }
         else
@@ -237,6 +245,7 @@ void Node::Display(int _size, int &currentBlock)
         if (i < _size)
         {
             // key exists
+            // child 5 byte, (key 8 byte, key block # 5 byte)
             childKeyBlk += intToThirteenDigitString(values[i]);
         }
     }
@@ -492,7 +501,6 @@ int BTree::Display(int &currentBlock)
         cout << "No tree found" << endl;
         return -1;
     }
-    int noOfNodes;
     queue<Node *> q;
     q.push(nodes);
     int level = 0;
@@ -508,10 +516,7 @@ int BTree::Display(int &currentBlock)
             q.pop();
             // display the current node
             cout << node->getNodeId() + currentBlock;
-            // << "[";
-            // node->Display(node->size, node->getNodeId() + currentBlock);
             node->Display(node->size, currentBlock);
-            // cout << "] ";
 
             // enqueue the children
             for (int i = 0; i < node->size + 1; i++)
@@ -523,7 +528,6 @@ int BTree::Display(int &currentBlock)
             }
             cout << endl;
             NodeCount--;
-            noOfNodes = node->getNodeId();
             if (level == 0)
             {
                 rootId = node->getNodeId() + currentBlock;
@@ -533,9 +537,7 @@ int BTree::Display(int &currentBlock)
         cout << endl;
     }
     cout << endl;
-    cout << "noOfNodes: " << noOfNodes << endl;
-    cout << "startBlock: " << rootId << endl;
-    return currentBlock + noOfNodes;
+    return currentBlock + NodeIdCounter;
 }
 
 /**

@@ -370,13 +370,15 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
 
     // start of index blocks
     currentBlock += 1;
-    int lastIndexNode = bTree.Display(currentBlock);
+    int totalIndexNode = bTree.Display(currentBlock);
     fcb.startBlock = bTree.getRootId();
     // set the bitmap from current block to last index block to 1
-    for (int i = currentBlock; i <= lastIndexNode; i++)
+    for (int i = currentBlock; i < totalIndexNode; i++)
     {
         bitMap(i, true, false);
     }
+    // write to database
+    // databaseFile << 
 
     // Add the FCB to the directory
     directory.push_back(fcb);
