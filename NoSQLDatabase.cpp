@@ -247,11 +247,14 @@ void NoSQLDatabase::handleIndexAllocation(int &currentBlock)
             q.pop();
             // display the current node
             // TODO: feed it to the database file
+            // databaseFile.seekp()
+            // index block number
             cout << node->getNodeId() + currentBlock;
+            // databaseFile << 
             cout << ": " << node->getChildKeyBlk();
 
             // enqueue the children
-            for (int i = 0; i < node->getChildSize(); i++)
+            for (int i = 0; i < node->getChildrenSize(); i++)
             {
                 if (node->getChildren()[i])
                 {
@@ -425,9 +428,6 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
     // start of index blocks
     currentBlock += 1;
     handleIndexAllocation(currentBlock);
-    // Add Index structure to the database
-    // currentBlock = firstAvailableBlock();
-    // currentPosInBlock = 0;
 
     // Add the FCB to the directory
     directory.push_back(fcb);

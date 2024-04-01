@@ -97,7 +97,7 @@ Node **Node::getChildren(){
  *
  * @return int return the child size
  */
-int Node::getChildSize(){
+int Node::getChildrenSize(){
 
     return size + 1;
 }

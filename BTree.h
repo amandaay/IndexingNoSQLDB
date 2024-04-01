@@ -48,8 +48,8 @@ public:
     string getChildKeyBlk();
     // getter for children nodes
     Node **getChildren();
-    // getter for size of the child node
-    int getChildSize();
+    // getter for size of the children nodes
+    int getChildrenSize();
     // Node insert values to the specific node
     void NodeInsert(int value, int &NodeIdCounter);
     // split child helper function if current node is full
