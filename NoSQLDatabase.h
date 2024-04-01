@@ -43,7 +43,7 @@ private:
         time_t timestamp;       // Last modified time
         int dataStartBlock;     // Starting block of the data
         int numberOfBlocksUsed; // Number of blocks used
-        int indexStartingBlock; // The starting block for the index (i.e. root of its BTree)
+        int indexStartBlock;    // The starting block for the index (i.e. root of its BTree)
     };
     FCB fcb;
     // Define a directory structure with the metadata, 3 FCBs
