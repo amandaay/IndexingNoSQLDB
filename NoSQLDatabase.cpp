@@ -289,15 +289,15 @@ string NoSQLDatabase::handleIndexSearch(string &idxStartBlock, string &key)
 
     for (int i = 5; i < idxBlkLine.size(); i += 18)
     {
-        if (key < idxBlkLine.substr(i, 8))
-        {
-            blkAccessed++;
-            return idxBlkLine.substr(i - 5, 5);
-        }
-        else if (key == idxBlkLine.substr(i, 8))
+        if (key == idxBlkLine.substr(i, 8))
         {
             blkAccessed ++;
             return idxBlkLine.substr(i + 8, 5);
+        }
+        else if (key < idxBlkLine.substr(i, 8))
+        {
+            blkAccessed++;
+            return idxBlkLine.substr(i - 5, 5);
         }
         else if ((key > idxBlkLine.substr(i, 8)) && (key < idxBlkLine.substr(i + 18, 8)))
         {
@@ -306,21 +306,21 @@ string NoSQLDatabase::handleIndexSearch(string &idxStartBlock, string &key)
         }
 
         if (i == idxBlkLine.size() - 18)
-        {
-            if (key < idxBlkLine.substr(i, 8))
+        {   
+            if (key == idxBlkLine.substr(i, 8))
+            {
+                blkAccessed ++;
+                return idxBlkLine.substr(i, 8);
+            }
+            else if (key < idxBlkLine.substr(i, 8))
             {
                 blkAccessed ++;
                 return idxBlkLine.substr(i - 5, 5);
             }
             else if ((key > idxBlkLine.substr(i, 8)))
-            {;
-                blkAccessed ++;
-                return idxBlkLine.substr(i + 13, 5);
-            }
-            else if (key == idxBlkLine.substr(i, 8))
             {
                 blkAccessed ++;
-                return idxBlkLine.substr(i, 8);
+                return idxBlkLine.substr(i + 13, 5);
             }
         }
     }
