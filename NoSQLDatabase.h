@@ -61,6 +61,8 @@ private:
     void writeDataBoundaries(string &data, int &currentBlock, int &currentPosInBlock);
     // Index operations
     void handleIndexAllocation(int &currentBlock);
+    // handle index search
+    string handleIndexSearch(string &idxStartBlock, int key);
 
     // Commands for client operation
     enum Command
