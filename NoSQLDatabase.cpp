@@ -91,7 +91,7 @@ void NoSQLDatabase::updateDirectory(int dbNumber)
 
         // Number of blocks used
         databaseFile.seekp((i + 1) * (BLOCK_SIZE + 1) + 90);
-        databaseFile << intToFiveDigitString(directory[i].numberOfBlocksUsed);
+        databaseFile << intToFiveDigitString(directory[i].dataBlockUsed);
 
         // Starting block for index (i.e. root)
         databaseFile.seekp((i + 1) * (BLOCK_SIZE + 1) + 100);
@@ -210,7 +210,7 @@ void NoSQLDatabase::writeDataBoundaries(string &data, int &currentBlock, int &cu
             openOrCreateDatabase(databaseName, dbNumber); // create the new PFS file
         }
         currentBlock = firstAvailableBlock();
-        fcb.numberOfBlocksUsed++;
+        fcb.dataBlockUsed++;
         currentPosInBlock = 0;
     }
     databaseFile.seekp((currentBlock % (INITIAL_SIZE / BLOCK_SIZE)) * (BLOCK_SIZE + 1) + currentPosInBlock);
@@ -283,10 +283,27 @@ void NoSQLDatabase::handleIndexAllocation(int &currentBlock)
 // }
 
 // Implement B-tree search method
-bool NoSQLDatabase::searchInBTree(int key)
+void NoSQLDatabase::searchInBTree(int key)
 {
     vector<int> NodeIds;
-    return bTree.Lookup(bTree.getRootNode(), key, NodeIds);
+    if (bTree.Lookup(bTree.getRootNode(), key * 100000, NodeIds))
+    {
+        for (auto j = NodeIds.begin(); j != NodeIds.end(); j++)
+        {
+            cout << *j + bTree.getRootId() - 1;
+            // Check if j is not pointing to the last element
+            if (j != NodeIds.end() - 1)
+            {
+                cout << " -> ";
+            }
+        }
+        cout << endl;
+    }
+    else
+    {
+        cout << "No key found." << endl;
+    }
+    cout << "# of Blocks = " << NodeIds.size() << endl;
 }
 
 void NoSQLDatabase::openOrCreateDatabase(string &PFSFile, int dbNumber)
@@ -371,7 +388,7 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
     fcb.fileSize = file_size(myFile);  // The actual file size
     fcb.timestamp = time(nullptr);     // Set the timestamp to current time
     fcb.dataStartBlock = currentBlock; // The starting block
-    fcb.numberOfBlocksUsed = 1;        // Number of blocks used
+    fcb.dataBlockUsed = 1;             // Number of blocks used
 
     // Skip the first row (header)
     string header;
@@ -421,7 +438,6 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
 
             cout << "KEY inserting into BTree: " << key << endl;
             // Index the key using B-tree
-            // insertIntoBTree(key);
             bTree.Insert(key);
 
             currentPosInBlock += DATA_RECORD_SIZE; // each individual block
@@ -454,9 +470,33 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
     cout << "Data from file " << myFile << " inserted into database " << databaseName << " successfully." << endl;
 }
 
-void NoSQLDatabase::getDataFromDatabase()
+void NoSQLDatabase::getDataFromDatabase(string &myFile)
 {
     // Download data file from NoSQL database to OS directory
+    // openOrCreateDatabase(databaseName, dbNumber);
+    // ofstream fileToWrite(myFile);
+    // if (!fileToWrite.is_open())
+    // {
+    //     cout << "Error: Unable to open file " << myFile << endl;
+    //     return;
+    // }
+    // // streampos dataBlockEndPos;
+    // int root;
+    // for (int i = 0; i < directory.size(); i++)
+    // {
+    //     if (myFile == directory[i].filename)
+    //     {
+    //         // databaseFile.seekg(directory[i].dataStartBlock * (BLOCK_SIZE + 1));
+    //         // dataBlockEndPos = directory[i].dataStartBlock + directory[i].dataBlockUsed;
+    //         root = directory[i].indexStartBlock;
+    //     }
+    // }
+    searchInBTree(23);
+    // string data;
+    // streampos startPos = databaseFile.tellg();
+    // streampos endPos =
+
+    // fileToWrite.close();
 }
 
 void NoSQLDatabase::delFileFromDatabase(string &myFile)
@@ -625,7 +665,7 @@ void NoSQLDatabase::runCLI()
             putDataIntoDatabase(file);
             break;
         case GET:
-            getDataFromDatabase();
+            getDataFromDatabase(file);
             break;
         case RM:
             delFileFromDatabase(file);

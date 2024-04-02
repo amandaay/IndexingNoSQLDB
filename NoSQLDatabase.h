@@ -39,11 +39,11 @@ private:
     struct FCB
     {
         string filename;
-        uintmax_t fileSize;     // actual file size of the uploaded file (e.g. movies-small.csv)
-        time_t timestamp;       // Last modified time
-        int dataStartBlock;     // Starting block of the data
-        int numberOfBlocksUsed; // Number of blocks used
-        int indexStartBlock;    // The starting block for the index (i.e. root of its BTree)
+        uintmax_t fileSize;  // actual file size of the uploaded file (e.g. movies-small.csv)
+        time_t timestamp;    // Last modified time
+        int dataStartBlock;  // Starting block of the data
+        int dataBlockUsed;   // Number of blocks used
+        int indexStartBlock; // The starting block for the index (i.e. root of its BTree)
     };
     FCB fcb;
     // Define a directory structure with the metadata, 3 FCBs
@@ -63,7 +63,7 @@ private:
     void handleIndexAllocation(int &currentBlock);
     // Index operations using B-tree
     // void insertIntoBTree(int key);
-    bool searchInBTree(int key);
+    void searchInBTree(int key);
 
     // Commands for client operation
     enum Command
@@ -94,7 +94,7 @@ public:
     // put myFile: Insert data from your OS file, i.e., "myfile" into your NoSQL database, i.e., PFS file.
     void putDataIntoDatabase(string &myFile);
     // get myFile: Download data file "myfile" from your NoSQL database, i.e., PFS file, and save it to the current OS directory.
-    void getDataFromDatabase();
+    void getDataFromDatabase(string &myFile);
     // rm myFile: Delete "myfile" from your NoSQL database, i.e. PFS file.
     void delFileFromDatabase(string &myFile);
     // dir: List all data files in your NoSQL database, i.e., PFS file.
