@@ -280,15 +280,18 @@ string NoSQLDatabase::handleIndexSearch(string &idxStartBlock, string &key)
     // idxBlkLine reads the index block
     string idxBlkLine;
     int blkAccessed;
+    cout << "database " << databaseName << " dbNumber " << dbNumber << endl;
+    cout << "which line to read: " << stoi(idxStartBlock) * (BLOCK_SIZE + 1) << endl;
     databaseFile.seekg(stoi(idxStartBlock) * (BLOCK_SIZE + 1));
     // reading idxBlkLine without parent 
     getline(databaseFile, idxBlkLine, ' ');
+    cout << "idxBlkLine: " << idxBlkLine << endl;
 
     for (int i = 5; i < idxBlkLine.size(); i += 18)
     {
         if (key < idxBlkLine.substr(i, 8))
         {
-            blkAccessed ++;
+            blkAccessed++;
             return idxBlkLine.substr(i - 5, 5);
         }
         else if (key == idxBlkLine.substr(i, 8))
@@ -588,6 +591,21 @@ void NoSQLDatabase::findValueFromDatabase(string &myFileKey)
         }
     }
     string datablk = handleIndexSearch(idxStartBlk, key);
+    while (datablk != "")
+    {
+        datablk = handleIndexSearch(datablk, key);
+        cout << "datablk: "  << datablk << endl;
+        if (datablk == "99999"){
+            cout << "No key found. or found key: " << datablk << endl;
+            break;
+        }
+    }
+    cout << "datablk " << datablk << endl;
+    // while (handleIndexSearch(idxStartBlk, key) != "" || handleIndexSearch(idxStartBlk, key) != "99999")
+    // {
+    //     datablk = handleIndexSearch(idxStartBlk, key);
+    // }
+    
     // int idxStartBlk = 0;
     // for (int i = 0; i < directory.size(); i++)
     // {
