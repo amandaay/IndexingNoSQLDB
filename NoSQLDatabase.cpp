@@ -508,6 +508,7 @@ void NoSQLDatabase::findValueFromDatabase(string &myFileKey)
     cout << "my File name: " << myFile << endl;
     int key = stoi(myFileKey.substr(myFileKey.find(".") + 1, myFileKey.length()));
     cout << "key: " << key << endl;
+    int idxStartBlk = 0;
 
     openOrCreateDatabase(databaseName, dbNumber);
     
@@ -522,6 +523,7 @@ void NoSQLDatabase::findValueFromDatabase(string &myFileKey)
         string fcbFileName = line.substr(0, line.find("."));
         if (fcbFileName == myFile)
         {
+            idxStartBlk = stoi(line.substr(100, 5));
             cout << "found my file name: " << fcbFileName << endl;
             break;
         }
