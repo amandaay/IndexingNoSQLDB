@@ -56,13 +56,13 @@ private:
     int firstAvailableBlock();
     // helper function to write data
     string intToFiveDigitString(int number);
-    // string intToEightDigitString(int number);
+    string intToEightDigitString(int number);
     // formating the data to write into the database
     void writeDataBoundaries(string &data, int &currentBlock, int &currentPosInBlock);
     // Index operations
     void handleIndexAllocation(int &currentBlock);
     // handle index search
-    string handleIndexSearch(string &idxStartBlock, string &key);
+    string handleIndexSearch(string &idxStartBlock, string &key, int &blkAccessed);
 
     // Commands for client operation
     enum Command
@@ -99,7 +99,7 @@ public:
     // dir: List all data files in your NoSQL database, i.e., PFS file.
     void listAllDataFromDatabase();
     // find [myfile.key]: Find ‘value’ using a given ‘key’, i.e., return a record which is associate with a key from ‘myfile’ in your NoSQL database. In addition, you need to show how many blocks are accessed during ‘find’
-    void findValueFromDatabase(string &myfileKey);
+    void findValueFromDatabase(string &myfileKey, int &blkAccessed);
     // kill PFSfile: Delete the NoSQL database, i.e., remove PFSfile from OS file system
     void killDatabase(string &PFSFile);
     // quit: exit NoSQL database

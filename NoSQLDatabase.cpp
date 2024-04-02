@@ -179,13 +179,13 @@ string NoSQLDatabase::intToFiveDigitString(int number)
     return ss.str();
 }
 
-// string NoSQLDatabase::intToEightDigitString(int number)
-// {
-//     // Convert an integer to a 8-digit string
-//     stringstream ss;
-//     ss << setw(8) << setfill('0') << number;
-//     return ss.str();
-// }
+string NoSQLDatabase::intToEightDigitString(int number)
+{
+    // Convert an integer to a 8-digit string
+    stringstream ss;
+    ss << setw(8) << setfill('0') << number;
+    return ss.str();
+}
 
 void NoSQLDatabase::writeDataBoundaries(string &data, int &currentBlock, int &currentPosInBlock)
 {
@@ -275,57 +275,34 @@ void NoSQLDatabase::handleIndexAllocation(int &currentBlock)
     }
 }
 
-string NoSQLDatabase::handleIndexSearch(string &idxStartBlock, string &key)
+string NoSQLDatabase::handleIndexSearch(string &idxStartBlock, string &key, int &blkAccessed)
 {
     // idxBlkLine reads the index block
     string idxBlkLine;
-    int blkAccessed;
     cout << "database " << databaseName << " dbNumber " << dbNumber << endl;
     cout << "which line to read: " << stoi(idxStartBlock) * (BLOCK_SIZE + 1) << endl;
     databaseFile.seekg(stoi(idxStartBlock) * (BLOCK_SIZE + 1));
-    // reading idxBlkLine without parent 
+    // reading idxBlkLine without parent
     getline(databaseFile, idxBlkLine, ' ');
     cout << "idxBlkLine: " << idxBlkLine << endl;
-
     for (int i = 5; i < idxBlkLine.size(); i += 18)
     {
         if (key == idxBlkLine.substr(i, 8))
         {
-            blkAccessed ++;
+            // found the value (blk value)
+            blkAccessed++;
             return idxBlkLine.substr(i + 8, 5);
         }
         else if (key < idxBlkLine.substr(i, 8))
         {
+            // return the child block number to search further
             blkAccessed++;
             return idxBlkLine.substr(i - 5, 5);
         }
-        else if ((key > idxBlkLine.substr(i, 8)) && (key < idxBlkLine.substr(i + 18, 8)))
-        {
-            blkAccessed ++;
-            return idxBlkLine.substr(i + 13, 5);
-        }
-
-        if (i == idxBlkLine.size() - 18)
-        {   
-            if (key == idxBlkLine.substr(i, 8))
-            {
-                blkAccessed ++;
-                return idxBlkLine.substr(i, 8);
-            }
-            else if (key < idxBlkLine.substr(i, 8))
-            {
-                blkAccessed ++;
-                return idxBlkLine.substr(i - 5, 5);
-            }
-            else if ((key > idxBlkLine.substr(i, 8)))
-            {
-                blkAccessed ++;
-                return idxBlkLine.substr(i + 13, 5);
-            }
-        }
     }
-    cout << "blkAccessed: " << blkAccessed << endl;
-    return "";
+    // return right child block number to search further
+    blkAccessed++;
+    return idxBlkLine.substr(idxBlkLine.size() - 5);
 }
 
 void NoSQLDatabase::openOrCreateDatabase(string &PFSFile, int dbNumber)
@@ -401,16 +378,36 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
     // Initialize B-tree index
     bTree = BTree(INDEX_BFR);
 
+    // Initialize FCB information
+    fcb.fileSize = file_size(myFile);  // The actual file size
+    fcb.timestamp = time(nullptr);     // Set the timestamp to current time
+    fcb.dataStartBlock = currentBlock; // The starting block
+    fcb.dataBlockUsed = 1;             // Number of blocks used
+
+    // search fcb files
+    int lineNumber = 1;
+    string fcbs;
+    while (getline(databaseFile, fcbs))
+    {
+        if (fcbs.substr(0, fcbs.find(' ')) == myFile)
+        {
+            myFile = myFile.substr(0, myFile.find('.')) + "_copy" + myFile.substr(myFile.find('.'));
+            cout << "myFile already exists. Renaming to " << myFile << endl;
+            break;
+        }
+        lineNumber++;
+        if (lineNumber == 4)
+        {
+            break;
+        }
+    }
+
     // data block starts after the directory structure
     currentBlock = firstAvailableBlock();
     currentPosInBlock = 0;
 
     // Initialize FCB information
     fcb.filename = myFile;
-    fcb.fileSize = file_size(myFile);  // The actual file size
-    fcb.timestamp = time(nullptr);     // Set the timestamp to current time
-    fcb.dataStartBlock = currentBlock; // The starting block
-    fcb.dataBlockUsed = 1;             // Number of blocks used
 
     // Skip the first row (header)
     string header;
@@ -550,37 +547,35 @@ void NoSQLDatabase::listAllDataFromDatabase()
     }
 }
 
-void NoSQLDatabase::findValueFromDatabase(string &myFileKey)
+void NoSQLDatabase::findValueFromDatabase(string &myFileKey, int &blkAccessed)
 {
     if (!myFileKey.find("."))
     {
         cout << "Invalid command, it should be formatted `find myFile.key`." << endl;
         return;
     }
+    string idxStartBlk;
 
     string myFile = myFileKey.substr(0, myFileKey.find("."));
-    cout << "my File name: " << myFile << endl;
-    string key = myFileKey.substr(myFileKey.find(".") + 1, myFileKey.length());
-    cout << "key: " << key << endl;
-
-    string idxStartBlk;
+    int inputKey = stoi(myFileKey.substr(myFileKey.find(".") + 1, myFileKey.length()));
+    string key = intToEightDigitString(inputKey);
 
     openOrCreateDatabase(databaseName, dbNumber);
 
+    // skip metadata
     string metadata;
     getline(databaseFile, metadata);
 
+    // search fcb files
     int lineNumber = 1;
-
     string line;
     while (getline(databaseFile, line))
     {
         string fcbFileName = line.substr(0, line.find("."));
+        blkAccessed++;
         if (fcbFileName == myFile)
         {
             idxStartBlk = line.substr(100, 6);
-            cout << "idxStartBlk: " << idxStartBlk << endl;
-            cout << "found my file name: " << fcbFileName << endl;
             break;
         }
         lineNumber++;
@@ -590,71 +585,54 @@ void NoSQLDatabase::findValueFromDatabase(string &myFileKey)
             break;
         }
     }
-    string datablk = handleIndexSearch(idxStartBlk, key);
-    while (datablk != "")
+
+    // search data block
+    string idxBlk = idxStartBlk;
+    string dataBlk;
+    string resultBlk = "99999";
+    bool found = false;
+    while (!found)
     {
-        datablk = handleIndexSearch(datablk, key);
-        cout << "datablk: "  << datablk << endl;
-        if (datablk == "99999"){
-            cout << "No key found. or found key: " << datablk << endl;
+        idxBlk = handleIndexSearch(idxBlk, key, blkAccessed);
+        for (char c : idxBlk)
+        {
+            if (!isdigit(c))
+            {
+                resultBlk = dataBlk;
+                found = true;
+                break;
+            }
+        }
+        if (found)
+        {
             break;
         }
+        if (idxBlk == "99999")
+        {
+            cout << "No key found." << endl;
+            break;
+        }
+        dataBlk = idxBlk;
     }
-    cout << "datablk " << datablk << endl;
-    // while (handleIndexSearch(idxStartBlk, key) != "" || handleIndexSearch(idxStartBlk, key) != "99999")
-    // {
-    //     datablk = handleIndexSearch(idxStartBlk, key);
-    // }
-    
-    // int idxStartBlk = 0;
-    // for (int i = 0; i < directory.size(); i++)
-    // {
-    //     // directory[i].filename e.g. movies-small.csv, truncate the file extension
-    //     string fcbFileName = directory[i].filename.substr(0, directory[i].filename.find("."));
-    //     cout << "fcbFileName: " << fcbFileName << endl;
-    //     if (myFile == fcbFileName)
-    //     {
-    //         cout << "found my file name";
-    //         idxStartBlk = directory[i].indexStartBlock;
-    //         // bTree1 = &(directory[i].bTree);
-    //         break;
-    //     }
-    // }
-
-    // openOrCreateDatabase(databaseName, dbNumber);
-    // BTree *bTree1 = nullptr;
-
-    // databaseFile.seekg(idxStartBlk % (INITIAL_SIZE / BLOCK_SIZE) * (BLOCK_SIZE + 1));
-    // vector<int> NodeIds;
-
-    // cout << "bTree1->getRootNode() " << bTree1->getRootNode() << endl;
-    // cout << "bTree id: " << bTree1->getRootId() << endl;
-    // if (bTree1 != nullptr)
-    // {
-    //     cout << "bTree1 is not null" << endl;
-    // }
-
-    // if (bTree1->Lookup(bTree1->getRootNode(), key * 100000, NodeIds))
-    // {
-    //     for (auto j = NodeIds.begin(); j != NodeIds.end(); j++)
-    //     {
-    //         cout << "bTree1 getFirstIndexToWrite: " << bTree1->getFirstIndexToWrite() << endl;
-    //         cout << *j + bTree1->getFirstIndexToWrite();
-    //         // Check if j is not pointing to the last element
-    //         if (j != NodeIds.end() - 1)
-    //         {
-    //             cout << " -> ";
-    //         }
-    //     }
-    //     cout << endl;
-    //     cout << "Block Value:" << bTree1->getBlockVal() << endl;
-    //     // find the record from the data block
-    // }
-    // else
-    // {
-    //     cout << "No key found." << endl;
-    // }
-    // cout << "# of Blocks = " << NodeIds.size() << endl;
+    if (resultBlk == "99999")
+    {
+        return;
+    }
+    cout << "result block: " << resultBlk << endl;
+    // result Blk search data block
+    string record;
+    string exactKey = to_string(inputKey) + ',';
+    databaseFile.seekg(stoi(resultBlk) * (BLOCK_SIZE + 1));
+    if (getline(databaseFile, line))
+    {
+        cout << "line: " << line << endl;
+        cout << "inputKey: " << inputKey << endl;
+        cout << "line.find(key + ',') + 1" << line.find(exactKey) << endl;
+        record = line.substr(line.find(exactKey), DATA_RECORD_SIZE);
+        cout << "record: " << record << endl;
+    }
+    cout << endl;
+    cout << "# of Blocks = " << blkAccessed << endl;
 }
 
 void NoSQLDatabase::killDatabase(string &PFSFile)
@@ -750,6 +728,7 @@ void NoSQLDatabase::runCLI()
     // Implement the command-line interface
     string command;
     string query;
+    int blkAccessed = 0;
 
     do
     {
@@ -798,7 +777,7 @@ void NoSQLDatabase::runCLI()
             listAllDataFromDatabase();
             break;
         case FIND:
-            findValueFromDatabase(query);
+            findValueFromDatabase(query, blkAccessed);
             break;
         case KILL:
             killDatabase(query);
