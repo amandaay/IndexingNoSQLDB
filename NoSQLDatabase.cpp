@@ -276,7 +276,7 @@ void NoSQLDatabase::handleIndexAllocation(int &currentBlock)
 }
 
 
-string NoSQLDatabase::handleIndexSearch(string &idxStartBlock, int key)
+string NoSQLDatabase::handleIndexSearch(string &idxStartBlock, string &key)
 {   
     string line;
     databaseFile.seekg(stoi(idxStartBlock) * (BLOCK_SIZE+1));
@@ -518,7 +518,7 @@ void NoSQLDatabase::findValueFromDatabase(string &myFileKey)
 
     string myFile = myFileKey.substr(0, myFileKey.find("."));
     cout << "my File name: " << myFile << endl;
-    int key = stoi(myFileKey.substr(myFileKey.find(".") + 1, myFileKey.length()));
+    string key = myFileKey.substr(myFileKey.find(".") + 1, myFileKey.length());
     cout << "key: " << key << endl;
 
     string idxStartBlk;
