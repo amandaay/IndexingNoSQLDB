@@ -87,7 +87,8 @@ string Node::getChildKeyBlk()
  *
  * @return Node** return the children
  */
-Node **Node::getChildren(){
+Node **Node::getChildren()
+{
 
     return children;
 }
@@ -97,7 +98,8 @@ Node **Node::getChildren(){
  *
  * @return int return the child size
  */
-int Node::getChildrenSize(){
+int Node::getChildrenSize()
+{
 
     return size + 1;
 }
@@ -397,25 +399,28 @@ int BTree::getRootId()
 
 /**
  * @brief get total number of nodes used
- * 
+ *
  */
-int BTree::getTotalNodes(){
+int BTree::getTotalNodes()
+{
     return NodeIdCounter;
 }
 
 /**
  * @brief get first index to write
- * 
+ *
  */
-int BTree::getFirstIndexToWrite(){
+int BTree::getFirstIndexToWrite()
+{
     return firstIndexToWrite;
 }
 
 /**
  * @brief get the block key value upon find
- * 
+ *
  */
-int BTree::getBlockVal(){
+int BTree::getBlockVal()
+{
     return blockVal;
 }
 

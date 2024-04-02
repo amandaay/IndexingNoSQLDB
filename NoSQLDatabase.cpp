@@ -226,6 +226,7 @@ void NoSQLDatabase::handleIndexAllocation(int &currentBlock)
     bTree.Display(currentBlock);
     int lastIndexBlk = bTree.getTotalNodes() + currentBlock - 1;
     fcb.indexStartBlock = bTree.getRootId(); // The starting block for the index (i.e. root)
+    cout << "fcb.indexStartBlock: " << fcb.indexStartBlock << endl;
     // set the bitmap from current block to last index block to 1
     for (int i = currentBlock; i <= lastIndexBlk; i++)
     {
@@ -498,38 +499,88 @@ void NoSQLDatabase::listAllDataFromDatabase()
 
 void NoSQLDatabase::findValueFromDatabase(string &myFileKey)
 {
+    if (!myFileKey.find(".")){
+        cout << "Invalid command, it should be formatted `find myFile.key`." << endl;
+        return;
+    }
+
     string myFile = myFileKey.substr(0, myFileKey.find("."));
-    int root;
-    for (int i = 0; i < directory.size(); i++)
-    {
-        if (myFile == directory[i].filename)
-        {
-            root = directory[i].indexStartBlock;
-        }
-    }
-    // Find value using a given key
+    cout << "my File name: " << myFile << endl;
     int key = stoi(myFileKey.substr(myFileKey.find(".") + 1, myFileKey.length()));
-    vector<int> NodeIds;
-    // TODO: can i find the root node with the indexstartblock
-    if (bTree.Lookup(bTree.getRootNode(), key * 100000, NodeIds))
+    cout << "key: " << key << endl;
+
+    openOrCreateDatabase(databaseName, dbNumber);
+    
+    string metadata;
+    getline(databaseFile, metadata);
+
+    int lineNumber = 1;
+
+    string line;
+    while (getline(databaseFile, line))
     {
-        cout << "Block Value:" << bTree.getBlockVal() << endl;
-        for (auto j = NodeIds.begin(); j != NodeIds.end(); j++)
+        string fcbFileName = line.substr(0, line.find("."));
+        if (fcbFileName == myFile)
         {
-            cout << *j + bTree.getFirstIndexToWrite();
-            // Check if j is not pointing to the last element
-            if (j != NodeIds.end() - 1)
-            {
-                cout << " -> ";
-            }
+            cout << "found my file name: " << fcbFileName << endl;
+            break;
         }
-        cout << endl;
+        lineNumber++;
+        if (lineNumber == 4)
+        {
+            cout << "No such file found.";
+            break;
+        }
     }
-    else
-    {
-        cout << "No key found." << endl;
-    }
-    cout << "# of Blocks = " << NodeIds.size() << endl;
+    // int idxStartBlk = 0;
+    // for (int i = 0; i < directory.size(); i++)
+    // {
+    //     // directory[i].filename e.g. movies-small.csv, truncate the file extension
+    //     string fcbFileName = directory[i].filename.substr(0, directory[i].filename.find("."));
+    //     cout << "fcbFileName: " << fcbFileName << endl;
+    //     if (myFile == fcbFileName)
+    //     {
+    //         cout << "found my file name";
+    //         idxStartBlk = directory[i].indexStartBlock;
+    //         // bTree1 = &(directory[i].bTree);
+    //         break;
+    //     }
+    // }
+    
+    // openOrCreateDatabase(databaseName, dbNumber);
+// BTree *bTree1 = nullptr;
+
+    // databaseFile.seekg(idxStartBlk % (INITIAL_SIZE / BLOCK_SIZE) * (BLOCK_SIZE + 1));
+    // vector<int> NodeIds;
+
+    // cout << "bTree1->getRootNode() " << bTree1->getRootNode() << endl;
+    // cout << "bTree id: " << bTree1->getRootId() << endl;
+    // if (bTree1 != nullptr)
+    // {
+    //     cout << "bTree1 is not null" << endl;
+    // }
+
+    // if (bTree1->Lookup(bTree1->getRootNode(), key * 100000, NodeIds))
+    // {
+    //     for (auto j = NodeIds.begin(); j != NodeIds.end(); j++)
+    //     {
+    //         cout << "bTree1 getFirstIndexToWrite: " << bTree1->getFirstIndexToWrite() << endl;
+    //         cout << *j + bTree1->getFirstIndexToWrite();
+    //         // Check if j is not pointing to the last element
+    //         if (j != NodeIds.end() - 1)
+    //         {
+    //             cout << " -> ";
+    //         }
+    //     }
+    //     cout << endl;
+    //     cout << "Block Value:" << bTree1->getBlockVal() << endl;
+    //     // find the record from the data block
+    // }
+    // else
+    // {
+    //     cout << "No key found." << endl;
+    // }
+    // cout << "# of Blocks = " << NodeIds.size() << endl;
 }
 
 void NoSQLDatabase::killDatabase(string &PFSFile)

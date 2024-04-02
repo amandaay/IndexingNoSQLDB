@@ -87,7 +87,7 @@ private:
     int rootId;
     // first index node to write
     int firstIndexToWrite;
-    // block key value
+    // data block key value
     int blockVal;
 
 public:
@@ -96,7 +96,7 @@ public:
     // Lookup - True if the value was found.
     bool Lookup(Node *root, int value, vector<int> &NodeIds);
     // Search for the full ndoes
-    bool Lookup(Node *root, int value, vector<Node* > &FullNodes);
+    bool Lookup(Node *root, int value, vector<Node *> &FullNodes);
     // Public method to access the root nodes
     Node *getRootNode();
     // Get root node ID
