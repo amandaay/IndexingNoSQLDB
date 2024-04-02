@@ -275,6 +275,18 @@ void NoSQLDatabase::handleIndexAllocation(int &currentBlock)
     }
 }
 
+
+string NoSQLDatabase::handleIndexSearch(string &idxStartBlock, int key)
+{   
+    string line;
+    databaseFile.seekg(stoi(idxStartBlock) * (BLOCK_SIZE+1));
+    getline(databaseFile, line, ' ');
+    
+
+
+}
+
+
 void NoSQLDatabase::openOrCreateDatabase(string &PFSFile, int dbNumber)
 {
     // close existing database file before opening others or creating other databases
@@ -534,6 +546,7 @@ void NoSQLDatabase::findValueFromDatabase(string &myFileKey)
             break;
         }
     }
+    string datablk = handleIndexSearch(,);
     // int idxStartBlk = 0;
     // for (int i = 0; i < directory.size(); i++)
     // {
