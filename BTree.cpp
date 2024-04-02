@@ -565,7 +565,6 @@ void BTree::Display(int &currentBlock)
         cout << endl;
     }
     cout << endl;
-    // return currentBlock + NodeIdCounter;
 }
 
 /**

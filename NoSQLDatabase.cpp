@@ -259,6 +259,7 @@ void NoSQLDatabase::handleIndexAllocation(int &currentBlock)
             databaseFile << node->getChildKeyBlk();
             databaseFile.seekp((indexBlock % (INITIAL_SIZE / BLOCK_SIZE)) * (BLOCK_SIZE + 1) + (BLOCK_SIZE - 5));
             databaseFile << parent;
+            currentBlock++;
             databaseFile.flush();
 
             // enqueue the children
@@ -283,28 +284,10 @@ void NoSQLDatabase::handleIndexAllocation(int &currentBlock)
 // }
 
 // Implement B-tree search method
-void NoSQLDatabase::searchInBTree(int key)
-{
-    vector<int> NodeIds;
-    if (bTree.Lookup(bTree.getRootNode(), key * 100000, NodeIds))
-    {
-        for (auto j = NodeIds.begin(); j != NodeIds.end(); j++)
-        {
-            cout << *j + bTree.getRootId() - 1;
-            // Check if j is not pointing to the last element
-            if (j != NodeIds.end() - 1)
-            {
-                cout << " -> ";
-            }
-        }
-        cout << endl;
-    }
-    else
-    {
-        cout << "No key found." << endl;
-    }
-    cout << "# of Blocks = " << NodeIds.size() << endl;
-}
+// void NoSQLDatabase::searchInBTree(int key)
+// {
+    
+// }
 
 void NoSQLDatabase::openOrCreateDatabase(string &PFSFile, int dbNumber)
 {
@@ -446,9 +429,10 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
     }
     // set the last data block bitmap to 1
     bitMap(currentBlock, true, false);
+    currentBlock += 1;
 
     // start of index blocks
-    currentBlock += 1;
+    firstIndexToWrite = currentBlock;
     handleIndexAllocation(currentBlock);
 
     // Add the FCB to the directory
@@ -491,7 +475,7 @@ void NoSQLDatabase::getDataFromDatabase(string &myFile)
     //         root = directory[i].indexStartBlock;
     //     }
     // }
-    searchInBTree(23);
+    
     // string data;
     // streampos startPos = databaseFile.tellg();
     // streampos endPos =
@@ -528,9 +512,40 @@ void NoSQLDatabase::listAllDataFromDatabase()
     }
 }
 
-void NoSQLDatabase::findValueFromDatabase()
+void NoSQLDatabase::findValueFromDatabase(string &myFileKey)
 {
+    string myFile = myFileKey.substr(0, myFileKey.find("."));
+    int root;
+    for (int i = 0; i < directory.size(); i++)
+    {
+        if (myFile == directory[i].filename)
+        {
+            root = directory[i].indexStartBlock;
+        }
+    }
     // Find value using a given key
+    int key = stoi(myFileKey.substr(myFileKey.find(".") +1, myFileKey.length()));
+    vector<int> NodeIds;
+    // TODO: can i find the root node with the indexstartblock
+    if (bTree.Lookup(bTree.getRootNode(), key * 100000, NodeIds))
+    {
+        for (auto j = NodeIds.begin(); j != NodeIds.end(); j++)
+        {
+            cout << *j + firstIndexToWrite;
+            // Check if j is not pointing to the last element
+            if (j != NodeIds.end() - 1)
+            {
+                cout << " -> ";
+            }
+        }
+        cout << endl;
+    }
+    else
+    {
+        cout << "No key found." << endl;
+    }
+    cout << "# of Blocks = " << NodeIds.size() << endl;
+
 }
 
 void NoSQLDatabase::killDatabase(string &PFSFile)
@@ -625,7 +640,7 @@ void NoSQLDatabase::runCLI()
 {
     // Implement the command-line interface
     string command;
-    string file;
+    string query;
 
     do
     {
@@ -650,7 +665,7 @@ void NoSQLDatabase::runCLI()
 
         if (command.length() > command.find(" "))
         {
-            file = command.substr(command.find(" ") + 1, command.length());
+            query = command.substr(command.find(" ") + 1, command.length());
         }
 
         // Execute actions based on the command keyword
@@ -658,26 +673,26 @@ void NoSQLDatabase::runCLI()
         {
         case OPEN:
             // file here is the database
-            openOrCreateDatabase(file, 0);
+            openOrCreateDatabase(query, 0);
             break;
         case PUT:
             // file here is the file to be put into the database
-            putDataIntoDatabase(file);
+            putDataIntoDatabase(query);
             break;
         case GET:
-            getDataFromDatabase(file);
+            getDataFromDatabase(query);
             break;
         case RM:
-            delFileFromDatabase(file);
+            delFileFromDatabase(query);
             break;
         case DIR:
             listAllDataFromDatabase();
             break;
         case FIND:
-            findValueFromDatabase();
+            findValueFromDatabase(query);
             break;
         case KILL:
-            killDatabase(file);
+            killDatabase(query);
             break;
         case QUIT:
             quitDatabase();

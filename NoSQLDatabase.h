@@ -61,9 +61,8 @@ private:
     void writeDataBoundaries(string &data, int &currentBlock, int &currentPosInBlock);
     // Index operations
     void handleIndexAllocation(int &currentBlock);
-    // Index operations using B-tree
-    // void insertIntoBTree(int key);
-    void searchInBTree(int key);
+    // difference between index start block
+    int firstIndexToWrite;
 
     // Commands for client operation
     enum Command
@@ -100,7 +99,7 @@ public:
     // dir: List all data files in your NoSQL database, i.e., PFS file.
     void listAllDataFromDatabase();
     // find [myfile.key]: Find ‘value’ using a given ‘key’, i.e., return a record which is associate with a key from ‘myfile’ in your NoSQL database. In addition, you need to show how many blocks are accessed during ‘find’
-    void findValueFromDatabase();
+    void findValueFromDatabase(string &myfileKey);
     // kill PFSfile: Delete the NoSQL database, i.e., remove PFSfile from OS file system
     void killDatabase(string &PFSFile);
     // quit: exit NoSQL database
