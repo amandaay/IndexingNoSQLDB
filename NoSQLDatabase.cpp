@@ -625,9 +625,6 @@ void NoSQLDatabase::findValueFromDatabase(string &myFileKey, int &blkAccessed)
     databaseFile.seekg(stoi(resultBlk) * (BLOCK_SIZE + 1));
     if (getline(databaseFile, line))
     {
-        cout << "line: " << line << endl;
-        cout << "inputKey: " << inputKey << endl;
-        cout << "line.find(key + ',') + 1" << line.find(exactKey) << endl;
         record = line.substr(line.find(exactKey), DATA_RECORD_SIZE);
         cout << "record: " << record << endl;
     }
