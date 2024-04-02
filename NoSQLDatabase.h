@@ -61,8 +61,6 @@ private:
     void writeDataBoundaries(string &data, int &currentBlock, int &currentPosInBlock);
     // Index operations
     void handleIndexAllocation(int &currentBlock);
-    // difference between index start block
-    int firstIndexToWrite;
 
     // Commands for client operation
     enum Command

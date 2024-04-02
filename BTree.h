@@ -85,6 +85,8 @@ private:
     int layers;
     // root node ID
     int rootId;
+    // first index node to write
+    int firstIndexToWrite;
 
 public:
     // constructor for BTree
@@ -99,6 +101,8 @@ public:
     int getRootId();
     // get total number of nodes used
     int getTotalNodes();
+    // get first index to write
+    int getFirstIndexToWrite();
     // Setter method for the root node pointer
     void setRootNode(Node *root);
     // helper function for inserting a new value

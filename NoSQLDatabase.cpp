@@ -531,7 +531,7 @@ void NoSQLDatabase::findValueFromDatabase(string &myFileKey)
     {
         for (auto j = NodeIds.begin(); j != NodeIds.end(); j++)
         {
-            cout << *j + firstIndexToWrite;
+            cout << *j + bTree.getFirstIndexToWrite();
             // Check if j is not pointing to the last element
             if (j != NodeIds.end() - 1)
             {

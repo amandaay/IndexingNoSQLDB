@@ -404,6 +404,14 @@ int BTree::getTotalNodes(){
 }
 
 /**
+ * @brief get first index to write
+ * 
+ */
+int BTree::getFirstIndexToWrite(){
+    return firstIndexToWrite;
+}
+
+/**
  * @brief reset root nodes to its root
  *
  * @param root root pointer
@@ -530,6 +538,7 @@ void BTree::Display(int &currentBlock)
         cout << "No tree found" << endl;
         return;
     }
+    firstIndexToWrite = currentBlock;
     queue<Node *> q;
     q.push(nodes);
     int level = 0;
