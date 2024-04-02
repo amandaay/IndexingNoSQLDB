@@ -250,10 +250,8 @@ void NoSQLDatabase::handleIndexAllocation(int &currentBlock)
             q.pop();
 
             // index block number
-            indexBlock = node->getNodeId() + currentBlock;
-
-            cout << node->getNodeId() + currentBlock;
-            cout << ": " << node->getChildKeyBlk() << " " << parent << endl;
+            indexBlock = node->getNodeId() + bTree.getFirstIndexToWrite();
+            cout << indexBlock << ": " << node->getChildKeyBlk() << " " << parent << endl;
 
             databaseFile.seekp(indexBlock % (INITIAL_SIZE / BLOCK_SIZE) * (BLOCK_SIZE + 1));
             databaseFile << node->getChildKeyBlk();
@@ -286,7 +284,7 @@ void NoSQLDatabase::handleIndexAllocation(int &currentBlock)
 // Implement B-tree search method
 // void NoSQLDatabase::searchInBTree(int key)
 // {
-    
+
 // }
 
 void NoSQLDatabase::openOrCreateDatabase(string &PFSFile, int dbNumber)
@@ -432,7 +430,6 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
     currentBlock += 1;
 
     // start of index blocks
-    firstIndexToWrite = currentBlock;
     handleIndexAllocation(currentBlock);
 
     // Add the FCB to the directory
@@ -475,7 +472,7 @@ void NoSQLDatabase::getDataFromDatabase(string &myFile)
     //         root = directory[i].indexStartBlock;
     //     }
     // }
-    
+
     // string data;
     // streampos startPos = databaseFile.tellg();
     // streampos endPos =
@@ -524,7 +521,7 @@ void NoSQLDatabase::findValueFromDatabase(string &myFileKey)
         }
     }
     // Find value using a given key
-    int key = stoi(myFileKey.substr(myFileKey.find(".") +1, myFileKey.length()));
+    int key = stoi(myFileKey.substr(myFileKey.find(".") + 1, myFileKey.length()));
     vector<int> NodeIds;
     // TODO: can i find the root node with the indexstartblock
     if (bTree.Lookup(bTree.getRootNode(), key * 100000, NodeIds))
@@ -545,7 +542,6 @@ void NoSQLDatabase::findValueFromDatabase(string &myFileKey)
         cout << "No key found." << endl;
     }
     cout << "# of Blocks = " << NodeIds.size() << endl;
-
 }
 
 void NoSQLDatabase::killDatabase(string &PFSFile)

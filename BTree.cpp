@@ -317,7 +317,6 @@ bool BTree::Lookup(Node *root, int value, vector<int> &NodeIds)
     int i = nodes->NodeLookup(value);
     NodeIds.push_back(nodes->getNodeId());
     // check the current node if the search value exist
-    cout << "nodes->values[i] / 100000: " << nodes->values[i] / 100000 << endl;
     if (i != -1 && nodes->values[i] / 100000 == value / 100000)
     {
         return true;
