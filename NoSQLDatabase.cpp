@@ -274,19 +274,6 @@ void NoSQLDatabase::handleIndexAllocation(int &currentBlock)
     }
 }
 
-// Implement B-tree insertion method
-// void NoSQLDatabase::insertIntoBTree(int key)
-// {
-//     bTree.Insert(key);
-//     // bTree.Display();
-// }
-
-// Implement B-tree search method
-// void NoSQLDatabase::searchInBTree(int key)
-// {
-
-// }
-
 void NoSQLDatabase::openOrCreateDatabase(string &PFSFile, int dbNumber)
 {
     // close existing database file before opening others or creating other databases
@@ -526,6 +513,7 @@ void NoSQLDatabase::findValueFromDatabase(string &myFileKey)
     // TODO: can i find the root node with the indexstartblock
     if (bTree.Lookup(bTree.getRootNode(), key * 100000, NodeIds))
     {
+        cout << "Block Value:" << bTree.getBlockVal() << endl;
         for (auto j = NodeIds.begin(); j != NodeIds.end(); j++)
         {
             cout << *j + bTree.getFirstIndexToWrite();

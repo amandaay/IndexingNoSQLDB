@@ -319,6 +319,7 @@ bool BTree::Lookup(Node *root, int value, vector<int> &NodeIds)
     // check the current node if the search value exist
     if (i != -1 && nodes->values[i] / 100000 == value / 100000)
     {
+        blockVal = nodes->values[i] % 100000;
         return true;
     }
     // if it reaches leaf node, it indicates there's no such value
@@ -408,6 +409,14 @@ int BTree::getTotalNodes(){
  */
 int BTree::getFirstIndexToWrite(){
     return firstIndexToWrite;
+}
+
+/**
+ * @brief get the block key value upon find
+ * 
+ */
+int BTree::getBlockVal(){
+    return blockVal;
 }
 
 /**

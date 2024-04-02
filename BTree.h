@@ -87,6 +87,8 @@ private:
     int rootId;
     // first index node to write
     int firstIndexToWrite;
+    // block key value
+    int blockVal;
 
 public:
     // constructor for BTree
@@ -103,6 +105,8 @@ public:
     int getTotalNodes();
     // get first index to write
     int getFirstIndexToWrite();
+    // get the block key value upon find
+    int getBlockVal();
     // Setter method for the root node pointer
     void setRootNode(Node *root);
     // helper function for inserting a new value
