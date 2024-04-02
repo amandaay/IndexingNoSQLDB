@@ -275,17 +275,55 @@ void NoSQLDatabase::handleIndexAllocation(int &currentBlock)
     }
 }
 
-
 string NoSQLDatabase::handleIndexSearch(string &idxStartBlock, string &key)
-{   
-    string line;
-    databaseFile.seekg(stoi(idxStartBlock) * (BLOCK_SIZE+1));
-    getline(databaseFile, line, ' ');
-    
+{
+    // idxBlkLine reads the index block
+    string idxBlkLine;
+    int blkAccessed;
+    databaseFile.seekg(stoi(idxStartBlock) * (BLOCK_SIZE + 1));
+    // reading idxBlkLine without parent 
+    getline(databaseFile, idxBlkLine, ' ');
 
+    for (int i = 5; i < idxBlkLine.size(); i += 18)
+    {
+        if (key < idxBlkLine.substr(i, 8))
+        {
+            blkAccessed ++;
+            return idxBlkLine.substr(i - 5, 5);
+        }
+        else if (key == idxBlkLine.substr(i, 8))
+        {
+            blkAccessed ++;
+            return idxBlkLine.substr(i + 8, 5);
+        }
+        else if ((key > idxBlkLine.substr(i, 8)) && (key < idxBlkLine.substr(i + 18, 8)))
+        {
+            blkAccessed ++;
+            return idxBlkLine.substr(i + 13, 5);
+        }
 
+        if (i == idxBlkLine.size() - 18)
+        {
+            if (key < idxBlkLine.substr(i, 8))
+            {
+                blkAccessed ++;
+                return idxBlkLine.substr(i - 5, 5);
+            }
+            else if ((key > idxBlkLine.substr(i, 8)))
+            {;
+                blkAccessed ++;
+                return idxBlkLine.substr(i + 13, 5);
+            }
+            else if (key == idxBlkLine.substr(i, 8))
+            {
+                blkAccessed ++;
+                return idxBlkLine.substr(i, 8);
+            }
+        }
+    }
+    cout << "blkAccessed: " << blkAccessed << endl;
+    return "";
 }
-
 
 void NoSQLDatabase::openOrCreateDatabase(string &PFSFile, int dbNumber)
 {
@@ -511,7 +549,8 @@ void NoSQLDatabase::listAllDataFromDatabase()
 
 void NoSQLDatabase::findValueFromDatabase(string &myFileKey)
 {
-    if (!myFileKey.find(".")){
+    if (!myFileKey.find("."))
+    {
         cout << "Invalid command, it should be formatted `find myFile.key`." << endl;
         return;
     }
@@ -524,7 +563,7 @@ void NoSQLDatabase::findValueFromDatabase(string &myFileKey)
     string idxStartBlk;
 
     openOrCreateDatabase(databaseName, dbNumber);
-    
+
     string metadata;
     getline(databaseFile, metadata);
 
@@ -563,9 +602,9 @@ void NoSQLDatabase::findValueFromDatabase(string &myFileKey)
     //         break;
     //     }
     // }
-    
+
     // openOrCreateDatabase(databaseName, dbNumber);
-// BTree *bTree1 = nullptr;
+    // BTree *bTree1 = nullptr;
 
     // databaseFile.seekg(idxStartBlk % (INITIAL_SIZE / BLOCK_SIZE) * (BLOCK_SIZE + 1));
     // vector<int> NodeIds;
