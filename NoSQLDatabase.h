@@ -62,7 +62,7 @@ private:
     // Index operations
     void handleIndexAllocation(int &currentBlock);
     // handle index search
-    string handleIndexSearch(string &idxStartBlock, int key);
+    string handleIndexSearch(string &idxStartBlock, string &key);
 
     // Commands for client operation
     enum Command
