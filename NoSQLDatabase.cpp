@@ -520,7 +520,8 @@ void NoSQLDatabase::findValueFromDatabase(string &myFileKey)
     cout << "my File name: " << myFile << endl;
     int key = stoi(myFileKey.substr(myFileKey.find(".") + 1, myFileKey.length()));
     cout << "key: " << key << endl;
-    int idxStartBlk = 0;
+
+    string idxStartBlk;
 
     openOrCreateDatabase(databaseName, dbNumber);
     
@@ -535,7 +536,8 @@ void NoSQLDatabase::findValueFromDatabase(string &myFileKey)
         string fcbFileName = line.substr(0, line.find("."));
         if (fcbFileName == myFile)
         {
-            idxStartBlk = stoi(line.substr(100, 5));
+            idxStartBlk = line.substr(100, 6);
+            cout << "idxStartBlk: " << idxStartBlk << endl;
             cout << "found my file name: " << fcbFileName << endl;
             break;
         }
@@ -546,7 +548,7 @@ void NoSQLDatabase::findValueFromDatabase(string &myFileKey)
             break;
         }
     }
-    string datablk = handleIndexSearch(,);
+    string datablk = handleIndexSearch(idxStartBlk, key);
     // int idxStartBlk = 0;
     // for (int i = 0; i < directory.size(); i++)
     // {
