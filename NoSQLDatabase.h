@@ -34,6 +34,7 @@ private:
     int uploadedFilesPos;  // position of uploaded files in the block
     BTree bTree;           // include BTree for indexing
     int indexBlock;        // index block number
+    string leftmost;       // leftmost key in the index block after rm cmd
 
     // Define structures for File Control Block (FCB) and directory entry
     struct FCB
@@ -64,7 +65,7 @@ private:
     // handle index search
     string handleIndexSearch(string &idxStartBlock, string &key, int &blkAccessed);
     // handle index search for delete bitmap
-    void handleIndexSearchForDelete(string &idxStartBlock, int &pos);
+    void handleIndexSearchForDelete(string &idxStartBlock, int &pos, string &leftmost);
 
     // Commands for client operation
     enum Command

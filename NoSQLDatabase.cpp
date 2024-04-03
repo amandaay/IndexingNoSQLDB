@@ -18,6 +18,7 @@ NoSQLDatabase::NoSQLDatabase() : bTree(INDEX_BFR)
     currentBlock = 0;      // which block in each db
     dbNumber = 0;          // defines database number (e.g. test.db0, test.db1, ...)
     uploadedFilesPos = 80; // position of uploaded files in the block
+    leftmost = "99999";    // leftmost key in the index block after rm cmd
 }
 
 void NoSQLDatabase::updateDirectory(int dbNumber)
@@ -146,11 +147,14 @@ void NoSQLDatabase::bitMap(int &currentBlock, bool isSet, bool initialize)
 
 int NoSQLDatabase::firstAvailableBlock()
 {
-    // for (int db = 0; db <= dbNumber; db++)
-    // {
     // to read the bitmap (seekg usage)
-    // openOrCreateDatabase(databaseName, db);
-    openOrCreateDatabase(databaseName, dbNumber);
+    int db = dbNumber;
+    if (leftmost != "99999")
+    {
+        // means removal happened, update first available block in the corresponding db
+        db = stoi(leftmost) / (INITIAL_SIZE / BLOCK_SIZE);
+    }
+    openOrCreateDatabase(databaseName, db);
     // Checks first available block
     // return currentBlock = first available block
     // 0 indicates a free block, 1 indicates that the block is allocated.
@@ -167,13 +171,11 @@ int NoSQLDatabase::firstAvailableBlock()
             databaseFile >> blockStatus;
             if (blockStatus == '0')
             {
-                // return ((i - 4) * BLOCK_SIZE + (INITIAL_SIZE / BLOCK_SIZE * db) + j);
-                return ((i - 4) * BLOCK_SIZE + (INITIAL_SIZE / BLOCK_SIZE * dbNumber) + j);
+                return ((i - 4) * BLOCK_SIZE + (INITIAL_SIZE / BLOCK_SIZE * db) + j);
             }
         }
     }
-    // }
-    return (INITIAL_SIZE / BLOCK_SIZE) * (dbNumber + 1) + (DIRECTORY_SIZE / BLOCK_SIZE); // after directory structure
+    return (INITIAL_SIZE / BLOCK_SIZE) * (db + 1) + (DIRECTORY_SIZE / BLOCK_SIZE); // after directory structure
 }
 
 string NoSQLDatabase::intToFiveDigitString(int number)
@@ -231,7 +233,6 @@ void NoSQLDatabase::handleIndexAllocation(int &currentBlock)
     bTree.Display(currentBlock);
     int lastIndexBlk = bTree.getTotalNodes() + currentBlock - 1;
     fcb.indexStartBlock = bTree.getRootId(); // The starting block for the index (i.e. root)
-    cout << "fcb.indexStartBlock: " << fcb.indexStartBlock << endl;
     // set the bitmap from current block to last index block to 1
     for (int i = currentBlock; i <= lastIndexBlk; i++)
     {
@@ -285,11 +286,9 @@ string NoSQLDatabase::handleIndexSearch(string &idxStartBlock, string &key, int 
     // idxBlkLine reads the index block
     string idxBlkLine;
     cout << "database " << databaseName << " dbNumber " << dbNumber << endl;
-    cout << "which line to read: " << stoi(idxStartBlock) * (BLOCK_SIZE + 1) << endl;
     databaseFile.seekg(stoi(idxStartBlock) * (BLOCK_SIZE + 1));
     // reading idxBlkLine without parent
     getline(databaseFile, idxBlkLine, ' ');
-    cout << "idxBlkLine: " << idxBlkLine << endl;
     for (int i = 5; i < idxBlkLine.size(); i += 18)
     {
         if (key == idxBlkLine.substr(i, 8))
@@ -310,10 +309,15 @@ string NoSQLDatabase::handleIndexSearch(string &idxStartBlock, string &key, int 
     return idxBlkLine.substr(idxBlkLine.size() - 5);
 }
 
-void NoSQLDatabase::handleIndexSearchForDelete(string &idxStartBlock, int &pos)
+void NoSQLDatabase::handleIndexSearchForDelete(string &idxStartBlock, int &pos, string &leftmost)
 {
+    // mark index block as free
     int idxBlk = stoi(idxStartBlock);
+    int db = idxBlk / (INITIAL_SIZE / BLOCK_SIZE);
+    openOrCreateDatabase(databaseName, db);
     bitMap(idxBlk, false, false);
+
+    // idxBlkLine reads the index block
     databaseFile.seekg(idxBlk * (BLOCK_SIZE + 1));
 
     // idxBlkLine reads the index block
@@ -328,7 +332,7 @@ void NoSQLDatabase::handleIndexSearchForDelete(string &idxStartBlock, int &pos)
     if (child != "99999")
     {
         // handle leftmost child
-        handleIndexSearchForDelete(child, pos);
+        handleIndexSearchForDelete(child, pos, leftmost);
         for (int i = 5; i < idxBlkLine.size(); i += 18)
         {
             if (i + 8 < idxBlkLine.size())
@@ -339,7 +343,6 @@ void NoSQLDatabase::handleIndexSearchForDelete(string &idxStartBlock, int &pos)
             // if prev pos is the same then skip
             if (resetBitmapPos != duplicatePos)
             {
-                cout << "resetBitmapPos: " << resetBitmapPos << endl;
                 bitMap(resetBitmapPos, false, false);
             }
             duplicatePos = resetBitmapPos;
@@ -349,13 +352,12 @@ void NoSQLDatabase::handleIndexSearchForDelete(string &idxStartBlock, int &pos)
             {
                 int childPos = i + 13;
                 child = idxBlkLine.substr(childPos, 5);
-                handleIndexSearchForDelete(child, childPos);
+                handleIndexSearchForDelete(child, childPos, leftmost);
             }
         }
     }
     else
     {
-        cout << "leaf node" << endl;
         // leaf node
         for (int i = 5; i < idxBlkLine.size(); i += 18)
         {
@@ -367,10 +369,15 @@ void NoSQLDatabase::handleIndexSearchForDelete(string &idxStartBlock, int &pos)
             // if prev pos is the same then skip
             if (resetBitmapPos != duplicatePos)
             {
-                cout << "resetBitmapPos: " << resetBitmapPos << endl;
                 bitMap(resetBitmapPos, false, false);
             }
             duplicatePos = resetBitmapPos;
+        }
+        string temp = idxBlkLine.substr(13, 5);
+        if (temp < leftmost)
+        {
+            leftmost = temp;
+            cout << "Leftmost data blk #: " << leftmost << endl;
         }
     }
 }
@@ -611,7 +618,6 @@ void NoSQLDatabase::delFileFromDatabase(string &myFile)
         if (fcbFileName == myFile)
         {
             rootStartblk = line.substr(100, 6);
-            cout << "root start blk: " << rootStartblk << endl;
             databaseFile.seekp(lineNumber * (BLOCK_SIZE + 1));
             databaseFile << string(line.size(), ' ');
             databaseFile.flush();
@@ -640,12 +646,10 @@ void NoSQLDatabase::delFileFromDatabase(string &myFile)
     {
         openOrCreateDatabase(databaseName, db);
         updateDirectory(db);
-        // update bitmap?
     }
-    // fix bitmap
     // index search
     int rootLeftChildPos = 0;
-    handleIndexSearchForDelete(rootStartblk, rootLeftChildPos);
+    handleIndexSearchForDelete(rootStartblk, rootLeftChildPos, leftmost);
 }
 
 void NoSQLDatabase::listAllDataFromDatabase()
