@@ -64,7 +64,7 @@ private:
     // handle index search
     string handleIndexSearch(string &idxStartBlock, string &key, int &blkAccessed);
     // handle index search for delete bitmap
-    void handleIndexSearchForDelete(string &idxStartBlock);
+    void handleIndexSearchForDelete(string &idxStartBlock, int &pos);
 
     // Commands for client operation
     enum Command

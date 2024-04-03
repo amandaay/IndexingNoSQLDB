@@ -135,6 +135,9 @@ void NoSQLDatabase::bitMap(int &currentBlock, bool isSet, bool initialize)
         databaseFile.seekp(((currentBlock % (INITIAL_SIZE / BLOCK_SIZE)) / BLOCK_SIZE + 4) * (BLOCK_SIZE + 1) + (currentBlock % BLOCK_SIZE));
         databaseFile << "1";
         isSet = false;
+    } else {
+        databaseFile.seekp(((currentBlock % (INITIAL_SIZE / BLOCK_SIZE)) / BLOCK_SIZE + 4) * (BLOCK_SIZE + 1) + (currentBlock % BLOCK_SIZE));
+        databaseFile << "0";
     }
     databaseFile.flush();
 }
@@ -305,8 +308,10 @@ string NoSQLDatabase::handleIndexSearch(string &idxStartBlock, string &key, int 
     return idxBlkLine.substr(idxBlkLine.size() - 5);
 }
 
-void NoSQLDatabase::handleIndexSearchForDelete(string &idxStartBlock)
+void NoSQLDatabase::handleIndexSearchForDelete(string &idxStartBlock, int &pos)
 {
+    cout << "idxStartBlock: " << idxStartBlock << endl;
+    cout << "pos: " << stoi(idxStartBlock) << endl;
     databaseFile.seekg(stoi(idxStartBlock) * (BLOCK_SIZE + 1));
 
     // idxBlkLine reads the index block
@@ -316,17 +321,45 @@ void NoSQLDatabase::handleIndexSearchForDelete(string &idxStartBlock)
 
     int resetBitmapPos;
 
-    string child = idxBlkLine.substr(0, 5);
+    string child = idxBlkLine.substr(pos, 5);
     if (child != "99999")
     {
-        handleIndexSearchForDelete(child);
+        // handle leftmost child
+        handleIndexSearchForDelete(child, pos);
+        for (int i = 5; i < idxBlkLine.size(); i += 18)
+        {
+            if (i + 8 < idxBlkLine.size())
+            {
+                resetBitmapPos = stoi(idxBlkLine.substr(i + 8, 5));
+                cout << "resetBitmapPos: " << resetBitmapPos << endl;
+            }
+            // if prev pos is the same then skip
+            if (resetBitmapPos == stoi(idxBlkLine.substr(i - 5, 5)))
+            {
+                continue;
+            }
+            bitMap(resetBitmapPos, false, false);
+            // child block number (right child)
+            if (i + 13 < idxBlkLine.size())
+            {
+                int childPos = i + 13;
+                child = idxBlkLine.substr(childPos, 5);
+                handleIndexSearchForDelete(child, childPos);
+            }
+        }
     }
     else
     {
+        cout << "leaf node" << endl;
         // leaf node
         for (int i = 5; i < idxBlkLine.size(); i += 18)
         {
-            resetBitmapPos = stoi(idxBlkLine.substr(i + 8, 5));
+            if (i + 8 < idxBlkLine.size())
+            {
+                resetBitmapPos = stoi(idxBlkLine.substr(i + 8, 5));
+                cout << "resetBitmapPos: " << resetBitmapPos << endl;
+            }
+
             // if prev pos is the same then skip
             if (resetBitmapPos == stoi(idxBlkLine.substr(i - 5, 5)))
             {
@@ -334,12 +367,6 @@ void NoSQLDatabase::handleIndexSearchForDelete(string &idxStartBlock)
             }
             bitMap(resetBitmapPos, false, false);
         }
-        
-        string parent;
-        getline(databaseFile, parent);
-        parent = parent.substr(parent.size() - 5);
-        cout << "parent: " << parent << endl;
-        handleIndexSearchForDelete(parent);
     }
 }
 
@@ -610,7 +637,9 @@ void NoSQLDatabase::delFileFromDatabase(string &myFile)
     }
     // fix bitmap
     // index search
-    databaseFile.seekg(stoi(rootStartblk) * (BLOCK_SIZE + 1));
+    // databaseFile.seekg(stoi(rootStartblk) * (BLOCK_SIZE + 1));
+    int rootLeftChildPos = 0;
+    handleIndexSearchForDelete(rootStartblk, rootLeftChildPos);
 
     // while(getline(databaseFile, line)) {
     //     if(line.substr(line.size() - 5) == "99999") {
