@@ -135,7 +135,9 @@ void NoSQLDatabase::bitMap(int &currentBlock, bool isSet, bool initialize)
         databaseFile.seekp(((currentBlock % (INITIAL_SIZE / BLOCK_SIZE)) / BLOCK_SIZE + 4) * (BLOCK_SIZE + 1) + (currentBlock % BLOCK_SIZE));
         databaseFile << "1";
         isSet = false;
-    } else {
+    }
+    else
+    {
         databaseFile.seekp(((currentBlock % (INITIAL_SIZE / BLOCK_SIZE)) / BLOCK_SIZE + 4) * (BLOCK_SIZE + 1) + (currentBlock % BLOCK_SIZE));
         databaseFile << "0";
     }
@@ -310,9 +312,9 @@ string NoSQLDatabase::handleIndexSearch(string &idxStartBlock, string &key, int 
 
 void NoSQLDatabase::handleIndexSearchForDelete(string &idxStartBlock, int &pos)
 {
-    cout << "idxStartBlock: " << idxStartBlock << endl;
-    cout << "pos: " << stoi(idxStartBlock) << endl;
-    databaseFile.seekg(stoi(idxStartBlock) * (BLOCK_SIZE + 1));
+    int idxBlk = stoi(idxStartBlock);
+    bitMap(idxBlk, false, false);
+    databaseFile.seekg(idxBlk * (BLOCK_SIZE + 1));
 
     // idxBlkLine reads the index block
     string idxBlkLine;
@@ -320,6 +322,7 @@ void NoSQLDatabase::handleIndexSearchForDelete(string &idxStartBlock, int &pos)
     getline(databaseFile, idxBlkLine, ' ');
 
     int resetBitmapPos;
+    int duplicatePos;
 
     string child = idxBlkLine.substr(pos, 5);
     if (child != "99999")
@@ -330,15 +333,17 @@ void NoSQLDatabase::handleIndexSearchForDelete(string &idxStartBlock, int &pos)
         {
             if (i + 8 < idxBlkLine.size())
             {
+                // data block #
                 resetBitmapPos = stoi(idxBlkLine.substr(i + 8, 5));
-                cout << "resetBitmapPos: " << resetBitmapPos << endl;
             }
             // if prev pos is the same then skip
-            if (resetBitmapPos == stoi(idxBlkLine.substr(i - 5, 5)))
+            if (resetBitmapPos != duplicatePos)
             {
-                continue;
+                cout << "resetBitmapPos: " << resetBitmapPos << endl;
+                bitMap(resetBitmapPos, false, false);
             }
-            bitMap(resetBitmapPos, false, false);
+            duplicatePos = resetBitmapPos;
+
             // child block number (right child)
             if (i + 13 < idxBlkLine.size())
             {
@@ -356,16 +361,16 @@ void NoSQLDatabase::handleIndexSearchForDelete(string &idxStartBlock, int &pos)
         {
             if (i + 8 < idxBlkLine.size())
             {
+                // data block #
                 resetBitmapPos = stoi(idxBlkLine.substr(i + 8, 5));
-                cout << "resetBitmapPos: " << resetBitmapPos << endl;
             }
-
             // if prev pos is the same then skip
-            if (resetBitmapPos == stoi(idxBlkLine.substr(i - 5, 5)))
+            if (resetBitmapPos != duplicatePos)
             {
-                continue;
+                cout << "resetBitmapPos: " << resetBitmapPos << endl;
+                bitMap(resetBitmapPos, false, false);
             }
-            bitMap(resetBitmapPos, false, false);
+            duplicatePos = resetBitmapPos;
         }
     }
 }
@@ -585,10 +590,11 @@ void NoSQLDatabase::getDataFromDatabase(string &myFile)
 
 void NoSQLDatabase::delFileFromDatabase(string &myFile)
 {
-    // Delete myfile from NoSQL database
-    // deletes the data, the index, fcb (within the directory),
-    // and update metadata (size, total PFS files, total uploaded files)
     // rm the PFS files if there's extra
+    // 1. update directory structure, remove fcb
+    // 2. update bitmap, set originally used block = 0
+    // 3. remove the index blocks correlated to movies-1.csv
+    // 4. data file blocks remain the same and just gets overwritten if new data comes in by checking bitmap =0 (Free)
     openOrCreateDatabase(databaseName, dbNumber);
 
     // skip metadata
@@ -609,6 +615,7 @@ void NoSQLDatabase::delFileFromDatabase(string &myFile)
             databaseFile.seekp(lineNumber * (BLOCK_SIZE + 1));
             databaseFile << string(line.size(), ' ');
             databaseFile.flush();
+            bitMap(lineNumber, false, false);
             cout << "Removed " << myFile << " from directory." << endl;
             break;
         }
@@ -637,16 +644,8 @@ void NoSQLDatabase::delFileFromDatabase(string &myFile)
     }
     // fix bitmap
     // index search
-    // databaseFile.seekg(stoi(rootStartblk) * (BLOCK_SIZE + 1));
     int rootLeftChildPos = 0;
     handleIndexSearchForDelete(rootStartblk, rootLeftChildPos);
-
-    // while(getline(databaseFile, line)) {
-    //     if(line.substr(line.size() - 5) == "99999") {
-    //         break;
-    //     }
-
-    // }
 }
 
 void NoSQLDatabase::listAllDataFromDatabase()
