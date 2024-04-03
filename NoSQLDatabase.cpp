@@ -305,6 +305,44 @@ string NoSQLDatabase::handleIndexSearch(string &idxStartBlock, string &key, int 
     return idxBlkLine.substr(idxBlkLine.size() - 5);
 }
 
+void NoSQLDatabase::handleIndexSearchForDelete(string &idxStartBlock)
+{
+    databaseFile.seekg(stoi(idxStartBlock) * (BLOCK_SIZE + 1));
+
+    // idxBlkLine reads the index block
+    string idxBlkLine;
+    // reading idxBlkLine without parent
+    getline(databaseFile, idxBlkLine, ' ');
+
+    int resetBitmapPos;
+
+    string child = idxBlkLine.substr(0, 5);
+    if (child != "99999")
+    {
+        handleIndexSearchForDelete(child);
+    }
+    else
+    {
+        // leaf node
+        for (int i = 5; i < idxBlkLine.size(); i += 18)
+        {
+            resetBitmapPos = stoi(idxBlkLine.substr(i + 8, 5));
+            // if prev pos is the same then skip
+            if (resetBitmapPos == stoi(idxBlkLine.substr(i - 5, 5)))
+            {
+                continue;
+            }
+            bitMap(resetBitmapPos, false, false);
+        }
+        
+        string parent;
+        getline(databaseFile, parent);
+        parent = parent.substr(parent.size() - 5);
+        cout << "parent: " << parent << endl;
+        handleIndexSearchForDelete(parent);
+    }
+}
+
 void NoSQLDatabase::openOrCreateDatabase(string &PFSFile, int dbNumber)
 {
     // close existing database file before opening others or creating other databases
@@ -524,6 +562,62 @@ void NoSQLDatabase::delFileFromDatabase(string &myFile)
     // deletes the data, the index, fcb (within the directory),
     // and update metadata (size, total PFS files, total uploaded files)
     // rm the PFS files if there's extra
+    openOrCreateDatabase(databaseName, dbNumber);
+
+    // skip metadata
+    string metadata;
+    getline(databaseFile, metadata);
+
+    // search fcb files
+    int lineNumber = 1;
+    string line;
+    string rootStartblk;
+    while (getline(databaseFile, line))
+    {
+        string fcbFileName = line.substr(0, line.find(" "));
+        if (fcbFileName == myFile)
+        {
+            rootStartblk = line.substr(100, 6);
+            cout << "root start blk: " << rootStartblk << endl;
+            databaseFile.seekp(lineNumber * (BLOCK_SIZE + 1));
+            databaseFile << string(line.size(), ' ');
+            databaseFile.flush();
+            cout << "Removed " << myFile << " from directory." << endl;
+            break;
+        }
+        lineNumber++;
+        if (lineNumber == 4)
+        {
+            cout << "No such file found.";
+            break;
+        }
+    }
+    // remove from directory
+    for (int i = 0; i < directory.size(); i++)
+    {
+        if (directory[i].filename == myFile)
+        {
+            directory.erase(directory.begin() + i);
+            break;
+        }
+    }
+    // remove directory from each db
+    for (int db = 0; db < dbNumber; db++)
+    {
+        openOrCreateDatabase(databaseName, db);
+        updateDirectory(db);
+        // update bitmap?
+    }
+    // fix bitmap
+    // index search
+    databaseFile.seekg(stoi(rootStartblk) * (BLOCK_SIZE + 1));
+
+    // while(getline(databaseFile, line)) {
+    //     if(line.substr(line.size() - 5) == "99999") {
+    //         break;
+    //     }
+
+    // }
 }
 
 void NoSQLDatabase::listAllDataFromDatabase()
