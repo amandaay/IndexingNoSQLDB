@@ -206,13 +206,12 @@ void NoSQLDatabase::writeDataBoundaries(string &data, int &currentBlock, int &cu
     // Each block is 256 bytes that includes a child block size of 4 bytes
     if (currentPosInBlock + DATA_RECORD_SIZE >= BLOCK_SIZE)
     {
-        // Move to the next block
-        cout << "Block is full." << endl;
+        // Block is full, move to the next block
         bitMap(currentBlock, true, false);
         // if curr block = 4095 and it's marked as 1, we should create a new PFS file
         if (currentBlock == (INITIAL_SIZE / BLOCK_SIZE) * (dbNumber + 1) - 1)
         {
-            cout << "Database file is full." << endl;
+            // PFS file is full, create a new PFS file
             dbNumber++;
             openOrCreateDatabase(databaseName, dbNumber); // create the new PFS file
         }
@@ -258,11 +257,11 @@ void NoSQLDatabase::handleIndexAllocation(int &currentBlock)
 
             // index block number
             indexBlock = node->getNodeId() + bTree.getFirstIndexToWrite();
-            // cout << indexBlock << ": " << node->getChildKeyBlk() << " " << parent << endl;
+            cout << indexBlock << ": " << node->getChildKeyBlk() << " " << parent << endl;
 
             if (indexBlock == (INITIAL_SIZE / BLOCK_SIZE) * (dbNumber + 1))
             {
-                cout << "Current PFS is full." << endl;
+                // Current PFS is full
                 dbNumber++;
                 openOrCreateDatabase(databaseName, dbNumber); // create the new PFS file
                 indexBlock += DIRECTORY_SIZE / BLOCK_SIZE;
@@ -379,11 +378,14 @@ void NoSQLDatabase::handleIndexSearchForDelete(string &idxStartBlock, int &pos, 
             }
             duplicatePos = resetBitmapPos;
         }
-        string temp = idxBlkLine.substr(13, 5);
-        if (temp < leftmost)
+        if (idxBlkLine.size() >= 13 && idxBlkLine.size() < 18)
         {
-            leftmost = temp;
-            cout << "Leftmost data blk #: " << leftmost << endl;
+            string temp = idxBlkLine.substr(13, 5);
+            if (temp < leftmost)
+            {
+                leftmost = temp;
+                // cout << "Leftmost data blk #: " << leftmost << endl;
+            }
         }
     }
 }
@@ -548,7 +550,6 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
             int key = 0;
             ss >> key;
 
-            cout << "KEY inserting into BTree: " << key << endl;
             // Index the key using B-tree
             bTree.Insert(key);
 
