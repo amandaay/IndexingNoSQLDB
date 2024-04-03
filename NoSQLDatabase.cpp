@@ -390,6 +390,11 @@ void NoSQLDatabase::handleIndexSearchForDelete(string &idxStartBlock, int &pos, 
 
 void NoSQLDatabase::openOrCreateDatabase(string &PFSFile, int dbNumber)
 {
+    if (databaseName.empty())
+    {
+        cout << "Please include a database name." << endl;
+        return;
+    }
     // close existing database file before opening others or creating other databases
     if (databaseFile.is_open())
     {
