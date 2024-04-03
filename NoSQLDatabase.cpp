@@ -268,6 +268,7 @@ void NoSQLDatabase::handleIndexAllocation(int &currentBlock)
             }
             databaseFile.seekp(indexBlock % (INITIAL_SIZE / BLOCK_SIZE) * (BLOCK_SIZE + 1));
             databaseFile << node->getChildKeyBlk();
+            databaseFile << string(BLOCK_SIZE-node->getChildKeyBlk().size()-parent.size(), ' ');
             databaseFile.seekp((indexBlock % (INITIAL_SIZE / BLOCK_SIZE)) * (BLOCK_SIZE + 1) + (BLOCK_SIZE - 5));
             databaseFile << parent;
             currentBlock++;
