@@ -258,8 +258,15 @@ void NoSQLDatabase::handleIndexAllocation(int &currentBlock)
 
             // index block number
             indexBlock = node->getNodeId() + bTree.getFirstIndexToWrite();
-            cout << indexBlock << ": " << node->getChildKeyBlk() << " " << parent << endl;
+            // cout << indexBlock << ": " << node->getChildKeyBlk() << " " << parent << endl;
 
+            if (indexBlock == (INITIAL_SIZE / BLOCK_SIZE) * (dbNumber + 1))
+            {
+                cout << "Current PFS is full." << endl;
+                dbNumber++;
+                openOrCreateDatabase(databaseName, dbNumber); // create the new PFS file
+                indexBlock += DIRECTORY_SIZE / BLOCK_SIZE;
+            }
             databaseFile.seekp(indexBlock % (INITIAL_SIZE / BLOCK_SIZE) * (BLOCK_SIZE + 1));
             databaseFile << node->getChildKeyBlk();
             databaseFile.seekp((indexBlock % (INITIAL_SIZE / BLOCK_SIZE)) * (BLOCK_SIZE + 1) + (BLOCK_SIZE - 5));
@@ -285,7 +292,6 @@ string NoSQLDatabase::handleIndexSearch(string &idxStartBlock, string &key, int 
 {
     // idxBlkLine reads the index block
     string idxBlkLine;
-    cout << "database " << databaseName << " dbNumber " << dbNumber << endl;
     databaseFile.seekg(stoi(idxStartBlock) * (BLOCK_SIZE + 1));
     // reading idxBlkLine without parent
     getline(databaseFile, idxBlkLine, ' ');
@@ -437,6 +443,11 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
 {
     // Insert data from OS file into NoSQL database
     // Accessing the databaseName member variable
+    if (databaseName.empty())
+    {
+        cout << "Error: No database is open." << endl;
+        return;
+    }
     cout << "Putting data into database " << databaseName << " from file " << myFile << endl;
     ifstream fileToRead(myFile);
     openOrCreateDatabase(databaseName, dbNumber);
@@ -744,7 +755,6 @@ void NoSQLDatabase::findValueFromDatabase(string &myFileKey, int &blkAccessed)
     {
         return;
     }
-    cout << "result block: " << resultBlk << endl;
     // result Blk search data block
     string record;
     string exactKey = to_string(inputKey) + ',';
@@ -752,9 +762,11 @@ void NoSQLDatabase::findValueFromDatabase(string &myFileKey, int &blkAccessed)
     if (getline(databaseFile, line))
     {
         record = line.substr(line.find(exactKey), DATA_RECORD_SIZE);
-        cout << "record: " << record << endl;
+        // output record to the console
+        cout << record << endl;
     }
     cout << endl;
+    // includes the fcb block, index blocks, and data blocks
     cout << "# of Blocks = " << blkAccessed << endl;
 }
 
