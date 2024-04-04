@@ -230,11 +230,8 @@ void NoSQLDatabase::writeDataBoundaries(string &data, int &currentBlock, int &cu
     databaseFile.seekp((currentBlock % (INITIAL_SIZE / BLOCK_SIZE)) * (BLOCK_SIZE + 1) + currentPosInBlock);
     databaseFile << data;
     // Ensure no overlapping of Data Blk and Index Blk
-    cout << "currentBlock" << currentBlock << endl;
-    cout << "currentPosInBlock" << currentPosInBlock << endl;
     if (currentPosInBlock != BLOCK_SIZE - 1)
     {
-        // databaseFile << "TEST" << endl;
         databaseFile << string(BLOCK_SIZE - currentPosInBlock - DATA_RECORD_SIZE, ' ');
     }
     databaseFile.flush();
@@ -273,7 +270,6 @@ void NoSQLDatabase::handleIndexAllocation(int &currentBlock)
 
             // index block number
             indexBlock = node->getNodeId() + bTree.getFirstIndexToWrite();
-            cout << indexBlock << ": " << node->getChildKeyBlk() << " " << parent << endl;
 
             if (indexBlock == (INITIAL_SIZE / BLOCK_SIZE) * (dbNumber + 1))
             {
@@ -308,7 +304,12 @@ string NoSQLDatabase::handleIndexSearch(string &idxStartBlock, string &key, int 
 {
     // idxBlkLine reads the index block
     string idxBlkLine;
-    databaseFile.seekg(stoi(idxStartBlock) * (BLOCK_SIZE + 1));
+    stringstream ss;
+    ss << idxStartBlock;
+    int idxStartBlk = 0;
+    ss >> idxStartBlk;
+
+    databaseFile.seekg(idxStartBlk * (BLOCK_SIZE + 1));
     // reading idxBlkLine without parent
     getline(databaseFile, idxBlkLine, ' ');
     for (int i = 5; i < idxBlkLine.size(); i += 18)
@@ -331,79 +332,53 @@ string NoSQLDatabase::handleIndexSearch(string &idxStartBlock, string &key, int 
     return idxBlkLine.substr(idxBlkLine.size() - 5);
 }
 
-void NoSQLDatabase::handleIndexSearchForDelete(string &idxStartBlock, int &pos, string &leftmost)
+void NoSQLDatabase::handleIndexSearchForDelete(string &idxStartBlock, string &leftmost)
 {
+    stringstream ss;
+    ss << idxStartBlock;
+    int idxBlk = 0;
+    ss >> idxBlk;
+
     // mark index block as free
-    int idxBlk = stoi(idxStartBlock);
     int db = idxBlk / (INITIAL_SIZE / BLOCK_SIZE);
     openOrCreateDatabase(databaseName, db);
     bitMap(idxBlk, false, false);
 
     // idxBlkLine reads the index block
-    databaseFile.seekg(idxBlk * (BLOCK_SIZE + 1));
-
-    // idxBlkLine reads the index block
     string idxBlkLine;
+    databaseFile.seekg(idxBlk * (BLOCK_SIZE + 1));
     // reading idxBlkLine without parent
     getline(databaseFile, idxBlkLine, ' ');
-
     int resetBitmapPos;
-    int duplicatePos;
-
-    string child = idxBlkLine.substr(pos, 5);
-    if (child != "99999")
+    for (int i = 5; i < idxBlkLine.size(); i += 18)
     {
-        // handle leftmost child
-        handleIndexSearchForDelete(child, pos, leftmost);
-        for (int i = 5; i < idxBlkLine.size(); i += 18)
+        if (i + 8 < idxBlkLine.size())
         {
-            if (i + 8 < idxBlkLine.size())
+            // data block #
+            if (idxBlkLine.substr(i + 8, 5) < leftmost)
             {
-                // data block #
-                resetBitmapPos = stoi(idxBlkLine.substr(i + 8, 5));
+                leftmost = idxBlkLine.substr(i + 8, 5);
             }
-            // if prev pos is the same then skip
-            if (resetBitmapPos != duplicatePos)
+            string resetStr = idxBlkLine.substr(i, 8);
+            stringstream ss;
+            ss << resetStr;
+            ss >> resetBitmapPos;
+            bitMap(resetBitmapPos, false, false);
+        }
+        if (i - 5 >= 0)
+        {
+            // child block number
+            string child = idxBlkLine.substr(i - 5, 5);
+            if (child != "99999")
             {
-                bitMap(resetBitmapPos, false, false);
-            }
-            duplicatePos = resetBitmapPos;
-
-            // child block number (right child)
-            if (i + 13 < idxBlkLine.size())
-            {
-                int childPos = i + 13;
-                child = idxBlkLine.substr(childPos, 5);
-                handleIndexSearchForDelete(child, childPos, leftmost);
+                handleIndexSearchForDelete(child, leftmost);
             }
         }
     }
-    else
+    string rightMostChild = idxBlkLine.substr(idxBlkLine.size() - 5);
+    if (rightMostChild != "99999")
     {
-        // leaf node
-        for (int i = 5; i < idxBlkLine.size(); i += 18)
-        {
-            if (i + 8 < idxBlkLine.size())
-            {
-                // data block #
-                resetBitmapPos = stoi(idxBlkLine.substr(i + 8, 5));
-            }
-            // if prev pos is the same then skip
-            if (resetBitmapPos != duplicatePos)
-            {
-                bitMap(resetBitmapPos, false, false);
-            }
-            duplicatePos = resetBitmapPos;
-        }
-        if (idxBlkLine.size() >= 13 && idxBlkLine.size() < 18)
-        {
-            string temp = idxBlkLine.substr(13, 5);
-            if (temp < leftmost)
-            {
-                leftmost = temp;
-                // cout << "Leftmost data blk #: " << leftmost << endl;
-            }
-        }
+        handleIndexSearchForDelete(rightMostChild, leftmost);
     }
 }
 
@@ -411,9 +386,14 @@ void NoSQLDatabase::handleIndexSearchGetData(string &idxStartBlock, set<string> 
 {
     // idxBlkLine reads the index block
     string idxBlkLine;
-    int currBlk = stoi(idxStartBlock);
-    // int db = stoi(idxStartBlock) / (INITIAL_SIZE / BLOCK_SIZE);
-    databaseFile.seekg(stoi(idxStartBlock) * (BLOCK_SIZE + 1));
+    stringstream ss;
+    ss << idxStartBlock;
+    int currBlk = 0;
+    ss >> currBlk;
+
+    int db =currBlk / (INITIAL_SIZE / BLOCK_SIZE);
+    openOrCreateDatabase(databaseName, db);
+    databaseFile.seekg(currBlk * (BLOCK_SIZE + 1));
     // reading idxBlkLine without parent
     getline(databaseFile, idxBlkLine, ' ');
     for (int i = 5; i < idxBlkLine.size(); i += 18)
@@ -668,31 +648,24 @@ void NoSQLDatabase::getDataFromDatabase(string &myFile)
 
     set<string> datablocks;
     handleIndexSearchGetData(rootBlk, datablocks);
-    
-    // test
-    for (auto &blk : datablocks)
-    {
-        cout << blk << endl;
-    }
 
     // read data block
-
-    // // streampos dataBlockEndPos;
-    // int root;
-    // for (int i = 0; i < directory.size(); i++)
-    // {
-    //     if (myFile == directory[i].filename)
-    //     {
-    //         // databaseFile.seekg(directory[i].dataStartBlock * (BLOCK_SIZE + 1));
-    //         // dataBlockEndPos = directory[i].dataStartBlock + directory[i].dataBlockUsed;
-    //         root = directory[i].indexStartBlock;
-    //     }
-    // }
-
-    // string data;
-    // streampos startPos = databaseFile.tellg();
-    // streampos endPos =
-
+    for (auto &blk : datablocks)
+    {
+        databaseFile.seekg(stoi(blk) * (BLOCK_SIZE + 1));
+        string line;
+        if (getline(databaseFile, line))
+        {
+            // each line only contains 1 record (40 bytes)
+            for (int i = 0; i < line.size(); i += DATA_RECORD_SIZE)
+            {
+                // output record to the file
+                fileToWrite << line.substr(i, DATA_RECORD_SIZE) << endl;
+            }
+            // fileToWrite.seekp(-1, ios_base::cur); // remove the newline character
+        }
+    }
+    fileToWrite.flush();
     fileToWrite.close();
 }
 
@@ -749,8 +722,8 @@ void NoSQLDatabase::delFileFromDatabase(string &myFile)
         updateDirectory(db);
     }
     // index search
-    int rootLeftChildPos = 0;
-    handleIndexSearchForDelete(rootStartblk, rootLeftChildPos, leftmost);
+    // int rootLeftChildPos = 0;
+    handleIndexSearchForDelete(rootStartblk, leftmost);
 }
 
 void NoSQLDatabase::listAllDataFromDatabase()
