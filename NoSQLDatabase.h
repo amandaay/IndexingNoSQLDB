@@ -64,7 +64,7 @@ private:
     // Index operations
     void handleIndexAllocation(int &currentBlock);
     // handle index search
-    string handleIndexSearch(string &idxStartBlock, string &key, int &blkAccessed);
+    string handleIndexSearch(string &idxStartBlock, string &key, int &blkAccessed, int &db);
     // handle index search for delete bitmap
     void handleIndexSearchForDelete(string &idxStartBlock, string &leftmost);
     // handle index search to get data

@@ -300,7 +300,7 @@ void NoSQLDatabase::handleIndexAllocation(int &currentBlock)
     }
 }
 
-string NoSQLDatabase::handleIndexSearch(string &idxStartBlock, string &key, int &blkAccessed)
+string NoSQLDatabase::handleIndexSearch(string &idxStartBlock, string &key, int &blkAccessed, int &db)
 {
     // idxBlkLine reads the index block
     string idxBlkLine;
@@ -308,6 +308,8 @@ string NoSQLDatabase::handleIndexSearch(string &idxStartBlock, string &key, int 
     ss << idxStartBlock;
     int idxStartBlk = 0;
     ss >> idxStartBlk;
+
+    openOrCreateDatabase(databaseName, db);
 
     databaseFile.seekg(idxStartBlk * (BLOCK_SIZE + 1));
     // reading idxBlkLine without parent
@@ -391,7 +393,7 @@ void NoSQLDatabase::handleIndexSearchGetData(string &idxStartBlock, set<string> 
     int currBlk = 0;
     ss >> currBlk;
 
-    int db =currBlk / (INITIAL_SIZE / BLOCK_SIZE);
+    int db = currBlk / (INITIAL_SIZE / BLOCK_SIZE);
     openOrCreateDatabase(databaseName, db);
     databaseFile.seekg(currBlk * (BLOCK_SIZE + 1));
     // reading idxBlkLine without parent
@@ -793,7 +795,12 @@ void NoSQLDatabase::findValueFromDatabase(string &myFileKey, int &blkAccessed)
     bool found = false;
     while (!found)
     {
-        idxBlk = handleIndexSearch(idxBlk, key, blkAccessed);
+        stringstream ss;
+        ss << idxBlk;
+        int intIdxBlk = 0;
+        ss >> intIdxBlk;
+        int db = intIdxBlk / (INITIAL_SIZE / BLOCK_SIZE);
+        idxBlk = handleIndexSearch(idxBlk, key, blkAccessed, db);
         for (char c : idxBlk)
         {
             if (!isdigit(c))
