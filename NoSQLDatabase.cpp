@@ -7,6 +7,7 @@
 #include <string>
 #include <iomanip>
 #include <queue>
+#include <set>
 #include "BTree.h"
 
 using namespace std;
@@ -29,28 +30,28 @@ void NoSQLDatabase::updateDirectory(int dbNumber)
     // databaseName
     databaseFile.seekp((currentBlock % (INITIAL_SIZE / BLOCK_SIZE)) * (BLOCK_SIZE + 1) + currentPosInBlock);
     databaseFile << databaseName; // takes up 0-49th byte
-    databaseFile << string(50-databaseName.size(), ' ');
+    databaseFile << string(50 - databaseName.size(), ' ');
 
     // total size of the database (1 PFS = 1 Mbyte)
     int metaDataSizePos = 50;                                  // position of metadata size in the block
     string pfsSize = to_string(INITIAL_SIZE * (dbNumber + 1)); // takes up 50-59th byte
     databaseFile.seekp((currentBlock % (INITIAL_SIZE / BLOCK_SIZE)) * (BLOCK_SIZE + 1) + metaDataSizePos);
     databaseFile << pfsSize;
-    databaseFile << string(60-50-pfsSize.size(), ' ');
+    databaseFile << string(60 - 50 - pfsSize.size(), ' ');
 
     // total number of files (PFS)
     int totalPfsFilesPos = 60;                      // position of total pfs files in the block
     string totalPfsFiles = to_string(dbNumber + 1); // takes up 60-69th byte
     databaseFile.seekp((currentBlock % (INITIAL_SIZE / BLOCK_SIZE)) * (BLOCK_SIZE + 1) + totalPfsFilesPos);
     databaseFile << totalPfsFiles;
-    databaseFile << string(70-60-totalPfsFiles.size(), ' ');
+    databaseFile << string(70 - 60 - totalPfsFiles.size(), ' ');
 
     // blocksize
     int blocksizePos = 70;                    // position of block size in the block
     string blocksize = to_string(BLOCK_SIZE); // takes up 70-79th byte
     databaseFile.seekp((currentBlock % (INITIAL_SIZE / BLOCK_SIZE)) * (BLOCK_SIZE + 1) + blocksizePos);
     databaseFile << blocksize;
-    databaseFile << string(80-70-blocksize.size(), ' ');
+    databaseFile << string(80 - 70 - blocksize.size(), ' ');
 
     // number of uploaded files e.g. movies-small.csv, should be empty
     // when the database is created, there's no file uploaded yet
@@ -59,7 +60,7 @@ void NoSQLDatabase::updateDirectory(int dbNumber)
     string uploadedFiles = to_string(directory.size()); // takes up 80-89th byte
     databaseFile.seekp((currentBlock % (INITIAL_SIZE / BLOCK_SIZE)) * (BLOCK_SIZE + 1) + uploadedFilesPos);
     databaseFile << uploadedFiles;
-    databaseFile << string(BLOCK_SIZE-80-uploadedFiles.size(), ' ');
+    databaseFile << string(BLOCK_SIZE - 80 - uploadedFiles.size(), ' ');
 
     // update metadata bitmap
     bitMap(currentBlock, true, false);
@@ -74,12 +75,12 @@ void NoSQLDatabase::updateDirectory(int dbNumber)
         // filename
         databaseFile.seekp((i + 1) * (BLOCK_SIZE + 1)); // starting from block 2, 0 - 49th byte
         databaseFile << directory[i].filename;
-        databaseFile << string(50-directory[i].filename.size(), ' ');    
-        
+        databaseFile << string(50 - directory[i].filename.size(), ' ');
+
         // file size
         databaseFile.seekp((i + 1) * (BLOCK_SIZE + 1) + 50); // starting from block 2, 50th byte
         databaseFile << to_string(directory[i].fileSize);
-        databaseFile << string(60-50-to_string(directory[i].fileSize).size(), ' ');
+        databaseFile << string(60 - 50 - to_string(directory[i].fileSize).size(), ' ');
 
         // last modified time
         databaseFile.seekp((i + 1) * (BLOCK_SIZE + 1) + 60);
@@ -231,9 +232,10 @@ void NoSQLDatabase::writeDataBoundaries(string &data, int &currentBlock, int &cu
     // Ensure no overlapping of Data Blk and Index Blk
     cout << "currentBlock" << currentBlock << endl;
     cout << "currentPosInBlock" << currentPosInBlock << endl;
-    if (currentPosInBlock != BLOCK_SIZE-1) {
-        //databaseFile << "TEST" << endl;
-        databaseFile << string(BLOCK_SIZE-currentPosInBlock-DATA_RECORD_SIZE, ' ');
+    if (currentPosInBlock != BLOCK_SIZE - 1)
+    {
+        // databaseFile << "TEST" << endl;
+        databaseFile << string(BLOCK_SIZE - currentPosInBlock - DATA_RECORD_SIZE, ' ');
     }
     databaseFile.flush();
 }
@@ -282,7 +284,7 @@ void NoSQLDatabase::handleIndexAllocation(int &currentBlock)
             }
             databaseFile.seekp(indexBlock % (INITIAL_SIZE / BLOCK_SIZE) * (BLOCK_SIZE + 1));
             databaseFile << node->getChildKeyBlk();
-            databaseFile << string(BLOCK_SIZE-node->getChildKeyBlk().size()-parent.size(), ' ');
+            databaseFile << string(BLOCK_SIZE - node->getChildKeyBlk().size() - parent.size(), ' ');
             databaseFile.seekp((indexBlock % (INITIAL_SIZE / BLOCK_SIZE)) * (BLOCK_SIZE + 1) + (BLOCK_SIZE - 5));
             databaseFile << parent;
             currentBlock++;
@@ -402,6 +404,40 @@ void NoSQLDatabase::handleIndexSearchForDelete(string &idxStartBlock, int &pos, 
                 // cout << "Leftmost data blk #: " << leftmost << endl;
             }
         }
+    }
+}
+
+void NoSQLDatabase::handleIndexSearchGetData(string &idxStartBlock, set<string> &datablocks)
+{
+    // idxBlkLine reads the index block
+    string idxBlkLine;
+    int currBlk = stoi(idxStartBlock);
+    // int db = stoi(idxStartBlock) / (INITIAL_SIZE / BLOCK_SIZE);
+    databaseFile.seekg(stoi(idxStartBlock) * (BLOCK_SIZE + 1));
+    // reading idxBlkLine without parent
+    getline(databaseFile, idxBlkLine, ' ');
+    for (int i = 5; i < idxBlkLine.size(); i += 18)
+    {
+        if (i + 8 < idxBlkLine.size())
+        {
+            // data block #
+            string dataBlk = idxBlkLine.substr(i + 8, 5);
+            datablocks.insert(dataBlk);
+        }
+        if (i - 5 >= 0)
+        {
+            // child block number
+            string child = idxBlkLine.substr(i - 5, 5);
+            if (child != "99999")
+            {
+                handleIndexSearchGetData(child, datablocks);
+            }
+        }
+    }
+    string rightMostChild = idxBlkLine.substr(idxBlkLine.size() - 5);
+    if (rightMostChild != "99999")
+    {
+        handleIndexSearchGetData(rightMostChild, datablocks);
     }
 }
 
@@ -602,13 +638,45 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
 void NoSQLDatabase::getDataFromDatabase(string &myFile)
 {
     // Download data file from NoSQL database to OS directory
-    // openOrCreateDatabase(databaseName, dbNumber);
-    // ofstream fileToWrite(myFile);
-    // if (!fileToWrite.is_open())
-    // {
-    //     cout << "Error: Unable to open file " << myFile << endl;
-    //     return;
-    // }
+    openOrCreateDatabase(databaseName, dbNumber);
+    ofstream fileToWrite(myFile);
+    if (!fileToWrite.is_open())
+    {
+        cout << "Error: Unable to open file " << myFile << endl;
+        return;
+    }
+
+    // read fcb
+    string fcb;
+    int lineNumber = 1;
+    string rootBlk;
+    while (getline(databaseFile, fcb))
+    {
+        if (fcb.substr(0, fcb.find(' ')) == myFile)
+        {
+            rootBlk = fcb.substr(100, 6);
+            cout << "root blk: " << rootBlk << endl;
+            break;
+        }
+        lineNumber++;
+        if (lineNumber == 4)
+        {
+            cout << "No such file found.";
+            break;
+        }
+    }
+
+    set<string> datablocks;
+    handleIndexSearchGetData(rootBlk, datablocks);
+    
+    // test
+    for (auto &blk : datablocks)
+    {
+        cout << blk << endl;
+    }
+
+    // read data block
+
     // // streampos dataBlockEndPos;
     // int root;
     // for (int i = 0; i < directory.size(); i++)
@@ -625,7 +693,7 @@ void NoSQLDatabase::getDataFromDatabase(string &myFile)
     // streampos startPos = databaseFile.tellg();
     // streampos endPos =
 
-    // fileToWrite.close();
+    fileToWrite.close();
 }
 
 void NoSQLDatabase::delFileFromDatabase(string &myFile)

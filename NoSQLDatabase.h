@@ -11,6 +11,7 @@
 #include <unordered_map>
 #include "BTree.h"
 #include <cstdint>
+#include <set>
 using namespace std;
 
 // Define constants for file system parameters
@@ -66,6 +67,8 @@ private:
     string handleIndexSearch(string &idxStartBlock, string &key, int &blkAccessed);
     // handle index search for delete bitmap
     void handleIndexSearchForDelete(string &idxStartBlock, int &pos, string &leftmost);
+    // handle index search to get data
+    void handleIndexSearchGetData(string &idxStartBlock, set<string> &datablocks);
 
     // Commands for client operation
     enum Command
