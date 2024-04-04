@@ -29,24 +29,28 @@ void NoSQLDatabase::updateDirectory(int dbNumber)
     // databaseName
     databaseFile.seekp((currentBlock % (INITIAL_SIZE / BLOCK_SIZE)) * (BLOCK_SIZE + 1) + currentPosInBlock);
     databaseFile << databaseName; // takes up 0-49th byte
+    databaseFile << string(50-databaseName.size(), ' ');
 
     // total size of the database (1 PFS = 1 Mbyte)
     int metaDataSizePos = 50;                                  // position of metadata size in the block
     string pfsSize = to_string(INITIAL_SIZE * (dbNumber + 1)); // takes up 50-59th byte
     databaseFile.seekp((currentBlock % (INITIAL_SIZE / BLOCK_SIZE)) * (BLOCK_SIZE + 1) + metaDataSizePos);
     databaseFile << pfsSize;
+    databaseFile << string(60-50-pfsSize.size(), ' ');
 
     // total number of files (PFS)
     int totalPfsFilesPos = 60;                      // position of total pfs files in the block
     string totalPfsFiles = to_string(dbNumber + 1); // takes up 60-69th byte
     databaseFile.seekp((currentBlock % (INITIAL_SIZE / BLOCK_SIZE)) * (BLOCK_SIZE + 1) + totalPfsFilesPos);
     databaseFile << totalPfsFiles;
+    databaseFile << string(70-60-totalPfsFiles.size(), ' ');
 
     // blocksize
     int blocksizePos = 70;                    // position of block size in the block
     string blocksize = to_string(BLOCK_SIZE); // takes up 70-79th byte
     databaseFile.seekp((currentBlock % (INITIAL_SIZE / BLOCK_SIZE)) * (BLOCK_SIZE + 1) + blocksizePos);
     databaseFile << blocksize;
+    databaseFile << string(80-70-blocksize.size(), ' ');
 
     // number of uploaded files e.g. movies-small.csv, should be empty
     // when the database is created, there's no file uploaded yet
@@ -55,6 +59,7 @@ void NoSQLDatabase::updateDirectory(int dbNumber)
     string uploadedFiles = to_string(directory.size()); // takes up 80-89th byte
     databaseFile.seekp((currentBlock % (INITIAL_SIZE / BLOCK_SIZE)) * (BLOCK_SIZE + 1) + uploadedFilesPos);
     databaseFile << uploadedFiles;
+    databaseFile << string(BLOCK_SIZE-80-uploadedFiles.size(), ' ');
 
     // update metadata bitmap
     bitMap(currentBlock, true, false);
@@ -69,10 +74,12 @@ void NoSQLDatabase::updateDirectory(int dbNumber)
         // filename
         databaseFile.seekp((i + 1) * (BLOCK_SIZE + 1)); // starting from block 2, 0 - 49th byte
         databaseFile << directory[i].filename;
-
+        databaseFile << string(50-directory[i].filename.size(), ' ');    
+        
         // file size
         databaseFile.seekp((i + 1) * (BLOCK_SIZE + 1) + 50); // starting from block 2, 50th byte
         databaseFile << to_string(directory[i].fileSize);
+        databaseFile << string(60-50-to_string(directory[i].fileSize).size(), ' ');
 
         // last modified time
         databaseFile.seekp((i + 1) * (BLOCK_SIZE + 1) + 60);
@@ -221,6 +228,13 @@ void NoSQLDatabase::writeDataBoundaries(string &data, int &currentBlock, int &cu
     }
     databaseFile.seekp((currentBlock % (INITIAL_SIZE / BLOCK_SIZE)) * (BLOCK_SIZE + 1) + currentPosInBlock);
     databaseFile << data;
+    // Ensure no overlapping of Data Blk and Index Blk
+    cout << "currentBlock" << currentBlock << endl;
+    cout << "currentPosInBlock" << currentPosInBlock << endl;
+    if (currentPosInBlock != BLOCK_SIZE-1) {
+        //databaseFile << "TEST" << endl;
+        databaseFile << string(BLOCK_SIZE-currentPosInBlock-DATA_RECORD_SIZE, ' ');
+    }
     databaseFile.flush();
 }
 
@@ -558,6 +572,7 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
             fcb.timestamp = time(nullptr);         // update the timestamp
         }
     }
+
     // set the last data block bitmap to 1
     bitMap(currentBlock, true, false);
     currentBlock += 1;
