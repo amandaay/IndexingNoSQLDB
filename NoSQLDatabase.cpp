@@ -859,10 +859,6 @@ void NoSQLDatabase::killDatabase(string &PFSFile)
             }
             else
             {
-                for (int i = 0; i < directory.size(); i++)
-                {
-                    directory.pop_back();
-                }
                 cout << "File " << filePath << " deleted successfully." << endl;
             }
         }
@@ -871,6 +867,7 @@ void NoSQLDatabase::killDatabase(string &PFSFile)
             cout << "File " << filePath << " does not exist." << endl;
         }
     }
+    directory.clear();
 }
 
 void NoSQLDatabase::quitDatabase()
