@@ -241,57 +241,53 @@ void NoSQLDatabase::handleIndexAllocation(int &currentBlock)
 {
     // Index operations
     // Index operations using B-tree
-    // for testing purpose
+
     bTree.Display(currentBlock);
-    // int lastIndexBlk = bTree.getTotalNodes() + currentBlock - 1;
     fcb.indexStartBlock = bTree.getRootId(); // The starting block for the index (i.e. root)
-    // set the bitmap from current block to last index block to 1
-    // for (int i = currentBlock; i <= lastIndexBlk; i++)
-    // {
-    //     bitMap(i, true, false);
-    // }
-    // write to database
+
     // if root is null, we ignore
     if (!bTree.getRootNode())
     {
         return;
     }
-    queue<tuple<Node *, string, int, int>> q;
+    queue<tuple<Node *, string, int>> q;
     string parent = "99999"; // parent block number
-    q.push({bTree.getRootNode(), parent, dbNumber, currentBlock});
+    cout << "bTree.getRootNode at line 255: " << bTree.getRootNode() << endl;
+    q.push({bTree.getRootNode(), parent, currentBlock}); 
+    int db = dbNumber;
     int level = 0;
+    int firstIndexBlock = currentBlock; 
     while (!q.empty())
     {
         int NodeCount = q.size();
         while (NodeCount > 0)
-        {
-            auto [node, parent, db, currBlk] = q.front();
+        {   
+            // current block number
+            auto [node, parent, currBlk] = q.front();     
             q.pop();
-            cout << "parent: " << parent << " db: " << db << " currBlk: " << currBlk << endl;
 
             // index block number
-            // indexBlock = node->getNodeId() + bTree.getFirstIndexToWrite();
-            indexBlock = node->getNodeId() + currBlk;
+            indexBlock = node->getNodeId() + firstIndexBlock;
+            if (indexBlock >= (INITIAL_SIZE/BLOCK_SIZE) * (dbNumber + 1))
+            {   
+                dbNumber ++;
+                cout << "firstAvailableBlock() at line 274: " << firstAvailableBlock() << endl;
+                cout << " node->getNodeId()at line 275: " << node->getNodeId() << endl;
+                cout << "firstIndexBlock at line 276: " << firstIndexBlock << endl;                
+                indexBlock = firstAvailableBlock() + node->getNodeId() - ((INITIAL_SIZE/BLOCK_SIZE) - firstIndexBlock);
+                cout << "indexBlock at line 276: " << indexBlock << endl;
+            }
             db = indexBlock / (INITIAL_SIZE / BLOCK_SIZE);
-
+            openOrCreateDatabase(databaseName, db);
+  
             cout << "index Blk: " << indexBlock << " db: " << db << " currBlk: " << currBlk << endl;
 
-            if (indexBlock >= (INITIAL_SIZE / BLOCK_SIZE) * (dbNumber + 1))
-            {
-                // Current PFS is full
-                dbNumber++;
-                openOrCreateDatabase(databaseName, dbNumber); // create the new PFS file
-                indexBlock = (INITIAL_SIZE / BLOCK_SIZE) * (dbNumber) + DIRECTORY_SIZE / BLOCK_SIZE;
-                currBlk = indexBlock;
-                db = dbNumber;
-            }
-            openOrCreateDatabase(databaseName, db);
-
             databaseFile.seekp(indexBlock % (INITIAL_SIZE / BLOCK_SIZE) * (BLOCK_SIZE + 1));
+            cout << "i'm working at line 291: node->getChildKeyBlk()" << node->getChildKeyBlk()<< endl;
             databaseFile << node->getChildKeyBlk();
             databaseFile << string(BLOCK_SIZE - node->getChildKeyBlk().size() - parent.size(), ' ');
             databaseFile.seekp((indexBlock % (INITIAL_SIZE / BLOCK_SIZE)) * (BLOCK_SIZE + 1) + (BLOCK_SIZE - 5));
-            databaseFile << parent;
+            databaseFile << parent;   
             bitMap(indexBlock, true, false);
             // currentBlock++;
             databaseFile.flush();
@@ -301,7 +297,7 @@ void NoSQLDatabase::handleIndexAllocation(int &currentBlock)
             {
                 if (node->getChildren()[i])
                 {
-                    q.push({node->getChildren()[i], intToFiveDigitString(indexBlock), db, currBlk});
+                    q.push({node->getChildren()[i], intToFiveDigitString(indexBlock), currBlk});
                 }
             }
             NodeCount--;
