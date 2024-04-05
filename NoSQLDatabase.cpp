@@ -240,8 +240,15 @@ void NoSQLDatabase::writeDataBoundaries(string &data, int &currentBlock, int &cu
 void NoSQLDatabase::handleIndexAllocation(int &currentBlock)
 {
     // Index operations
+    // if current PFS file is full, create a new PFS file
+    // edge case: data block filled entire first PFS file
+    if (currentBlock >= (INITIAL_SIZE / BLOCK_SIZE) * (dbNumber + 1))
+    {
+        // Current PFS is full
+        dbNumber++;
+        openOrCreateDatabase(databaseName, dbNumber); // create the new PFS file
+    }
     // Index operations using B-tree
-
     bTree.Display(currentBlock);
     fcb.indexStartBlock = bTree.getRootId(); // The starting block for the index (i.e. root)
 
@@ -250,53 +257,74 @@ void NoSQLDatabase::handleIndexAllocation(int &currentBlock)
     {
         return;
     }
-    queue<tuple<Node *, string, int>> q;
+    int firstIndexBlock = currentBlock;
     string parent = "99999"; // parent block number
+    int rootId = bTree.getRootNode()->getNodeId();
+    indexBlock = rootId + firstIndexBlock;
+    if (indexBlock >= (INITIAL_SIZE / BLOCK_SIZE) * (dbNumber + 1))
+    {
+        dbNumber++;
+        indexBlock = firstAvailableBlock() + rootId - ((INITIAL_SIZE / BLOCK_SIZE) - firstIndexBlock);
+        cout << "indexBlock at line 278: " << indexBlock << endl;
+    }
+    databaseFile.seekp(indexBlock % (INITIAL_SIZE / BLOCK_SIZE) * (BLOCK_SIZE + 1));
+    cout << "i'm working at line 291: node->getChildKeyBlk()" << (bTree.getRootNode())->getChildKeyBlk() << endl;
+    databaseFile << (bTree.getRootNode())->getChildKeyBlk();
+    databaseFile << string(BLOCK_SIZE - (bTree.getRootNode())->getChildKeyBlk().size() - parent.size(), ' ');
+    databaseFile.seekp((indexBlock % (INITIAL_SIZE / BLOCK_SIZE)) * (BLOCK_SIZE + 1) + (BLOCK_SIZE - 5));
+    databaseFile << parent;
+    bitMap(indexBlock, true, false);
+    databaseFile.flush();
+
+    queue<tuple<Node *, string, int>> q;
+
     cout << "bTree.getRootNode at line 255: " << bTree.getRootNode() << endl;
-    q.push({bTree.getRootNode(), parent, currentBlock}); 
+    q.push({bTree.getRootNode(), parent, currentBlock});
+
     int db = dbNumber;
     int level = 0;
-    int firstIndexBlock = currentBlock; 
+
     while (!q.empty())
     {
         int NodeCount = q.size();
         while (NodeCount > 0)
-        {   
+        {
             // current block number
-            auto [node, parent, currBlk] = q.front();     
+            auto [node, parent, currBlk] = q.front();
             q.pop();
 
             // index block number
             indexBlock = node->getNodeId() + firstIndexBlock;
-            if (indexBlock >= (INITIAL_SIZE/BLOCK_SIZE) * (dbNumber + 1))
-            {   
-                dbNumber ++;
-                cout << "firstAvailableBlock() at line 274: " << firstAvailableBlock() << endl;
+            if (indexBlock >= (INITIAL_SIZE / BLOCK_SIZE) * (dbNumber + 1))
+            {
+                cout << "updated brute force at line 300" << endl;
+                dbNumber++;
                 cout << " node->getNodeId()at line 275: " << node->getNodeId() << endl;
-                cout << "firstIndexBlock at line 276: " << firstIndexBlock << endl;                
-                indexBlock = firstAvailableBlock() + node->getNodeId() - ((INITIAL_SIZE/BLOCK_SIZE) - firstIndexBlock);
+                cout << "firstIndexBlock at line 276: " << firstIndexBlock << endl;
+                // indexBlock = firstAvailableBlock() + node->getNodeId() - ((INITIAL_SIZE / BLOCK_SIZE) - firstIndexBlock);
+                indexBlock = 4116 + node->getNodeId() - ((INITIAL_SIZE / BLOCK_SIZE) - firstIndexBlock);
                 cout << "indexBlock at line 278: " << indexBlock << endl;
             }
-            if ((indexBlock >= (INITIAL_SIZE/BLOCK_SIZE) * dbNumber) && (indexBlock < (INITIAL_SIZE/BLOCK_SIZE) * dbNumber + DIRECTORY_SIZE/BLOCK_SIZE))
-            {   
+            if ((indexBlock >= (INITIAL_SIZE / BLOCK_SIZE) * dbNumber) && (indexBlock < (INITIAL_SIZE / BLOCK_SIZE) * dbNumber + DIRECTORY_SIZE / BLOCK_SIZE))
+            {
                 cout << "firstAvailableBlock() at line 282: " << firstAvailableBlock() << endl;
                 cout << " node->getNodeId()at line 283: " << node->getNodeId() << endl;
-                cout << "firstIndexBlock at line 284: " << firstIndexBlock << endl;                
-                indexBlock = firstAvailableBlock() + node->getNodeId() - ((INITIAL_SIZE/BLOCK_SIZE) - firstIndexBlock);
+                cout << "firstIndexBlock at line 284: " << firstIndexBlock << endl;
+                indexBlock = firstAvailableBlock() + node->getNodeId() - ((INITIAL_SIZE / BLOCK_SIZE) - firstIndexBlock);
                 cout << "indexBlock at line 286: " << indexBlock << endl;
-            }            
+            }
 
             db = indexBlock / (INITIAL_SIZE / BLOCK_SIZE);
             openOrCreateDatabase(databaseName, db);
-  
+
             cout << "index Blk: " << indexBlock << " db: " << db << " currBlk: " << currBlk << endl;
 
             databaseFile.seekp(indexBlock % (INITIAL_SIZE / BLOCK_SIZE) * (BLOCK_SIZE + 1));
-            cout << "i'm working at line 291: node->getChildKeyBlk()" << node->getChildKeyBlk()<< endl;
+            cout << "i'm working at line 291: node->getChildKeyBlk()" << node->getChildKeyBlk() << endl;
             databaseFile << node->getChildKeyBlk();
             databaseFile << string(BLOCK_SIZE - node->getChildKeyBlk().size() - parent.size(), ' ');
             databaseFile.seekp((indexBlock % (INITIAL_SIZE / BLOCK_SIZE)) * (BLOCK_SIZE + 1) + (BLOCK_SIZE - 5));
-            databaseFile << parent;   
+            databaseFile << parent;
             bitMap(indexBlock, true, false);
             // currentBlock++;
             databaseFile.flush();
@@ -875,10 +903,6 @@ void NoSQLDatabase::killDatabase(string &PFSFile)
             }
             else
             {
-                for (int i = 0; i < directory.size(); i++)
-                {
-                    directory.pop_back();
-                }
                 cout << "File " << filePath << " deleted successfully." << endl;
             }
         }
@@ -887,6 +911,7 @@ void NoSQLDatabase::killDatabase(string &PFSFile)
             cout << "File " << filePath << " does not exist." << endl;
         }
     }
+    directory.clear();
 }
 
 void NoSQLDatabase::quitDatabase()
