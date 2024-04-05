@@ -275,8 +275,17 @@ void NoSQLDatabase::handleIndexAllocation(int &currentBlock)
                 cout << " node->getNodeId()at line 275: " << node->getNodeId() << endl;
                 cout << "firstIndexBlock at line 276: " << firstIndexBlock << endl;                
                 indexBlock = firstAvailableBlock() + node->getNodeId() - ((INITIAL_SIZE/BLOCK_SIZE) - firstIndexBlock);
-                cout << "indexBlock at line 276: " << indexBlock << endl;
+                cout << "indexBlock at line 278: " << indexBlock << endl;
             }
+            if ((indexBlock >= (INITIAL_SIZE/BLOCK_SIZE) * dbNumber) && (indexBlock < (INITIAL_SIZE/BLOCK_SIZE) * dbNumber + DIRECTORY_SIZE/BLOCK_SIZE))
+            {   
+                cout << "firstAvailableBlock() at line 282: " << firstAvailableBlock() << endl;
+                cout << " node->getNodeId()at line 283: " << node->getNodeId() << endl;
+                cout << "firstIndexBlock at line 284: " << firstIndexBlock << endl;                
+                indexBlock = firstAvailableBlock() + node->getNodeId() - ((INITIAL_SIZE/BLOCK_SIZE) - firstIndexBlock);
+                cout << "indexBlock at line 286: " << indexBlock << endl;
+            }            
+
             db = indexBlock / (INITIAL_SIZE / BLOCK_SIZE);
             openOrCreateDatabase(databaseName, db);
   
