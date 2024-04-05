@@ -242,12 +242,12 @@ void NoSQLDatabase::handleIndexAllocation(int &currentBlock)
     // Index operations
     // if current PFS file is full, create a new PFS file
     // edge case: data block filled entire first PFS file
-    // if (currentBlock >= (INITIAL_SIZE / BLOCK_SIZE) * (dbNumber + 1))
-    // {
-    //     // Current PFS is full
-    //     dbNumber++;
-    //     openOrCreateDatabase(databaseName, dbNumber); // create the new PFS file
-    // }
+    if (currentBlock >= (INITIAL_SIZE / BLOCK_SIZE) * (dbNumber + 1))
+    {
+        // Current PFS is full
+        dbNumber++;
+        openOrCreateDatabase(databaseName, dbNumber); // create the new PFS file
+    }
     // Index operations using B-tree
     bTree.Display(currentBlock);
     fcb.indexStartBlock = bTree.getRootId(); // The starting block for the index (i.e. root)
