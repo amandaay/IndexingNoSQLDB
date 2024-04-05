@@ -243,47 +243,57 @@ void NoSQLDatabase::handleIndexAllocation(int &currentBlock)
     // Index operations using B-tree
     // for testing purpose
     bTree.Display(currentBlock);
-    int lastIndexBlk = bTree.getTotalNodes() + currentBlock - 1;
+    // int lastIndexBlk = bTree.getTotalNodes() + currentBlock - 1;
     fcb.indexStartBlock = bTree.getRootId(); // The starting block for the index (i.e. root)
     // set the bitmap from current block to last index block to 1
-    for (int i = currentBlock; i <= lastIndexBlk; i++)
-    {
-        bitMap(i, true, false);
-    }
+    // for (int i = currentBlock; i <= lastIndexBlk; i++)
+    // {
+    //     bitMap(i, true, false);
+    // }
     // write to database
     // if root is null, we ignore
     if (!bTree.getRootNode())
     {
         return;
     }
-    queue<pair<Node *, string>> q;
+    queue<tuple<Node *, string, int, int>> q;
     string parent = "99999"; // parent block number
-    q.push({bTree.getRootNode(), parent});
+    q.push({bTree.getRootNode(), parent, dbNumber, currentBlock});
     int level = 0;
     while (!q.empty())
     {
         int NodeCount = q.size();
         while (NodeCount > 0)
         {
-            auto [node, parent] = q.front();
+            auto [node, parent, db, currBlk] = q.front();
             q.pop();
+            cout << "parent: " << parent << " db: " << db << " currBlk: " << currBlk << endl;
 
             // index block number
-            indexBlock = node->getNodeId() + bTree.getFirstIndexToWrite();
+            // indexBlock = node->getNodeId() + bTree.getFirstIndexToWrite();
+            indexBlock = node->getNodeId() + currBlk;
+            db = indexBlock / (INITIAL_SIZE / BLOCK_SIZE);
 
-            if (indexBlock == (INITIAL_SIZE / BLOCK_SIZE) * (dbNumber + 1))
+            cout << "index Blk: " << indexBlock << " db: " << db << " currBlk: " << currBlk << endl;
+
+            if (indexBlock >= (INITIAL_SIZE / BLOCK_SIZE) * (dbNumber + 1))
             {
                 // Current PFS is full
                 dbNumber++;
                 openOrCreateDatabase(databaseName, dbNumber); // create the new PFS file
-                indexBlock += DIRECTORY_SIZE / BLOCK_SIZE;
+                indexBlock = (INITIAL_SIZE / BLOCK_SIZE) * (dbNumber) + DIRECTORY_SIZE / BLOCK_SIZE;
+                currBlk = indexBlock;
+                db = dbNumber;
             }
+            openOrCreateDatabase(databaseName, db);
+
             databaseFile.seekp(indexBlock % (INITIAL_SIZE / BLOCK_SIZE) * (BLOCK_SIZE + 1));
             databaseFile << node->getChildKeyBlk();
             databaseFile << string(BLOCK_SIZE - node->getChildKeyBlk().size() - parent.size(), ' ');
             databaseFile.seekp((indexBlock % (INITIAL_SIZE / BLOCK_SIZE)) * (BLOCK_SIZE + 1) + (BLOCK_SIZE - 5));
             databaseFile << parent;
-            currentBlock++;
+            bitMap(indexBlock, true, false);
+            // currentBlock++;
             databaseFile.flush();
 
             // enqueue the children
@@ -291,7 +301,7 @@ void NoSQLDatabase::handleIndexAllocation(int &currentBlock)
             {
                 if (node->getChildren()[i])
                 {
-                    q.push({node->getChildren()[i], intToFiveDigitString(indexBlock)});
+                    q.push({node->getChildren()[i], intToFiveDigitString(indexBlock), db, currBlk});
                 }
             }
             NodeCount--;
@@ -593,7 +603,9 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
 
     // set the last data block bitmap to 1
     bitMap(currentBlock, true, false);
-    currentBlock += 1;
+
+    // start of index blocks
+    currentBlock = firstAvailableBlock();
 
     // start of index blocks
     handleIndexAllocation(currentBlock);
@@ -724,7 +736,6 @@ void NoSQLDatabase::delFileFromDatabase(string &myFile)
         updateDirectory(db);
     }
     // index search
-    // int rootLeftChildPos = 0;
     handleIndexSearchForDelete(rootStartblk, leftmost);
 }
 
