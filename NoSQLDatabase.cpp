@@ -361,7 +361,7 @@ void NoSQLDatabase::handleIndexSearchForDelete(string &idxStartBlock, string &le
             {
                 leftmost = idxBlkLine.substr(i + 8, 5);
             }
-            string resetStr = idxBlkLine.substr(i, 8);
+            string resetStr = idxBlkLine.substr(i + 8, 5);
             stringstream ss;
             ss << resetStr;
             ss >> resetBitmapPos;
@@ -636,7 +636,7 @@ void NoSQLDatabase::getDataFromDatabase(string &myFile)
     {
         if (fcb.substr(0, fcb.find(' ')) == myFile)
         {
-            rootBlk = fcb.substr(100, 6);
+            rootBlk = fcb.substr(100, 5);
             cout << "root blk: " << rootBlk << endl;
             break;
         }
@@ -690,14 +690,11 @@ void NoSQLDatabase::delFileFromDatabase(string &myFile)
     string rootStartblk;
     while (getline(databaseFile, line))
     {
-        cout << "lineNumber line: " << lineNumber << " " << line << endl;
         string fcbFileName = line.substr(0, line.find(" "));
-        cout << "fcbFileName: " << fcbFileName << endl;
         if (fcbFileName == myFile)
 
         {
             rootStartblk = line.substr(100, 5);
-            cout << "root blk: " << rootStartblk << endl;
             databaseFile.seekp(lineNumber * (BLOCK_SIZE + 1));
             databaseFile << string(line.size(), ' ');
             databaseFile.flush();
@@ -717,25 +714,18 @@ void NoSQLDatabase::delFileFromDatabase(string &myFile)
     {
         if (directory[i].filename == myFile)
         {
-            cout << "directory.filename: " << directory[i].filename << endl;
             directory.erase(directory.begin() + i);
             break;
         }
     }
-    // cout << "directory.size: " << directory.size() << endl;
-    // for (int i = 0; i < directory.size(); i++)
-    // {
-    //     cout << "directory.filename: " << directory[i].filename << endl;
-    // }
-    // // remove directory from each db
-    // for (int db = 0; db <= dbNumber; db++)
-    // {
-    //     cout << "update dir" << endl;
-    //     openOrCreateDatabase(databaseName, db);
-    //     updateDirectory(db);
-    // }
+    // remove directory from each db
+    for (int db = 0; db <= dbNumber; db++)
+    {
+        openOrCreateDatabase(databaseName, db);
+        updateDirectory(db);
+    }
     // index search
-    // handleIndexSearchForDelete(rootStartblk, leftmost);
+    handleIndexSearchForDelete(rootStartblk, leftmost);
 }
 
 void NoSQLDatabase::listAllDataFromDatabase()
