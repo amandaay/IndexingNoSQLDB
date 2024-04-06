@@ -404,7 +404,7 @@ void NoSQLDatabase::handleIndexSearchForDelete(string &idxStartBlock, string &le
             {
                 leftmost = idxBlkLine.substr(i + 8, 5);
             }
-            string resetStr = idxBlkLine.substr(i, 8);
+            string resetStr = idxBlkLine.substr(i + 8, 5);
             stringstream ss;
             ss << resetStr;
             ss >> resetBitmapPos;
@@ -763,7 +763,7 @@ void NoSQLDatabase::delFileFromDatabase(string &myFile)
         }
     }
     // remove directory from each db
-    for (int db = 0; db < dbNumber; db++)
+    for (int db = 0; db <= dbNumber; db++)
     {
         openOrCreateDatabase(databaseName, db);
         updateDirectory(db);
