@@ -242,7 +242,8 @@ void NoSQLDatabase::handleIndexAllocation(int &currentBlock)
     // Index operations
     // Index operations using B-tree
     // for testing purpose
-    bTree.Display(currentBlock);
+    long long int currentBlk = currentBlock;
+    bTree.Display(currentBlk);
     int lastIndexBlk = bTree.getTotalNodes() + currentBlock - 1;
     fcb.indexStartBlock = bTree.getRootId(); // The starting block for the index (i.e. root)
     // set the bitmap from current block to last index block to 1
@@ -304,10 +305,9 @@ string NoSQLDatabase::handleIndexSearch(string &idxStartBlock, string &key, int 
 {
     // idxBlkLine reads the index block
     string idxBlkLine;
-    stringstream ss;
-    ss << idxStartBlock;
-    int idxStartBlk = 0;
-    ss >> idxStartBlk;
+    long long int idxStartBlk = stoll(idxStartBlock);
+    long long int targetKey = stoll(key);
+    long long int dataKey;
 
     openOrCreateDatabase(databaseName, db);
 
@@ -316,13 +316,14 @@ string NoSQLDatabase::handleIndexSearch(string &idxStartBlock, string &key, int 
     getline(databaseFile, idxBlkLine, ' ');
     for (int i = 5; i < idxBlkLine.size(); i += 18)
     {
-        if (key == idxBlkLine.substr(i, 8))
+        dataKey = stoll(idxBlkLine.substr(i, 8));
+        if (targetKey == dataKey)
         {
             // found the value (blk value)
             blkAccessed++;
             return idxBlkLine.substr(i + 8, 5);
         }
-        else if (key < idxBlkLine.substr(i, 8))
+        else if (targetKey < dataKey)
         {
             // return the child block number to search further
             blkAccessed++;
@@ -340,6 +341,7 @@ void NoSQLDatabase::handleIndexSearchForDelete(string &idxStartBlock, string &le
     ss << idxStartBlock;
     int idxBlk = 0;
     ss >> idxBlk;
+    // long long idxBlk = stoll(idxStartBlock);
 
     // mark index block as free
     int db = idxBlk / (INITIAL_SIZE / BLOCK_SIZE);
@@ -578,10 +580,7 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
             // when presenting in the index block, we will pad the key to 8 bytes, e.g. 00000002
             // e.g. key = 2, currentBlock = 00001, key = 200001, int key = 200001
             string keyStr = keyString + intToFiveDigitString(currentBlock);
-            stringstream ss;
-            ss << keyStr;
-            int key = 0;
-            ss >> key;
+            long long int key = stoll(keyStr);
 
             // Index the key using B-tree
             bTree.Insert(key);
@@ -795,10 +794,7 @@ void NoSQLDatabase::findValueFromDatabase(string &myFileKey, int &blkAccessed)
     bool found = false;
     while (!found)
     {
-        stringstream ss;
-        ss << idxBlk;
-        int intIdxBlk = 0;
-        ss >> intIdxBlk;
+        long long int intIdxBlk = stoll(idxBlk);
         int db = intIdxBlk / (INITIAL_SIZE / BLOCK_SIZE);
         idxBlk = handleIndexSearch(idxBlk, key, blkAccessed, db);
         for (char c : idxBlk)

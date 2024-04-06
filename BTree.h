@@ -24,7 +24,7 @@ class Node
 {
 private:
     // Node Values (Leaf Values / Key Values for the children nodes).
-    int *values;
+    long long int *values;
     // Children ptrs from current node
     Node **children;
     // Number of value
@@ -32,7 +32,7 @@ private:
     // indicates if the current node is a leaf node
     bool leaf;
     // Node Id
-    int NodeId;
+    long long int NodeId;
     // nodesize
     int nodesize;
     // string for child key block
@@ -42,9 +42,9 @@ public:
     // Node Constructor Declaration: initiates a new node
     Node(int nodesize, bool _leaf);
     // nodeLookup(int value) - search the index of the value in the specific node
-    int NodeLookup(int value);
+    long long int NodeLookup(long long int value);
     // getter for nodeId
-    int getNodeId();
+    long long int getNodeId();
     // getter for childKeyBlk chain
     string getChildKeyBlk();
     // getter for children nodes
@@ -52,15 +52,15 @@ public:
     // getter for size of the children nodes
     int getChildrenSize();
     // Node insert values to the specific node
-    void NodeInsert(int value, int &NodeIdCounter);
+    void NodeInsert(long long int value, long long int &NodeIdCounter);
     // split child helper function if current node is full
-    void SplitChild(int i, Node *CurrNode, int &NodeIdCounter);
+    void SplitChild(int i, Node *CurrNode, long long int &NodeIdCounter);
     // to convert child to 5 digit string
-    string intToFiveDigitString(int number);
+    string intToFiveDigitString(long long int number);
     // to convert key+block# to 8+5 digit string
-    string intToThirteenDigitString(int number);
+    string intToThirteenDigitString(long long int number);
     // Display node
-    void Display(int _size, int &currentBlock);
+    void Display(int _size, long long int &currentBlock);
     // deconstructor
     ~Node();
 
@@ -78,7 +78,7 @@ private:
     // Node array, including the root nodes
     Node *nodes;
     // NodeIdCounter
-    int NodeIdCounter;
+    long long int NodeIdCounter;
     // nodesize --> blocking factor (bfr)
     int nodesize;
     // count layers if there's more than 2 layers meaning internal nodes exist
@@ -94,13 +94,13 @@ public:
     // constructor for BTree
     BTree(int nodesize);
     // Lookup - True if the value was found.
-    bool Lookup(Node *root, int value, vector<int> &NodeIds);
+    bool Lookup(Node *root, long long int value, vector<int> &NodeIds);
     // Search for the full ndoes
-    bool Lookup(Node *root, int value, vector<Node *> &FullNodes);
+    bool Lookup(Node *root, long long int value, vector<Node *> &FullNodes);
     // Public method to access the root nodes
     Node *getRootNode();
     // Get root node ID
-    int getRootId();
+    long long int getRootId();
     // get total number of nodes used
     int getTotalNodes();
     // get first index to write
@@ -110,11 +110,11 @@ public:
     // Setter method for the root node pointer
     void setRootNode(Node *root);
     // helper function for inserting a new value
-    Node *SplitRoot(Node *node, int value);
+    Node *SplitRoot(Node *node, long long int value);
     // Insert specific value to the tree
-    void Insert(int value);
+    void Insert(long long int value);
     // Display of the entire tree
-    void Display(int &currentBlock);
+    void Display(long long int &currentBlock);
     // deconstructor
     ~BTree();
 };
