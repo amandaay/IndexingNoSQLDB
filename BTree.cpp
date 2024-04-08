@@ -26,7 +26,7 @@ using namespace std;
  */
 Node::Node(int _nodesize, bool _leaf) : nodesize(_nodesize), leaf(_leaf), NodeId(-1), childKeyBlk("")
 {
-    values = new int[nodesize];
+    values = new long long int[nodesize];
     // initialize node pointers for the Node's children ptr
     children = new Node *[nodesize + 1];
     // initialize number of values = 0
@@ -38,7 +38,7 @@ Node::Node(int _nodesize, bool _leaf) : nodesize(_nodesize), leaf(_leaf), NodeId
  * @return the search value if exist, otherwise leftmost index
  *
  */
-int Node::NodeLookup(int value)
+long long int Node::NodeLookup(long long int value)
 {
     // if node does not exit, you cannot find the existing value
     if (size <= 0)
@@ -67,7 +67,7 @@ int Node::NodeLookup(int value)
  *
  * @return int return the NodeId
  */
-int Node::getNodeId()
+long long int Node::getNodeId()
 {
     return NodeId;
 }
@@ -109,7 +109,7 @@ int Node::getChildrenSize()
  * insertion of the dedicated value will be performed
  *
  */
-void Node::NodeInsert(int value, int &NodeIdCounter)
+void Node::NodeInsert(long long int value, long long int &NodeIdCounter)
 {
     // binary search and insert where the element should be at
     // search the index if exist and return null, otherwise where it should be
@@ -156,7 +156,7 @@ void Node::NodeInsert(int value, int &NodeIdCounter)
  * @param NodeIdCounter is to keep track of the to the NodeId count
  *
  */
-void Node::SplitChild(int i, Node *CurrNode, int &NodeIdCounter)
+void Node::SplitChild(int i, Node *CurrNode, long long int &NodeIdCounter)
 {
     // Create a new node that will be the right sibling of CurrNode
     Node *newNode = new Node(nodesize, CurrNode->leaf);
@@ -202,7 +202,7 @@ void Node::SplitChild(int i, Node *CurrNode, int &NodeIdCounter)
  * @param number key value
  * @return string converted key value
  */
-string Node::intToFiveDigitString(int number)
+string Node::intToFiveDigitString(long long int number)
 {
     // Convert an integer to a 5-digit string
     stringstream ss;
@@ -216,7 +216,7 @@ string Node::intToFiveDigitString(int number)
  * @param number key value
  * @return string converted key value
  */
-string Node::intToThirteenDigitString(int number)
+string Node::intToThirteenDigitString(long long int number)
 {
     // Convert an integer to an 8-digit string
     stringstream ss;
@@ -230,7 +230,7 @@ string Node::intToThirteenDigitString(int number)
  * @param _size current size of the nodes
  * @param currentBlock current index block number
  */
-void Node::Display(int _size, int &currentBlock)
+void Node::Display(int _size, long long int &currentBlock)
 {
     cout << "[";
     int i = 0;
@@ -308,7 +308,7 @@ BTree::BTree(int _nodesize) : nodesize(_nodesize), nodes(nullptr), NodeIdCounter
  *
  * @return true if search value found else return false
  */
-bool BTree::Lookup(Node *root, int value, vector<int> &NodeIds)
+bool BTree::Lookup(Node *root, long long int value, vector<int> &NodeIds)
 {
     nodes = root;
     // if root node is null, then we cannot perform search
@@ -343,7 +343,7 @@ bool BTree::Lookup(Node *root, int value, vector<int> &NodeIds)
  * @return true if reaches leaf node else value exist
  *         false if value does not exist
  */
-bool BTree::Lookup(Node *root, int value, vector<Node *> &FullNodes)
+bool BTree::Lookup(Node *root, long long int value, vector<Node *> &FullNodes)
 {
     nodes = root;
     // if root node is null, then we cannot perform search
@@ -392,7 +392,7 @@ Node *BTree::getRootNode()
  * @brief get Root ID
  *
  */
-int BTree::getRootId()
+long long int BTree::getRootId()
 {
     return rootId;
 }
@@ -441,7 +441,7 @@ void BTree::setRootNode(Node *root)
  * @param value value to be inserted
  * @return newRoot updated root node
  */
-Node *BTree::SplitRoot(Node *node, int value)
+Node *BTree::SplitRoot(Node *node, long long int value)
 {
     // create a new node 'new_root' which will become the new root after splitting the current root
     Node *newRoot = new Node(nodesize, false);
@@ -463,7 +463,7 @@ Node *BTree::SplitRoot(Node *node, int value)
  * @param value insertion value
  *
  */
-void BTree::Insert(int value)
+void BTree::Insert(long long int value)
 { // if root node is null, need to create a new root for the empty tree
     if (!nodes)
     {
@@ -543,7 +543,7 @@ void BTree::Insert(int value)
  * @brief Display of the entire constructed tree using level order traversal
  *
  */
-void BTree::Display(int &currentBlock)
+void BTree::Display(long long int &currentBlock)
 {
     // if root is null, we ignore
     if (!nodes)
