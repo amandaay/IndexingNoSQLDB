@@ -160,7 +160,7 @@ int NoSQLDatabase::firstAvailableBlock()
     if (leftmost != "99999")
     {
         // means removal happened, update first available block in the corresponding db
-        db = stoi(leftmost) / (INITIAL_SIZE / BLOCK_SIZE);
+        db = stoll(leftmost) / (INITIAL_SIZE / BLOCK_SIZE);
     }
     openOrCreateDatabase(databaseName, db);
     // Checks first available block
@@ -283,7 +283,8 @@ void NoSQLDatabase::handleIndexAllocation(int &currentBlock)
     // Index operations using B-tree
     // for testing purpose
     long long int currentBlk = currentBlock;
-    bTree.Display(currentBlk);
+    int firstDb = dbNumber;
+    bTree.Display(currentBlk, firstDb);
     fcb.indexStartBlock = bTree.getRootId(); // The starting block for the index (i.e. root)
 
     // if root is null, we ignore
@@ -297,7 +298,6 @@ void NoSQLDatabase::handleIndexAllocation(int &currentBlock)
     q.push({bTree.getRootNode(), parent});
 
     int db = dbNumber;
-    int firstDb = dbNumber;
     int level = 0;
 
     while (!q.empty())
@@ -311,23 +311,11 @@ void NoSQLDatabase::handleIndexAllocation(int &currentBlock)
 
             // index block number
             indexBlock = node->getNodeId() + firstIndexBlock;
-            int firstBlkInNewPFS = (INITIAL_SIZE / BLOCK_SIZE) * (firstDb + 1);
-            // if (indexBlock >= firstBlkInNewPFS)
-            // {
-                // indexBlock = node->getNodeId() + (DIRECTORY_SIZE / BLOCK_SIZE) + firstIndexBlock;
-                // int currDb = firstDb + 2;
-                int currDb = firstDb + 1;
-                while (indexBlock >= (INITIAL_SIZE / BLOCK_SIZE) * currDb)
-                {
-                    currDb++;
-                    indexBlock+= (DIRECTORY_SIZE / BLOCK_SIZE);
-                }
-            // }
-            if (node->getNodeId() == bTree.getRootId())
+            int currDb = firstDb + 1;
+            while (indexBlock >= (INITIAL_SIZE / BLOCK_SIZE) * currDb)
             {
-                // update the root id
-                fcb.indexStartBlock = indexBlock;
-                cout << "update root id: " << fcb.indexStartBlock << endl;
+                indexBlock += (DIRECTORY_SIZE / BLOCK_SIZE);
+                currDb++;
             }
 
             db = indexBlock / (INITIAL_SIZE / BLOCK_SIZE);
@@ -350,7 +338,7 @@ void NoSQLDatabase::handleIndexAllocation(int &currentBlock)
             }
             else
             {
-                cout << "index Blk: " << indexBlock << " node Id: " << node->getNodeId() << " firstIndexBlock: " << firstIndexBlock  << " db: " << db << endl;
+                cout << "index Blk: " << indexBlock << " node Id: " << node->getNodeId() << " firstIndexBlock: " << firstIndexBlock << " db: " << db << endl;
             }
 
             // enqueue the children
@@ -721,7 +709,7 @@ void NoSQLDatabase::getDataFromDatabase(string &myFile)
     // read data block
     for (auto &blk : datablocks)
     {
-        databaseFile.seekg(stoi(blk) * (BLOCK_SIZE + 1));
+        databaseFile.seekg(stoll(blk) * (BLOCK_SIZE + 1));
         string line;
         if (getline(databaseFile, line))
         {
@@ -826,7 +814,7 @@ void NoSQLDatabase::findValueFromDatabase(string &myFileKey, int &blkAccessed)
     string idxStartBlk;
 
     string myFile = myFileKey.substr(0, myFileKey.find("."));
-    int inputKey = stoi(myFileKey.substr(myFileKey.find(".") + 1, myFileKey.length()));
+    long long int inputKey = stoll(myFileKey.substr(myFileKey.find(".") + 1, myFileKey.length()));
     string key = intToEightDigitString(inputKey);
 
     openOrCreateDatabase(databaseName, dbNumber);
@@ -892,7 +880,7 @@ void NoSQLDatabase::findValueFromDatabase(string &myFileKey, int &blkAccessed)
     // result Blk search data block
     string record;
     string exactKey = to_string(inputKey) + ',';
-    databaseFile.seekg(stoi(resultBlk) * (BLOCK_SIZE + 1));
+    databaseFile.seekg(stoll(resultBlk) * (BLOCK_SIZE + 1));
     if (getline(databaseFile, line))
     {
         record = line.substr(line.find(exactKey), DATA_RECORD_SIZE);

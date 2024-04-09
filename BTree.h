@@ -114,7 +114,7 @@ public:
     // Insert specific value to the tree
     void Insert(long long int value);
     // Display of the entire tree
-    void Display(long long int &currentBlock);
+    void Display(long long int &currentBlock, int &firstDb);
     // deconstructor
     ~BTree();
 };

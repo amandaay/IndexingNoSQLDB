@@ -9,6 +9,7 @@
  *
  */
 #include "BTree.h"
+#include "NoSQLDatabase.h"
 #include <iostream>
 #include <queue>
 #include <cmath>
@@ -543,7 +544,7 @@ void BTree::Insert(long long int value)
  * @brief Display of the entire constructed tree using level order traversal
  *
  */
-void BTree::Display(long long int &currentBlock)
+void BTree::Display(long long int &currentBlock, int &firstDb)
 {
     // if root is null, we ignore
     if (!nodes)
@@ -552,6 +553,7 @@ void BTree::Display(long long int &currentBlock)
         return;
     }
     firstIndexToWrite = currentBlock;
+    long long int idxBlk;
     queue<Node *> q;
     q.push(nodes);
     int level = 0;
@@ -566,8 +568,18 @@ void BTree::Display(long long int &currentBlock)
             Node *node = q.front();
             q.pop();
             // display the current node
-            cout << node->getNodeId() + currentBlock;
-            node->Display(node->size, currentBlock);
+            idxBlk = node->getNodeId() + firstIndexToWrite;
+            int currDb = firstDb + 1;
+            while (idxBlk >= (INITIAL_SIZE / BLOCK_SIZE) * currDb)
+            {
+                idxBlk += (DIRECTORY_SIZE / BLOCK_SIZE);
+                currDb++;
+            }
+            // cout << node->getNodeId() + currentBlock;
+            cout << idxBlk;
+            // node->Display(node->size, currentBlock);
+            long long int diff = idxBlk - node->getNodeId();
+            node->Display(node->size, diff);
 
             // enqueue the children
             for (int i = 0; i < node->size + 1; i++)
@@ -580,8 +592,13 @@ void BTree::Display(long long int &currentBlock)
             NodeCount--;
             if (level == 0)
             {
-                rootId = node->getNodeId() + currentBlock;
+                // update the root id
+                rootId = idxBlk;
             }
+            // if (level == 0)
+            // {
+            //     rootId = node->getNodeId() + currentBlock;
+            // }
         }
         level++;
         cout << endl;
