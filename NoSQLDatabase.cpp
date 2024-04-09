@@ -186,6 +186,38 @@ int NoSQLDatabase::firstAvailableBlock()
     return (INITIAL_SIZE / BLOCK_SIZE) * (db + 1) + (DIRECTORY_SIZE / BLOCK_SIZE); // after directory structure
 }
 
+bool NoSQLDatabase::isBlockAvailable(int &currentBlock)
+{
+    // Check if the block is available
+    // 0 indicates a free block, 1 indicates that the block is allocated.
+    // if this location belongs to the directory structure, we skip
+    int db = currentBlock / (INITIAL_SIZE / BLOCK_SIZE);
+    openOrCreateDatabase(databaseName, db);
+    if ((currentBlock % (INITIAL_SIZE / BLOCK_SIZE)) < DIRECTORY_SIZE / BLOCK_SIZE)
+    {
+        cout << "Error: Invalid block number. It belongs to the directory structure." << endl;
+        return false;
+    }
+    databaseFile.seekg(((currentBlock % (INITIAL_SIZE / BLOCK_SIZE)) / BLOCK_SIZE + 4) * (BLOCK_SIZE + 1) + (currentBlock % BLOCK_SIZE));
+    // Check if the seek operation failed
+    if (!databaseFile)
+    {
+        cout << "Error: Seek operation failed." << endl;
+        return false;
+    }
+    char blockStatus;
+    databaseFile >> blockStatus;
+    // Check if the read operation failed
+    if (!databaseFile)
+    {
+        cout << "Error: Read operation failed. " << databaseName << " dbNumber " << dbNumber << endl;
+        cout << "Current block: " << currentBlock << endl;
+        cout << "File position after seek: " << databaseFile.tellg() << endl;
+        return false;
+    }
+    return blockStatus == '0';
+}
+
 string NoSQLDatabase::intToFiveDigitString(int number)
 {
     // Convert an integer to a 5-digit string
@@ -252,7 +284,6 @@ void NoSQLDatabase::handleIndexAllocation(int &currentBlock)
     // for testing purpose
     long long int currentBlk = currentBlock;
     bTree.Display(currentBlk);
-    int lastIndexBlk = bTree.getTotalNodes() + currentBlock - 1;
     fcb.indexStartBlock = bTree.getRootId(); // The starting block for the index (i.e. root)
 
     // if root is null, we ignore
@@ -262,29 +293,11 @@ void NoSQLDatabase::handleIndexAllocation(int &currentBlock)
     }
     int firstIndexBlock = currentBlock;
     string parent = "99999"; // parent block number
-    int rootId = bTree.getRootNode()->getNodeId();
-    indexBlock = rootId + firstIndexBlock;
-    if (indexBlock >= (INITIAL_SIZE / BLOCK_SIZE) * (dbNumber + 1))
-    {
-        dbNumber++;
-        indexBlock = firstAvailableBlock() + rootId - ((INITIAL_SIZE / BLOCK_SIZE) - firstIndexBlock);
-        cout << "indexBlock at line 278: " << indexBlock << endl;
-    }
-    databaseFile.seekp(indexBlock % (INITIAL_SIZE / BLOCK_SIZE) * (BLOCK_SIZE + 1));
-    cout << "i'm working at line 291: node->getChildKeyBlk()" << (bTree.getRootNode())->getChildKeyBlk() << endl;
-    databaseFile << (bTree.getRootNode())->getChildKeyBlk();
-    databaseFile << string(BLOCK_SIZE - (bTree.getRootNode())->getChildKeyBlk().size() - parent.size(), ' ');
-    databaseFile.seekp((indexBlock % (INITIAL_SIZE / BLOCK_SIZE)) * (BLOCK_SIZE + 1) + (BLOCK_SIZE - 5));
-    databaseFile << parent;
-    bitMap(indexBlock, true, false);
-    databaseFile.flush();
-
-    queue<tuple<Node *, string, int>> q;
-
-    cout << "bTree.getRootNode at line 255: " << bTree.getRootNode() << endl;
-    q.push({bTree.getRootNode(), parent, currentBlock});
+    queue<tuple<Node *, string>> q;
+    q.push({bTree.getRootNode(), parent});
 
     int db = dbNumber;
+    int firstDb = dbNumber;
     int level = 0;
 
     while (!q.empty())
@@ -293,51 +306,59 @@ void NoSQLDatabase::handleIndexAllocation(int &currentBlock)
         while (NodeCount > 0)
         {
             // current block number
-            auto [node, parent, currBlk] = q.front();
+            auto [node, parent] = q.front();
             q.pop();
 
             // index block number
             indexBlock = node->getNodeId() + firstIndexBlock;
-            if (indexBlock >= (INITIAL_SIZE / BLOCK_SIZE) * (dbNumber + 1))
+            int firstBlkInNewPFS = (INITIAL_SIZE / BLOCK_SIZE) * (firstDb + 1);
+            // if (indexBlock >= firstBlkInNewPFS)
+            // {
+                // indexBlock = node->getNodeId() + (DIRECTORY_SIZE / BLOCK_SIZE) + firstIndexBlock;
+                // int currDb = firstDb + 2;
+                int currDb = firstDb + 1;
+                while (indexBlock >= (INITIAL_SIZE / BLOCK_SIZE) * currDb)
+                {
+                    currDb++;
+                    indexBlock+= (DIRECTORY_SIZE / BLOCK_SIZE);
+                }
+            // }
+            if (node->getNodeId() == bTree.getRootId())
             {
-                cout << "updated brute force at line 300" << endl;
-                dbNumber++;
-                cout << " node->getNodeId()at line 275: " << node->getNodeId() << endl;
-                cout << "firstIndexBlock at line 276: " << firstIndexBlock << endl;
-                // indexBlock = firstAvailableBlock() + node->getNodeId() - ((INITIAL_SIZE / BLOCK_SIZE) - firstIndexBlock);
-                indexBlock = 4116 + node->getNodeId() - ((INITIAL_SIZE / BLOCK_SIZE) - firstIndexBlock);
-                cout << "indexBlock at line 278: " << indexBlock << endl;
-            }
-            if ((indexBlock >= (INITIAL_SIZE / BLOCK_SIZE) * dbNumber) && (indexBlock < (INITIAL_SIZE / BLOCK_SIZE) * dbNumber + DIRECTORY_SIZE / BLOCK_SIZE))
-            {
-                cout << "firstAvailableBlock() at line 282: " << firstAvailableBlock() << endl;
-                cout << " node->getNodeId()at line 283: " << node->getNodeId() << endl;
-                cout << "firstIndexBlock at line 284: " << firstIndexBlock << endl;
-                indexBlock = firstAvailableBlock() + node->getNodeId() - ((INITIAL_SIZE / BLOCK_SIZE) - firstIndexBlock);
-                cout << "indexBlock at line 286: " << indexBlock << endl;
+                // update the root id
+                fcb.indexStartBlock = indexBlock;
+                cout << "update root id: " << fcb.indexStartBlock << endl;
             }
 
             db = indexBlock / (INITIAL_SIZE / BLOCK_SIZE);
+            if (db > dbNumber)
+            {
+                // update the biggest db number
+                dbNumber = db;
+            }
             openOrCreateDatabase(databaseName, db);
 
-            cout << "index Blk: " << indexBlock << " db: " << db << " currBlk: " << currBlk << endl;
-
-            databaseFile.seekp(indexBlock % (INITIAL_SIZE / BLOCK_SIZE) * (BLOCK_SIZE + 1));
-            cout << "i'm working at line 291: node->getChildKeyBlk()" << node->getChildKeyBlk() << endl;
-            databaseFile << node->getChildKeyBlk();
-            databaseFile << string(BLOCK_SIZE - node->getChildKeyBlk().size() - parent.size(), ' ');
-            databaseFile.seekp((indexBlock % (INITIAL_SIZE / BLOCK_SIZE)) * (BLOCK_SIZE + 1) + (BLOCK_SIZE - 5));
-            databaseFile << parent;
-            bitMap(indexBlock, true, false);
-            // currentBlock++;
-            databaseFile.flush();
+            if (isBlockAvailable(indexBlock))
+            {
+                databaseFile.seekp(indexBlock % (INITIAL_SIZE / BLOCK_SIZE) * (BLOCK_SIZE + 1));
+                databaseFile << node->getChildKeyBlk();
+                databaseFile << string(BLOCK_SIZE - node->getChildKeyBlk().size() - parent.size(), ' ');
+                databaseFile.seekp((indexBlock % (INITIAL_SIZE / BLOCK_SIZE)) * (BLOCK_SIZE + 1) + (BLOCK_SIZE - 5));
+                databaseFile << parent;
+                bitMap(indexBlock, true, false);
+                databaseFile.flush();
+            }
+            else
+            {
+                cout << "index Blk: " << indexBlock << " node Id: " << node->getNodeId() << " firstIndexBlock: " << firstIndexBlock  << " db: " << db << endl;
+            }
 
             // enqueue the children
             for (int i = 0; i < node->getChildrenSize(); i++)
             {
                 if (node->getChildren()[i])
                 {
-                    q.push({node->getChildren()[i], intToFiveDigitString(indexBlock), currBlk});
+                    q.push({node->getChildren()[i], intToFiveDigitString(indexBlock)});
                 }
             }
             NodeCount--;

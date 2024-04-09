@@ -56,6 +56,8 @@ private:
     void bitMap(int &currentBlock, bool isSet, bool initialize);
     // check first available block
     int firstAvailableBlock();
+    // check if the block is available
+    bool isBlockAvailable(int &currentBlock);
     // helper function to write data
     string intToFiveDigitString(int number);
     string intToEightDigitString(int number);
