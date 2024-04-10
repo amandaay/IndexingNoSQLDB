@@ -741,35 +741,38 @@ void NoSQLDatabase::delFileFromDatabase(string &myFile)
     // 2. update bitmap, set originally used block = 0
     // 3. remove the index blocks correlated to movies-1.csv
     // 4. data file blocks remain the same and just gets overwritten if new data comes in by checking bitmap =0 (Free)
-    openOrCreateDatabase(databaseName, dbNumber);
-
-    // skip metadata
-    string metadata;
-    getline(databaseFile, metadata);
-
-    // search fcb files
-    int lineNumber = 1;
-    string line;
     string rootStartblk;
-    while (getline(databaseFile, line))
+    for (int db = 0; db <= dbNumber; db++)
     {
-        string fcbFileName = line.substr(0, line.find(" "));
-        if (fcbFileName == myFile)
+        openOrCreateDatabase(databaseName, db);
 
+        // skip metadata
+        string metadata;
+        getline(databaseFile, metadata);
+
+        // search fcb files
+        int lineNumber = 1;
+        string line;
+        
+        while (getline(databaseFile, line))
         {
-            rootStartblk = line.substr(100, 5);
-            databaseFile.seekp(lineNumber * (BLOCK_SIZE + 1));
-            databaseFile << string(line.size(), ' ');
-            databaseFile.flush();
-            bitMap(lineNumber, false, false);
-            cout << "Removed " << myFile << " from directory." << endl;
-            break;
-        }
-        lineNumber++;
-        if (lineNumber == 4)
-        {
-            cout << "No such file found.";
-            break;
+            string fcbFileName = line.substr(0, line.find(" "));
+            if (fcbFileName == myFile)
+            {
+                rootStartblk = line.substr(100, 5);
+                databaseFile.seekp(lineNumber * (BLOCK_SIZE + 1));
+                databaseFile << string(line.size(), ' ');
+                databaseFile.flush();
+                bitMap(lineNumber, false, false);
+                cout << "Removed " << myFile << " from directory in db " << db << endl;
+                break;
+            }
+            lineNumber++;
+            if (lineNumber == 4)
+            {
+                cout << "No such file found.";
+                break;
+            }
         }
     }
     // remove from directory
@@ -782,11 +785,11 @@ void NoSQLDatabase::delFileFromDatabase(string &myFile)
         }
     }
     // remove directory from each db
-    for (int db = 0; db <= dbNumber; db++)
-    {
-        openOrCreateDatabase(databaseName, db);
-        updateDirectory(db);
-    }
+    // for (int db = 0; db <= dbNumber; db++)
+    // {
+    //     openOrCreateDatabase(databaseName, db);
+    //     updateDirectory(db);
+    // }
     // index search
     handleIndexSearchForDelete(rootStartblk, leftmost);
 }
