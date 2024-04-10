@@ -114,6 +114,8 @@ void NoSQLDatabase::updateDirectory(int dbNumber)
 
 void NoSQLDatabase::bitMap(int &currentBlock, bool isSet, bool initialize)
 {
+    int db = currentBlock / (INITIAL_SIZE / BLOCK_SIZE);
+    openOrCreateDatabase(databaseName, db);
     // initialize the bitmap
     if (initialize)
     {
@@ -141,16 +143,12 @@ void NoSQLDatabase::bitMap(int &currentBlock, bool isSet, bool initialize)
     // 0 indicates a free block, 1 indicates that the block is allocated.
     if (isSet)
     {
-        int db = currentBlock / (INITIAL_SIZE / BLOCK_SIZE);
-        openOrCreateDatabase(databaseName, db);
         databaseFile.seekp(((currentBlock % (INITIAL_SIZE / BLOCK_SIZE)) / BLOCK_SIZE + 4) * (BLOCK_SIZE + 1) + (currentBlock % BLOCK_SIZE));
         databaseFile << "1";
         isSet = false;
     }
     else
     {
-        int db = currentBlock / (INITIAL_SIZE / BLOCK_SIZE);
-        openOrCreateDatabase(databaseName, db);
         databaseFile.seekp(((currentBlock % (INITIAL_SIZE / BLOCK_SIZE)) / BLOCK_SIZE + 4) * (BLOCK_SIZE + 1) + (currentBlock % BLOCK_SIZE));
         databaseFile << "0";
     }
@@ -757,7 +755,7 @@ void NoSQLDatabase::delFileFromDatabase(string &myFile)
         // search fcb files
         int lineNumber = 1;
         string line;
-        
+
         while (getline(databaseFile, line))
         {
             string fcbFileName = line.substr(0, line.find(" "));
