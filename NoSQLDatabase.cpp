@@ -942,6 +942,11 @@ void NoSQLDatabase::killDatabase(string &PFSFile)
 {
     // Delete the NoSQL database
     // e.g. rm PFSFile
+    if (PFSFile.empty())
+    {
+        cout << "Please include a database name." << endl;
+        return;
+    }
     databaseName = PFSFile;
     cout << "Deleting database " << databaseName << " dbNumber: " << dbNumber << endl;
 
