@@ -431,7 +431,6 @@ void NoSQLDatabase::handleIndexSearchForDelete(string &idxStartBlock, string &le
             int resetDb = resetBitmapPos / (INITIAL_SIZE / BLOCK_SIZE);
             openOrCreateDatabase(databaseName, resetDb);
             bitMap(resetBitmapPos, false, false);
-            databaseFile.close();
             openOrCreateDatabase(databaseName, db);
         }
         if (i - 5 >= 0)
