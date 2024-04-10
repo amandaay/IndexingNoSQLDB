@@ -114,8 +114,6 @@ void NoSQLDatabase::updateDirectory(int dbNumber)
 
 void NoSQLDatabase::bitMap(int &currentBlock, bool isSet, bool initialize)
 {
-    int db = currentBlock / (INITIAL_SIZE / BLOCK_SIZE);
-    openOrCreateDatabase(databaseName, db);
     // initialize the bitmap
     if (initialize)
     {
@@ -430,6 +428,8 @@ void NoSQLDatabase::handleIndexSearchForDelete(string &idxStartBlock, string &le
             stringstream ss;
             ss << resetStr;
             ss >> resetBitmapPos;
+            int db = resetBitmapPos / (INITIAL_SIZE / BLOCK_SIZE);
+            openOrCreateDatabase(databaseName, db);
             bitMap(resetBitmapPos, false, false);
         }
         if (i - 5 >= 0)
