@@ -226,7 +226,7 @@ string NoSQLDatabase::intToFiveDigitString(int number)
     return ss.str();
 }
 
-string NoSQLDatabase::intToEightDigitString(int number)
+string NoSQLDatabase::intToEightDigitString(long long int number)
 {
     // Convert an integer to a 8-digit string
     stringstream ss;
@@ -360,7 +360,9 @@ string NoSQLDatabase::handleIndexSearch(string &idxStartBlock, string &key, int 
     // idxBlkLine reads the index block
     string idxBlkLine;
     long long int idxStartBlk = stoll(idxStartBlock);
+    cout << "idxStartBlk " << idxStartBlk << endl;
     long long int targetKey = stoll(key);
+    cout << "targetKey " << targetKey << endl;
     long long int dataKey;
 
     openOrCreateDatabase(databaseName, db);
@@ -370,18 +372,21 @@ string NoSQLDatabase::handleIndexSearch(string &idxStartBlock, string &key, int 
     getline(databaseFile, idxBlkLine, ' ');
     for (int i = 5; i < idxBlkLine.size(); i += 18)
     {
-        dataKey = stoll(idxBlkLine.substr(i, 8));
-        if (targetKey == dataKey)
-        {
-            // found the value (blk value)
-            blkAccessed++;
-            return idxBlkLine.substr(i + 8, 5);
-        }
-        else if (targetKey < dataKey)
-        {
-            // return the child block number to search further
-            blkAccessed++;
-            return idxBlkLine.substr(i - 5, 5);
+        if (i + 8 < idxBlkLine.size()){
+            dataKey = stoll(idxBlkLine.substr(i, 8));
+            cout << "data key " << dataKey << endl;
+            if (targetKey == dataKey)
+            {
+                // found the value (blk value)
+                blkAccessed++;
+                return idxBlkLine.substr(i + 8, 5);
+            }
+            else if (i - 5 >=0 && targetKey < dataKey)
+            {
+                // return the child block number to search further
+                blkAccessed++;
+                return idxBlkLine.substr(i - 5, 5);
+            }
         }
     }
     // return right child block number to search further
@@ -814,7 +819,7 @@ void NoSQLDatabase::findValueFromDatabase(string &myFileKey, int &blkAccessed)
     string idxStartBlk;
 
     string myFile = myFileKey.substr(0, myFileKey.find("."));
-    long long int inputKey = stoll(myFileKey.substr(myFileKey.find(".") + 1, myFileKey.length()));
+    long long int inputKey = stoll(myFileKey.substr(myFileKey.find(".") + 1, 8));
     string key = intToEightDigitString(inputKey);
 
     openOrCreateDatabase(databaseName, dbNumber);
@@ -845,14 +850,18 @@ void NoSQLDatabase::findValueFromDatabase(string &myFileKey, int &blkAccessed)
 
     // search data block
     string idxBlk = idxStartBlk;
+    cout << "idxBlk " << idxBlk << endl;
     string dataBlk;
     string resultBlk = "99999";
     bool found = false;
     while (!found)
     {
         long long int intIdxBlk = stoll(idxBlk);
+        cout << "intIdxBlk: " << intIdxBlk << endl;
         int db = intIdxBlk / (INITIAL_SIZE / BLOCK_SIZE);
+        cout << "db " << endl;
         idxBlk = handleIndexSearch(idxBlk, key, blkAccessed, db);
+        cout << "idxBlk " << idxBlk << endl;
         for (char c : idxBlk)
         {
             if (!isdigit(c))

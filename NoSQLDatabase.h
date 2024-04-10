@@ -60,7 +60,7 @@ private:
     bool isBlockAvailable(int &currentBlock);
     // helper function to write data
     string intToFiveDigitString(int number);
-    string intToEightDigitString(int number);
+    string intToEightDigitString(long long int number);
     // formating the data to write into the database
     void writeDataBoundaries(string &data, int &currentBlock, int &currentPosInBlock);
     // Index operations

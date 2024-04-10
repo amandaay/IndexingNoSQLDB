@@ -86,8 +86,10 @@ Bit Map:
 - Assume that metadata uses 1 block, each FCB uses 1 block (3 * 1 block), bitmap uses 16 blocks
 - The directory structure takes around 20 blocks.
 
-6. For find command:
-- Number of block asscessed: Read fcbs + (every index block from the root) + Data Block
+6. Every PFS File has a directory structure.
+
+7. For find command:
+- Number of block accessed: Read fcbs + (every index block from the root) + Data Block
 
 ## Authors
 
