@@ -367,12 +367,18 @@ string NoSQLDatabase::handleIndexSearch(string &idxStartBlock, string &key, int 
 
     openOrCreateDatabase(databaseName, db);
 
-    databaseFile.seekg(idxStartBlk * (BLOCK_SIZE + 1));
+    databaseFile.seekg(idxStartBlk % (INITIAL_SIZE / BLOCK_SIZE) * (BLOCK_SIZE + 1));
+    if (!databaseFile)
+    {
+        cout << "Error: Seek operation failed." << endl;
+        return "99999";
+    }
     // reading idxBlkLine without parent
     getline(databaseFile, idxBlkLine, ' ');
     for (int i = 5; i < idxBlkLine.size(); i += 18)
     {
-        if (i + 8 < idxBlkLine.size()){
+        if (i + 8 < idxBlkLine.size())
+        {
             dataKey = stoll(idxBlkLine.substr(i, 8));
             cout << "data key " << dataKey << endl;
             if (targetKey == dataKey)
@@ -381,7 +387,7 @@ string NoSQLDatabase::handleIndexSearch(string &idxStartBlock, string &key, int 
                 blkAccessed++;
                 return idxBlkLine.substr(i + 8, 5);
             }
-            else if (i - 5 >=0 && targetKey < dataKey)
+            else if (i - 5 >= 0 && targetKey < dataKey)
             {
                 // return the child block number to search further
                 blkAccessed++;
@@ -400,7 +406,6 @@ void NoSQLDatabase::handleIndexSearchForDelete(string &idxStartBlock, string &le
     ss << idxStartBlock;
     int idxBlk = 0;
     ss >> idxBlk;
-    // long long idxBlk = stoll(idxStartBlock);
 
     // mark index block as free
     int db = idxBlk / (INITIAL_SIZE / BLOCK_SIZE);
@@ -409,7 +414,7 @@ void NoSQLDatabase::handleIndexSearchForDelete(string &idxStartBlock, string &le
 
     // idxBlkLine reads the index block
     string idxBlkLine;
-    databaseFile.seekg(idxBlk * (BLOCK_SIZE + 1));
+    databaseFile.seekg(idxBlk % (INITIAL_SIZE / BLOCK_SIZE) * (BLOCK_SIZE + 1));
     // reading idxBlkLine without parent
     getline(databaseFile, idxBlkLine, ' ');
     int resetBitmapPos;
@@ -456,7 +461,7 @@ void NoSQLDatabase::handleIndexSearchGetData(string &idxStartBlock, set<string> 
 
     int db = currBlk / (INITIAL_SIZE / BLOCK_SIZE);
     openOrCreateDatabase(databaseName, db);
-    databaseFile.seekg(currBlk * (BLOCK_SIZE + 1));
+    databaseFile.seekg(currBlk % (INITIAL_SIZE / BLOCK_SIZE) * (BLOCK_SIZE + 1));
     // reading idxBlkLine without parent
     getline(databaseFile, idxBlkLine, ' ');
     for (int i = 5; i < idxBlkLine.size(); i += 18)
@@ -714,7 +719,9 @@ void NoSQLDatabase::getDataFromDatabase(string &myFile)
     // read data block
     for (auto &blk : datablocks)
     {
-        databaseFile.seekg(stoll(blk) * (BLOCK_SIZE + 1));
+        int db = stoll(blk) / (INITIAL_SIZE / BLOCK_SIZE);
+        openOrCreateDatabase(databaseName, db);
+        databaseFile.seekg(stoll(blk) % (INITIAL_SIZE / BLOCK_SIZE) * (BLOCK_SIZE + 1));
         string line;
         if (getline(databaseFile, line))
         {
@@ -724,7 +731,6 @@ void NoSQLDatabase::getDataFromDatabase(string &myFile)
                 // output record to the file
                 fileToWrite << line.substr(i, DATA_RECORD_SIZE) << endl;
             }
-            // fileToWrite.seekp(-1, ios_base::cur); // remove the newline character
         }
     }
     fileToWrite.flush();
