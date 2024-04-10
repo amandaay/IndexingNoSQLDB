@@ -360,9 +360,7 @@ string NoSQLDatabase::handleIndexSearch(string &idxStartBlock, string &key, int 
     // idxBlkLine reads the index block
     string idxBlkLine;
     long long int idxStartBlk = stoll(idxStartBlock);
-    cout << "idxStartBlk " << idxStartBlk << endl;
     long long int targetKey = stoll(key);
-    cout << "targetKey " << targetKey << endl;
     long long int dataKey;
 
     openOrCreateDatabase(databaseName, db);
@@ -380,7 +378,6 @@ string NoSQLDatabase::handleIndexSearch(string &idxStartBlock, string &key, int 
         if (i + 8 < idxBlkLine.size())
         {
             dataKey = stoll(idxBlkLine.substr(i, 8));
-            cout << "data key " << dataKey << endl;
             if (targetKey == dataKey)
             {
                 // found the value (blk value)
@@ -856,18 +853,14 @@ void NoSQLDatabase::findValueFromDatabase(string &myFileKey, int &blkAccessed)
 
     // search data block
     string idxBlk = idxStartBlk;
-    cout << "idxBlk " << idxBlk << endl;
     string dataBlk;
     string resultBlk = "99999";
     bool found = false;
     while (!found)
     {
         long long int intIdxBlk = stoll(idxBlk);
-        cout << "intIdxBlk: " << intIdxBlk << endl;
         int db = intIdxBlk / (INITIAL_SIZE / BLOCK_SIZE);
-        cout << "db " << endl;
         idxBlk = handleIndexSearch(idxBlk, key, blkAccessed, db);
-        cout << "idxBlk " << idxBlk << endl;
         for (char c : idxBlk)
         {
             if (!isdigit(c))
@@ -895,7 +888,7 @@ void NoSQLDatabase::findValueFromDatabase(string &myFileKey, int &blkAccessed)
     // result Blk search data block
     string record;
     string exactKey = to_string(inputKey) + ',';
-    databaseFile.seekg(stoll(resultBlk) * (BLOCK_SIZE + 1));
+    databaseFile.seekg(stoll(resultBlk) % (INITIAL_SIZE / BLOCK_SIZE) * (BLOCK_SIZE + 1));
     if (getline(databaseFile, line))
     {
         record = line.substr(line.find(exactKey), DATA_RECORD_SIZE);
