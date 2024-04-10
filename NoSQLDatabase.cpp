@@ -686,6 +686,10 @@ void NoSQLDatabase::getDataFromDatabase(string &myFile)
 {
     // Download data file from NoSQL database to OS directory
     openOrCreateDatabase(databaseName, dbNumber);
+    if (directory.empty()) {
+        cout << "No files found in the database." << endl;
+        return;
+    }
     ofstream fileToWrite(myFile);
     if (!fileToWrite.is_open())
     {
@@ -702,7 +706,6 @@ void NoSQLDatabase::getDataFromDatabase(string &myFile)
         if (fcb.substr(0, fcb.find(' ')) == myFile)
         {
             rootBlk = fcb.substr(100, 5);
-            cout << "root blk: " << rootBlk << endl;
             break;
         }
         lineNumber++;
@@ -767,7 +770,7 @@ void NoSQLDatabase::delFileFromDatabase(string &myFile)
                 databaseFile << string(line.size(), ' ');
                 databaseFile.flush();
                 bitMap(lineNumber, false, false);
-                cout << "Removed " << myFile << " from directory in db " << db << endl;
+                cout << "Removed " << myFile << " from db " << db << endl;
                 break;
             }
             lineNumber++;
@@ -787,12 +790,6 @@ void NoSQLDatabase::delFileFromDatabase(string &myFile)
             break;
         }
     }
-    // remove directory from each db
-    // for (int db = 0; db <= dbNumber; db++)
-    // {
-    //     openOrCreateDatabase(databaseName, db);
-    //     updateDirectory(db);
-    // }
     // index search
     handleIndexSearchForDelete(rootStartblk, leftmost);
 }
@@ -911,6 +908,7 @@ void NoSQLDatabase::killDatabase(string &PFSFile)
     // Delete the NoSQL database
     // e.g. rm PFSFile
     databaseName = PFSFile;
+    cout << "Deleting database " << databaseName << " dbNumber: " << dbNumber << endl;
 
     for (int i = 0; i <= dbNumber; i++)
     {
@@ -934,6 +932,8 @@ void NoSQLDatabase::killDatabase(string &PFSFile)
         }
     }
     directory.clear();
+    // restart the dbNumber
+    dbNumber = 0;
 }
 
 void NoSQLDatabase::quitDatabase()
