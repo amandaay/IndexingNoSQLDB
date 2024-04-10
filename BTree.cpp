@@ -231,7 +231,7 @@ string Node::intToThirteenDigitString(long long int number)
  * @param _size current size of the nodes
  * @param currentBlock current index block number
  */
-void Node::Display(int _size, long long int &currentBlock)
+void Node::Display(int _size, long long int &currentBlock, int &firstDb)
 {
     cout << "[";
     int i = 0;
@@ -259,7 +259,15 @@ void Node::Display(int _size, long long int &currentBlock)
         if (i <= _size && children[i] != nullptr)
         {
             // child ID: 5 byte
-            childKeyBlk += intToFiveDigitString(children[i]->getNodeId() + currentBlock);
+            int childBlk = children[i]->getNodeId() + currentBlock;
+            int currDb = firstDb + 1;
+            while (childBlk >= (INITIAL_SIZE / BLOCK_SIZE) * currDb)
+            {
+                childBlk += (DIRECTORY_SIZE / BLOCK_SIZE);
+                currDb++;
+            }
+            childKeyBlk += intToFiveDigitString(childBlk);
+            // childKeyBlk += intToFiveDigitString(children[i]->getNodeId() + currentBlock);
         }
         else
         {
@@ -575,11 +583,8 @@ void BTree::Display(long long int &currentBlock, int &firstDb)
                 idxBlk += (DIRECTORY_SIZE / BLOCK_SIZE);
                 currDb++;
             }
-            // cout << node->getNodeId() + currentBlock;
             cout << idxBlk;
-            // node->Display(node->size, currentBlock);
-            long long int diff = idxBlk - node->getNodeId();
-            node->Display(node->size, diff);
+            node->Display(node->size, firstIndexToWrite, firstDb);
 
             // enqueue the children
             for (int i = 0; i < node->size + 1; i++)
@@ -595,10 +600,6 @@ void BTree::Display(long long int &currentBlock, int &firstDb)
                 // update the root id
                 rootId = idxBlk;
             }
-            // if (level == 0)
-            // {
-            //     rootId = node->getNodeId() + currentBlock;
-            // }
         }
         level++;
         cout << endl;

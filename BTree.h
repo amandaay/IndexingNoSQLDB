@@ -60,7 +60,7 @@ public:
     // to convert key+block# to 8+5 digit string
     string intToThirteenDigitString(long long int number);
     // Display node
-    void Display(int _size, long long int &currentBlock);
+    void Display(int _size, long long int &currentBlock, int& firstDb);
     // deconstructor
     ~Node();
 
@@ -86,7 +86,7 @@ private:
     // root node ID
     int rootId;
     // first index node to write
-    int firstIndexToWrite;
+    long long int firstIndexToWrite;
     // data block key value
     int blockVal;
 

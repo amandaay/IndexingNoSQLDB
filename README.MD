@@ -91,6 +91,9 @@ Bit Map:
 7. For find command:
 - Number of block accessed: Read fcbs + (every index block from the root) + Data Block
 
+## Presentation Slide
+https://docs.google.com/presentation/d/11No_ByUtp9IdFpWdFastP0NVLu4G1fSZGQK9316PIJQ/edit?usp=sharing
+
 ## Authors
 
 So Man Amanda Au-Yeung, NUID: 001673193<br/>
