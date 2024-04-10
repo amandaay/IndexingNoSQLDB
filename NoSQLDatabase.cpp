@@ -9,6 +9,7 @@
 #include <queue>
 #include <set>
 #include "BTree.h"
+#include <istream>
 
 using namespace std;
 using namespace std::filesystem;
@@ -556,6 +557,11 @@ void NoSQLDatabase::putDataIntoDatabase(string &myFile)
     }
     cout << "Putting data into database " << databaseName << " from file " << myFile << endl;
     ifstream fileToRead(myFile);
+    if (fileToRead.peek() == ifstream::traits_type::eof())
+    {
+        cout << "Error: File is empty." << endl;
+        return;
+    }
     openOrCreateDatabase(databaseName, dbNumber);
     if (!fileToRead.is_open())
     {
@@ -686,7 +692,8 @@ void NoSQLDatabase::getDataFromDatabase(string &myFile)
 {
     // Download data file from NoSQL database to OS directory
     openOrCreateDatabase(databaseName, dbNumber);
-    if (directory.empty()) {
+    if (directory.empty())
+    {
         cout << "No files found in the database." << endl;
         return;
     }
@@ -703,10 +710,17 @@ void NoSQLDatabase::getDataFromDatabase(string &myFile)
     string rootBlk;
     while (getline(databaseFile, fcb))
     {
-        if (fcb.substr(0, fcb.find(' ')) == myFile)
+        if (!fcb.empty())
         {
-            rootBlk = fcb.substr(100, 5);
-            break;
+            if (fcb.substr(0, fcb.find(' ')) == myFile)
+            {
+                rootBlk = fcb.substr(100, 5);
+                break;
+            }
+        }
+        else
+        {
+            cout << "fcb empty block." << endl;
         }
         lineNumber++;
         if (lineNumber == 4)
@@ -747,6 +761,11 @@ void NoSQLDatabase::delFileFromDatabase(string &myFile)
     // 2. update bitmap, set originally used block = 0
     // 3. remove the index blocks correlated to movies-1.csv
     // 4. data file blocks remain the same and just gets overwritten if new data comes in by checking bitmap =0 (Free)
+    if (directory.empty())
+    {
+        cout << "No files found in the database." << endl;
+        return;
+    }
     string rootStartblk;
     for (int db = 0; db <= dbNumber; db++)
     {
@@ -762,6 +781,11 @@ void NoSQLDatabase::delFileFromDatabase(string &myFile)
 
         while (getline(databaseFile, line))
         {
+            if (line.empty())
+            {
+                lineNumber++;
+                continue;
+            }
             string fcbFileName = line.substr(0, line.find(" "));
             if (fcbFileName == myFile)
             {
@@ -839,6 +863,11 @@ void NoSQLDatabase::findValueFromDatabase(string &myFileKey, int &blkAccessed)
     string line;
     while (getline(databaseFile, line))
     {
+        if (line.empty())
+        {
+            lineNumber++;
+            continue;
+        }
         string fcbFileName = line.substr(0, line.find("."));
         blkAccessed++;
         if (fcbFileName == myFile)
