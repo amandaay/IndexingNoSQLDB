@@ -948,7 +948,7 @@ void NoSQLDatabase::killDatabase(string &PFSFile)
         return;
     }
     databaseName = PFSFile;
-    cout << "Deleting database " << databaseName << " dbNumber: " << dbNumber << endl;
+    cout << "Deleting database " << databaseName << "from db0 up to db" << dbNumber << endl;
 
     for (int i = 0; i <= dbNumber; i++)
     {
