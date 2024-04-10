@@ -697,12 +697,12 @@ void NoSQLDatabase::getDataFromDatabase(string &myFile)
         cout << "No files found in the database." << endl;
         return;
     }
-    ofstream fileToWrite(myFile);
-    if (!fileToWrite.is_open())
-    {
-        cout << "Error: Unable to open file " << myFile << endl;
-        return;
-    }
+
+    // check if the file exists in the database
+
+    // skip metadata
+    string metadata;
+    getline(databaseFile, metadata);
 
     // read fcb
     string fcb;
@@ -710,24 +710,30 @@ void NoSQLDatabase::getDataFromDatabase(string &myFile)
     string rootBlk;
     while (getline(databaseFile, fcb))
     {
-        if (!fcb.empty())
+        if (fcb.empty())
         {
-            if (fcb.substr(0, fcb.find(' ')) == myFile)
-            {
-                rootBlk = fcb.substr(100, 5);
-                break;
-            }
-        }
-        else
-        {
+            lineNumber++;
             cout << "fcb empty block." << endl;
+            continue;
+        } else if (fcb.substr(0, fcb.find(' ')) == myFile)
+        {
+            rootBlk = fcb.substr(100, 5);
+            break;
         }
         lineNumber++;
         if (lineNumber == 4)
         {
-            cout << "No such file found.";
-            break;
+            cout << "No such file found. Cannot download data." << endl;
+            return;
         }
+    }
+
+    // create the file to write
+    ofstream fileToWrite(myFile);
+    if (!fileToWrite.is_open())
+    {
+        cout << "Error: Unable to open file " << myFile << endl;
+        return;
     }
 
     set<string> datablocks;
@@ -800,8 +806,8 @@ void NoSQLDatabase::delFileFromDatabase(string &myFile)
             lineNumber++;
             if (lineNumber == 4)
             {
-                cout << "No such file found.";
-                break;
+                cout << "No such file found. Cannot delete file." << endl;
+                return;
             }
         }
     }
@@ -878,8 +884,8 @@ void NoSQLDatabase::findValueFromDatabase(string &myFileKey, int &blkAccessed)
         lineNumber++;
         if (lineNumber == 4)
         {
-            cout << "No such file found.";
-            break;
+            cout << "No such file found. Cannot find value." << endl;
+            return;
         }
     }
 
