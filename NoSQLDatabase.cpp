@@ -856,7 +856,16 @@ void NoSQLDatabase::findValueFromDatabase(string &myFileKey, int &blkAccessed)
     string idxStartBlk;
 
     string myFile = myFileKey.substr(0, myFileKey.find("."));
-    long long int inputKey = stoll(myFileKey.substr(myFileKey.find(".") + 1, 8));
+    string keyStr = myFileKey.substr(myFileKey.find(".") + 1, 8);
+    for (char c : keyStr)
+    {
+        if (!isdigit(c))
+        {
+            cout << "Invalid key. Key should be a number." << endl;
+            return;
+        }
+    }
+    long long int inputKey = stoll(keyStr);
     string key = intToEightDigitString(inputKey);
 
     openOrCreateDatabase(databaseName, dbNumber);
