@@ -36,6 +36,7 @@ private:
     BTree bTree;           // include BTree for indexing
     int indexBlock;        // index block number
     string leftmost;       // leftmost key in the index block after rm cmd
+    int blkAccessed;       // number of blocks accessed during find cmd
 
     // Define structures for File Control Block (FCB) and directory entry
     struct FCB

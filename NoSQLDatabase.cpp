@@ -21,6 +21,7 @@ NoSQLDatabase::NoSQLDatabase() : bTree(INDEX_BFR)
     dbNumber = 0;          // defines database number (e.g. test.db0, test.db1, ...)
     uploadedFilesPos = 80; // position of uploaded files in the block
     leftmost = "99999";    // leftmost key in the index block after rm cmd
+    blkAccessed = 0;       // number of blocks accessed during find cmd
 }
 
 void NoSQLDatabase::updateDirectory(int dbNumber)
@@ -921,6 +922,7 @@ void NoSQLDatabase::findValueFromDatabase(string &myFileKey, int &blkAccessed)
     }
     if (resultBlk == "99999")
     {
+        blkAccessed = 0;
         return;
     }
     // result Blk search data block
@@ -936,6 +938,7 @@ void NoSQLDatabase::findValueFromDatabase(string &myFileKey, int &blkAccessed)
     cout << endl;
     // includes the fcb block, index blocks, and data blocks
     cout << "# of Blocks = " << blkAccessed << endl;
+    blkAccessed = 0;
 }
 
 void NoSQLDatabase::killDatabase(string &PFSFile)
@@ -1036,7 +1039,6 @@ void NoSQLDatabase::runCLI()
     // Implement the command-line interface
     string command;
     string query;
-    int blkAccessed = 0;
 
     do
     {
